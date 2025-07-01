@@ -315,7 +315,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate {
+public class ProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate, IProfileActivity {
     private final static int PHONE_OPTION_CALL = 0,
         PHONE_OPTION_COPY = 1,
         PHONE_OPTION_TELEGRAM_CALL = 2,
@@ -7691,6 +7691,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     public RecyclerListView getListView() {
         return listView;
+    }
+
+    @Override
+    public int getBirthdayRow() {
+        return birthdayRow;
     }
 
     private void needLayoutText(float diff) {

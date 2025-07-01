@@ -315,7 +315,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ContestProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate {
+public class ContestProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate, IProfileActivity {
     private final static int PHONE_OPTION_CALL = 0,
             PHONE_OPTION_COPY = 1,
             PHONE_OPTION_TELEGRAM_CALL = 2,
@@ -499,7 +499,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
     public ProfileChannelCell.ChannelMessageFetcher profileChannelMessageFetcher;
     public boolean createdBirthdayFetcher;
-    public ContestProfileBirthdayEffect.BirthdayEffectFetcher birthdayFetcher;
+    public ProfileBirthdayEffect.BirthdayEffectFetcher birthdayFetcher;
 
     private CharSequence currentBio;
 
@@ -7693,6 +7693,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         return listView;
     }
 
+    @Override
+    public int getBirthdayRow() {
+        return birthdayRow;
+    }
+
     private void needLayoutText(float diff) {
         FrameLayout.LayoutParams layoutParams;
         float scale = nameTextView[1].getScaleX();
@@ -8000,8 +8005,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     profileChannelMessageFetcher.fetch(userInfo);
                 }
                 if (!isSettings()) {
-                    ContestProfileBirthdayEffect.BirthdayEffectFetcher oldFetcher = birthdayFetcher;
-                    birthdayFetcher = ContestProfileBirthdayEffect.BirthdayEffectFetcher.of(currentAccount, userInfo, birthdayFetcher);
+                    ProfileBirthdayEffect.BirthdayEffectFetcher oldFetcher = birthdayFetcher;
+                    birthdayFetcher = ProfileBirthdayEffect.BirthdayEffectFetcher.of(currentAccount, userInfo, birthdayFetcher);
                     createdBirthdayFetcher = birthdayFetcher != oldFetcher;
                     if (birthdayFetcher != null) {
                         birthdayFetcher.subscribe(this::createBirthdayEffect);
@@ -8895,7 +8900,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     public void setUserInfo(
             TLRPC.UserFull value,
             ProfileChannelCell.ChannelMessageFetcher channelMessageFetcher,
-            ContestProfileBirthdayEffect.BirthdayEffectFetcher birthdayAssetsFetcher
+            ProfileBirthdayEffect.BirthdayEffectFetcher birthdayAssetsFetcher
     ) {
         userInfo = value;
         if (storyView != null) {
@@ -8922,7 +8927,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             birthdayFetcher = birthdayAssetsFetcher;
         }
         if (birthdayFetcher == null) {
-            birthdayFetcher = ContestProfileBirthdayEffect.BirthdayEffectFetcher.of(currentAccount, userInfo, birthdayFetcher);
+            birthdayFetcher = ProfileBirthdayEffect.BirthdayEffectFetcher.of(currentAccount, userInfo, birthdayFetcher);
             createdBirthdayFetcher = birthdayFetcher != null;
         }
         if (birthdayFetcher != null) {
@@ -14205,7 +14210,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         });
     }
 
-    private ContestProfileBirthdayEffect birthdayEffect;
+    private ProfileBirthdayEffect birthdayEffect;
 
     private void createBirthdayEffect() {
         if (fragmentView == null || !fullyVisible || birthdayFetcher == null || getContext() == null)
@@ -14217,7 +14222,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             return;
         }
 
-        birthdayEffect = new ContestProfileBirthdayEffect(this, birthdayFetcher);
+        birthdayEffect = new ProfileBirthdayEffect(this, birthdayFetcher);
         ((FrameLayout) fragmentView).addView(birthdayEffect, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL_HORIZONTAL | Gravity.TOP));
     }
 

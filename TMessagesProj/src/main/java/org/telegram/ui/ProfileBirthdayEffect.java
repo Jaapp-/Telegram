@@ -37,7 +37,7 @@ public class ProfileBirthdayEffect extends View {
 
     private final int currentAccount;
     private final long dialogId;
-    private final ProfileActivity profileActivity;
+    private final IProfileActivity profileActivity;
     private BirthdayEffectFetcher fetcher;
     private BirthdayEffectFetcher fetcherToSet;
 
@@ -50,7 +50,7 @@ public class ProfileBirthdayEffect extends View {
 
     public PointF sourcePoint = new PointF();
 
-    public ProfileBirthdayEffect(ProfileActivity profileActivity, BirthdayEffectFetcher fetcher) {
+    public ProfileBirthdayEffect(IProfileActivity profileActivity, BirthdayEffectFetcher fetcher) {
         super(profileActivity.getContext());
 
         this.currentAccount = profileActivity.getCurrentAccount();
@@ -186,7 +186,7 @@ public class ProfileBirthdayEffect extends View {
 
     private void updateSourcePoint() {
         RecyclerListView listView = profileActivity.getListView();
-        final int position = profileActivity.birthdayRow;
+        final int position = profileActivity.getBirthdayRow();
         if (position < 0) return;
         for (int i = 0; i < listView.getChildCount(); ++i) {
             View child = listView.getChildAt(i);
