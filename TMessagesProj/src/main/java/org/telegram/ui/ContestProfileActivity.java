@@ -64,7 +64,6 @@ import android.media.MediaCodecList;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -224,7 +223,6 @@ import org.telegram.ui.Components.ChatAvatarContainer;
 import org.telegram.ui.Components.ChatNotificationsPopupWrapper;
 import org.telegram.ui.Components.ColoredImageSpan;
 import org.telegram.ui.Components.CombinedDrawable;
-import org.telegram.ui.Components.ContestProfileGalleryView;
 import org.telegram.ui.Components.CrossfadeDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.DotDividerSpan;
@@ -250,6 +248,7 @@ import org.telegram.ui.Components.Premium.PremiumGradient;
 import org.telegram.ui.Components.Premium.PremiumPreviewBottomSheet;
 import org.telegram.ui.Components.Premium.ProfilePremiumCell;
 import org.telegram.ui.Components.Premium.boosts.UserSelectorBottomSheet;
+import org.telegram.ui.Components.ProfileGalleryView;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgressView;
@@ -269,12 +268,12 @@ import org.telegram.ui.Components.voip.VoIPHelper;
 import org.telegram.ui.Gifts.GiftSheet;
 import org.telegram.ui.Stars.BotStarsActivity;
 import org.telegram.ui.Stars.BotStarsController;
-import org.telegram.ui.Stars.ContestProfileGiftsView;
+import org.telegram.ui.Stars.ProfileGiftsView;
 import org.telegram.ui.Stars.StarGiftPatterns;
 import org.telegram.ui.Stars.StarGiftSheet;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
-import org.telegram.ui.Stories.ContestProfileStoriesView;
+import org.telegram.ui.Stories.ProfileStoriesView;
 import org.telegram.ui.Stories.StoriesController;
 import org.telegram.ui.Stories.StoriesListPlaceProvider;
 import org.telegram.ui.Stories.StoryViewer;
@@ -320,203 +319,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             PHONE_OPTION_COPY = 1,
             PHONE_OPTION_TELEGRAM_CALL = 2,
             PHONE_OPTION_TELEGRAM_VIDEO_CALL = 3;
-
-    private RecyclerListView listView;
-    private RecyclerListView searchListView;
-    private LinearLayoutManager layoutManager;
-    private ListAdapter listAdapter;
-    private SearchAdapter searchAdapter;
-    private SimpleTextView[] nameTextView = new SimpleTextView[2];
-    private String nameTextViewRightDrawableContentDescription = null;
-    private String nameTextViewRightDrawable2ContentDescription = null;
-    private SimpleTextView[] onlineTextView = new SimpleTextView[4];
-    private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
-    private RLottieImageView writeButton;
-    private AnimatorSet writeButtonAnimation;
-    private AnimatorSet qrItemAnimation;
-    private Drawable lockIconDrawable;
-    private final Drawable[] verifiedDrawable = new Drawable[2];
-    private final Drawable[] premiumStarDrawable = new Drawable[2];
-    private Long emojiStatusGiftId;
-    private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] emojiStatusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
-    private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] botVerificationDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
-    private final Drawable[] verifiedCheckDrawable = new Drawable[2];
-    private final CrossfadeDrawable[] verifiedCrossfadeDrawable = new CrossfadeDrawable[2];
-    private final CrossfadeDrawable[] premiumCrossfadeDrawable = new CrossfadeDrawable[2];
-    private ScamDrawable scamDrawable;
-    private UndoView undoView;
-    private OverlaysView overlaysView;
-    public SharedMediaLayout sharedMediaLayout;
-    private StickerEmptyView emptyView;
-    private boolean sharedMediaLayoutAttached;
-    private SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
-    private boolean preloadedChannelEmojiStatuses;
-
-    private View blurredView;
-
-    private RLottieDrawable cameraDrawable;
-    private RLottieDrawable cellCameraDrawable;
-
-    private HintView fwdRestrictedHint;
-    private FrameLayout avatarContainer;
-    private FrameLayout avatarContainer2;
-    private DrawerProfileCell.AnimatedStatusView animatedStatusView;
-    private AvatarImageView avatarImage;
-    private View avatarOverlay;
-    private AnimatorSet avatarAnimation;
-    private RadialProgressView avatarProgressView;
-    private ImageView timeItem;
-    private ImageView starBgItem, starFgItem;
-    private TimerDrawable timerDrawable;
-    private ContestProfileGalleryView avatarsViewPager;
-    private PagerIndicatorView avatarsViewPagerIndicatorView;
-    private AvatarDrawable avatarDrawable;
-    private ImageUpdater imageUpdater;
-    private int avatarColor;
-    TimerDrawable autoDeleteItemDrawable;
-    private ContestProfileStoriesView storyView;
-    public ContestProfileGiftsView giftsView;
-
-    private View scrimView = null;
-    private Paint scrimPaint = new Paint(Paint.ANTI_ALIAS_FLAG) {
-        @Override
-        public void setAlpha(int a) {
-            super.setAlpha(a);
-            fragmentView.invalidate();
-        }
-    };
-    private Paint actionBarBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private ActionBarPopupWindow scrimPopupWindow;
-    private Theme.ResourcesProvider resourcesProvider;
-
-    private int overlayCountVisible;
-
-    private ImageLocation prevLoadedImageLocation;
-
-    private int lastMeasuredContentWidth;
-    private int lastMeasuredContentHeight;
-    private int listContentHeight;
-    private boolean openingAvatar;
-    private boolean fragmentViewAttached;
-
-    private boolean doNotSetForeground;
-
-    private boolean[] isOnline = new boolean[1];
-
-    private boolean callItemVisible;
-    private boolean videoCallItemVisible;
-    private boolean editItemVisible;
-    private ActionBarMenuItem animatingItem;
-    private ActionBarMenuItem callItem;
-    private ActionBarMenuItem videoCallItem;
-    private ActionBarMenuItem editItem;
-    private ActionBarMenuItem otherItem;
-    private ActionBarMenuItem searchItem;
-    private ActionBarMenuSubItem editColorItem;
-    private ActionBarMenuSubItem linkItem;
-    private ActionBarMenuSubItem setUsernameItem;
-    private ImageView ttlIconView;
-    private ActionBarMenuItem qrItem;
-    private ActionBarMenuSubItem autoDeleteItem;
-    AutoDeletePopupWrapper autoDeletePopupWrapper;
-    protected float headerShadowAlpha = 1.0f;
-    private int actionBarBackgroundColor;
-    private TopView topView;
-    private long userId;
-    private long chatId;
-    private long topicId;
-    public boolean saved;
-    private long dialogId;
-    private boolean creatingChat;
-    private boolean userBlocked;
-    private boolean reportSpam;
-    private long mergeDialogId;
-    private boolean expandPhoto;
-    private boolean needSendMessage;
-    private boolean hasVoiceChatItem;
-    private boolean isTopic;
-    private boolean openSimilar;
-    public boolean myProfile;
-    public boolean openGifts;
-    private boolean openedGifts;
-    public boolean openCommonChats;
-
-    private boolean scrolling;
-
-    private boolean canSearchMembers;
-
-    private boolean loadingUsers;
-    private LongSparseArray<TLRPC.ChatParticipant> participantsMap = new LongSparseArray<>();
-    private boolean usersEndReached;
-
-    private long banFromGroup;
-    private boolean openAnimationInProgress;
-    private boolean transitionAnimationInProress;
-    private boolean recreateMenuAfterAnimation;
-    private int playProfileAnimation;
-    private boolean needTimerImage;
-    private boolean needStarImage;
-    private boolean allowProfileAnimation = true;
-    private boolean disableProfileAnimation = false;
-    private float extraHeight;
-    private float initialAnimationExtraHeight;
-    private float avatarAnimationProgress;
-
-    private int searchTransitionOffset;
-    private float searchTransitionProgress;
-    private Animator searchViewTransition;
-    private boolean searchMode;
-
-    private FlagSecureReason flagSecure;
-
-    private HashMap<Integer, Integer> positionToOffset = new HashMap<>();
-
-    private float avatarX;
-    private float avatarY;
-    private float avatarScale;
-    private float nameX;
-    private float nameY;
-    private float onlineX;
-    private float onlineY;
-    private float expandProgress;
-    private float listViewVelocityY;
-    private ValueAnimator expandAnimator;
-    private float currentExpandAnimatorValue;
-    private float currentExpanAnimatorFracture;
-    private float[] expandAnimatorValues = new float[]{0f, 1f};
-    private boolean isInLandscapeMode;
-    private boolean allowPullingDown;
-    private boolean isPulledDown;
-
-    private Paint whitePaint = new Paint();
-
-    private boolean isBot;
-    private BotLocation botLocation;
-    private BotBiometry botBiometry;
-
-    private TLRPC.ChatFull chatInfo;
-    private TLRPC.UserFull userInfo;
-
-    public ProfileChannelCell.ChannelMessageFetcher profileChannelMessageFetcher;
-    public boolean createdBirthdayFetcher;
-    public ProfileBirthdayEffect.BirthdayEffectFetcher birthdayFetcher;
-
-    private CharSequence currentBio;
-
-    private long selectedUser;
-    private int onlineCount = -1;
-    private ArrayList<Integer> sortedUsers;
-
-    private TLRPC.EncryptedChat currentEncryptedChat;
-    private TLRPC.Chat currentChat;
-    private TL_bots.BotInfo botInfo;
-    private TLRPC.ChannelParticipant currentChannelParticipant;
-    private TL_account.TL_password currentPassword;
-
-    private TLRPC.FileLocation avatar;
-    private TLRPC.FileLocation avatarBig;
-    private ImageLocation uploadingImageLocation;
-
     private final static int add_contact = 1;
     private final static int block_contact = 2;
     private final static int share_contact = 3;
@@ -537,7 +339,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private final static int view_discussion = 22;
     private final static int delete_topic = 23;
     private final static int report = 24;
-
     private final static int edit_info = 30;
     private final static int logout = 31;
     private final static int search_button = 32;
@@ -553,20 +354,217 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private final static int copy_link_profile = 42;
     private final static int set_username = 43;
     private final static int bot_privacy = 44;
+    private final Drawable[] verifiedDrawable = new Drawable[2];
+    private final Drawable[] premiumStarDrawable = new Drawable[2];
+    private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] emojiStatusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
+    private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] botVerificationDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
+    private final Drawable[] verifiedCheckDrawable = new Drawable[2];
+    private final CrossfadeDrawable[] verifiedCrossfadeDrawable = new CrossfadeDrawable[2];
+    private final CrossfadeDrawable[] premiumCrossfadeDrawable = new CrossfadeDrawable[2];
+    private final ArrayList<TLRPC.ChatParticipant> visibleChatParticipants = new ArrayList<>();
+    private final ArrayList<Integer> visibleSortedUsers = new ArrayList<>();
+    private final AccelerateDecelerateInterpolator floatingInterpolator = new AccelerateDecelerateInterpolator();
+    private final SparseIntArray adaptedColors = new SparseIntArray();
+    public SharedMediaLayout sharedMediaLayout;
+    public ProfileGiftsView giftsView;
+    public boolean saved;
+    public boolean myProfile;
+    public boolean openGifts;
+    public boolean openCommonChats;
+    public ProfileChannelCell.ChannelMessageFetcher profileChannelMessageFetcher;
+    public boolean createdBirthdayFetcher;
+    public ProfileBirthdayEffect.BirthdayEffectFetcher birthdayFetcher;
+    public int birthdayRow;
+    public boolean isFragmentOpened;
+    protected float headerShadowAlpha = 1.0f;
+    TimerDrawable autoDeleteItemDrawable;
+    AutoDeletePopupWrapper autoDeletePopupWrapper;
+    PinchToZoomHelper pinchToZoomHelper;
+    BaseFragment previousTransitionMainFragment;
+    ChatActivityInterface previousTransitionFragment;
+    HashSet<Integer> notificationsExceptionTopics = new HashSet<>();
+    FrameLayout floatingButtonContainer;
+    RLottieImageView floatingButton;
+    boolean floatingHidden;
+    float floatingButtonHideProgress;
+    boolean showBoostsAlert;
+    boolean profileTransitionInProgress;
+    int avatarUploadingRequest;
+    int savedScrollPosition = -1;
+    int savedScrollOffset;
+    boolean savedScrollToSharedMedia;
+    float photoDescriptionProgress = -1;
+    private RecyclerListView listView;
+    private RecyclerListView searchListView;
+    private LinearLayoutManager layoutManager;
+    private ListAdapter listAdapter;
+    private SearchAdapter searchAdapter;
+    private SimpleTextView[] nameTextView = new SimpleTextView[2];
+    private String nameTextViewRightDrawableContentDescription = null;
+    private String nameTextViewRightDrawable2ContentDescription = null;
+    private SimpleTextView[] onlineTextView = new SimpleTextView[4];
+    private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
+    private RLottieImageView writeButton;
+    private AnimatorSet writeButtonAnimation;
+    private AnimatorSet qrItemAnimation;
+    private Drawable lockIconDrawable;
+    private Long emojiStatusGiftId;
+    private ScamDrawable scamDrawable;
+    private UndoView undoView;
+    private OverlaysView overlaysView;
+    private StickerEmptyView emptyView;
+    private boolean sharedMediaLayoutAttached;
+    private SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
+    private boolean preloadedChannelEmojiStatuses;
+    private View blurredView;
+    private RLottieDrawable cameraDrawable;
+    private RLottieDrawable cellCameraDrawable;
+    private HintView fwdRestrictedHint;
+    private FrameLayout avatarContainer;
+    private FrameLayout avatarContainer2;
+    private DrawerProfileCell.AnimatedStatusView animatedStatusView;
+    private AvatarImageView avatarImage;
+    private View avatarOverlay;
+    private AnimatorSet avatarAnimation;
+    private RadialProgressView avatarProgressView;
+    private ImageView timeItem;
+    private ImageView starBgItem, starFgItem;
+    private TimerDrawable timerDrawable;
+    private ProfileGalleryView avatarsViewPager;
+    private PagerIndicatorView avatarsViewPagerIndicatorView;
+    private AvatarDrawable avatarDrawable;
+    private ImageUpdater imageUpdater;
+    private int avatarColor;
+    private ProfileStoriesView storyView;
+    private View scrimView = null;
+    private Paint scrimPaint = new Paint(Paint.ANTI_ALIAS_FLAG) {
+        @Override
+        public void setAlpha(int a) {
+            super.setAlpha(a);
+            fragmentView.invalidate();
+        }
+    };
+    private Paint actionBarBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private ActionBarPopupWindow scrimPopupWindow;
+    private Theme.ResourcesProvider resourcesProvider;
+    private int overlayCountVisible;
+    private ImageLocation prevLoadedImageLocation;
+    private int lastMeasuredContentWidth;
+    private int lastMeasuredContentHeight;
+    private int listContentHeight;
+    private boolean openingAvatar;
+    private boolean fragmentViewAttached;
+    private boolean doNotSetForeground;
+    private boolean[] isOnline = new boolean[1];
+    private boolean callItemVisible;
+    private boolean videoCallItemVisible;
+    private boolean editItemVisible;
+    private ActionBarMenuItem animatingItem;
+    private ActionBarMenuItem callItem;
+    private ActionBarMenuItem videoCallItem;
+    private ActionBarMenuItem editItem;
+    private ActionBarMenuItem otherItem;
+    private ActionBarMenuItem searchItem;
+    private ActionBarMenuSubItem editColorItem;
+    private ActionBarMenuSubItem linkItem;
+    private ActionBarMenuSubItem setUsernameItem;
+    private ImageView ttlIconView;
+    private ActionBarMenuItem qrItem;
+    private ActionBarMenuSubItem autoDeleteItem;
+    private int actionBarBackgroundColor;
+    private TopView topView;
+    private final Property<ContestProfileActivity, Float> HEADER_SHADOW = new AnimationProperties.FloatProperty<ContestProfileActivity>("headerShadow") {
+        @Override
+        public void setValue(ContestProfileActivity object, float value) {
+            headerShadowAlpha = value;
+            topView.invalidate();
+        }
 
+        @Override
+        public Float get(ContestProfileActivity object) {
+            return headerShadowAlpha;
+        }
+    };
+    private long userId;
+    private long chatId;
+    private long topicId;
+    private long dialogId;
+    private boolean creatingChat;
+    private boolean userBlocked;
+    private boolean reportSpam;
+    private long mergeDialogId;
+    private boolean expandPhoto;
+    private boolean needSendMessage;
+    private boolean hasVoiceChatItem;
+    private boolean isTopic;
+    private boolean openSimilar;
+    private boolean openedGifts;
+    private boolean scrolling;
+    private boolean canSearchMembers;
+    private boolean loadingUsers;
+    private LongSparseArray<TLRPC.ChatParticipant> participantsMap = new LongSparseArray<>();
+    private boolean usersEndReached;
+    private long banFromGroup;
+    private boolean openAnimationInProgress;
+    private boolean transitionAnimationInProress;
+    private boolean recreateMenuAfterAnimation;
+    private int playProfileAnimation;
+    private boolean needTimerImage;
+    private boolean needStarImage;
+    private boolean allowProfileAnimation = true;
+    private boolean disableProfileAnimation = false;
+    private float extraHeight;
+    private float initialAnimationExtraHeight;
+    private float avatarAnimationProgress;
+    private int searchTransitionOffset;
+    private float searchTransitionProgress;
+    private Animator searchViewTransition;
+    private boolean searchMode;
+    private FlagSecureReason flagSecure;
+    private HashMap<Integer, Integer> positionToOffset = new HashMap<>();
+    private float avatarX;
+    private float avatarY;
+    private float avatarScale;
+    private float nameX;
+    private float nameY;
+    private float onlineX;
+    private float onlineY;
+    private float expandProgress;
+    private float listViewVelocityY;
+    private ValueAnimator expandAnimator;
+    private float currentExpandAnimatorValue;
+    private float currentExpanAnimatorFracture;
+    private float[] expandAnimatorValues = new float[]{0f, 1f};
+    private boolean isInLandscapeMode;
+    private boolean allowPullingDown;
+    private boolean isPulledDown;
+    private Paint whitePaint = new Paint();
+    private boolean isBot;
+    private BotLocation botLocation;
+    private BotBiometry botBiometry;
+    private TLRPC.ChatFull chatInfo;
+    private TLRPC.UserFull userInfo;
+    private CharSequence currentBio;
+    private long selectedUser;
+    private int onlineCount = -1;
+    private ArrayList<Integer> sortedUsers;
+    private TLRPC.EncryptedChat currentEncryptedChat;
+    private TLRPC.Chat currentChat;
+    private TL_bots.BotInfo botInfo;
+    private TLRPC.ChannelParticipant currentChannelParticipant;
+    private TL_account.TL_password currentPassword;
+    private TLRPC.FileLocation avatar;
+    private TLRPC.FileLocation avatarBig;
+    private ImageLocation uploadingImageLocation;
     private Rect rect = new Rect();
-
     private TextCell setAvatarCell;
-
     private int rowCount;
-
     private int setAvatarRow;
     private int setAvatarSectionRow;
     private int channelRow;
     private int channelDividerRow;
     private int numberSectionRow;
     private int numberRow;
-    public int birthdayRow;
     private int setUsernameRow;
     private int bioRow;
     private int phoneSuggestionSectionRow;
@@ -637,11 +635,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     @Keep
     private int botPermissionBiometry;
     private int botPermissionsDivider;
-
     private int settingsTimerRow;
     private int settingsKeyRow;
     private int secretSettingsSectionRow;
-
     private int membersHeaderRow;
     private int membersStartRow;
     private int membersEndRow;
@@ -657,60 +653,28 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private int balanceDividerRow;
     private int blockedUsersRow;
     private int membersSectionRow;
-
     private int sharedMediaRow;
-
     private int unblockRow;
     private int joinRow;
     private int lastSectionRow;
-
     private boolean hoursExpanded;
     private boolean hoursShownMine;
-
     private int transitionIndex;
-    private final ArrayList<TLRPC.ChatParticipant> visibleChatParticipants = new ArrayList<>();
-    private final ArrayList<Integer> visibleSortedUsers = new ArrayList<>();
     private int usersForceShowingIn = 0;
-
     private boolean firstLayout = true;
     private boolean invalidateScroll = true;
     private boolean isQrItemVisible = true;
-
-    PinchToZoomHelper pinchToZoomHelper;
-
     private View transitionOnlineText;
     private int actionBarAnimationColorFrom = 0;
     private int navigationBarAnimationColorFrom = 0;
     private int reportReactionMessageId = 0;
     private long reportReactionFromDialogId = 0;
-
     private boolean isFragmentPhoneNumber;
-
     private boolean showAddToContacts;
     private String vcardPhone;
     private String vcardFirstName;
     private String vcardLastName;
-
-    BaseFragment previousTransitionMainFragment;
-    ChatActivityInterface previousTransitionFragment;
-
-    HashSet<Integer> notificationsExceptionTopics = new HashSet<>();
-
     private CharacterStyle loadingSpan;
-
-    private final Property<ContestProfileActivity, Float> HEADER_SHADOW = new AnimationProperties.FloatProperty<ContestProfileActivity>("headerShadow") {
-        @Override
-        public void setValue(ContestProfileActivity object, float value) {
-            headerShadowAlpha = value;
-            topView.invalidate();
-        }
-
-        @Override
-        public Float get(ContestProfileActivity object) {
-            return headerShadowAlpha;
-        }
-    };
-
     private PhotoViewer.PhotoViewerProvider provider = new PhotoViewer.EmptyPhotoViewerProvider() {
 
         @Override
@@ -780,6 +744,115 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private SpannableStringBuilder bottomButtonPostText;
     private ButtonWithCounterView[] bottomButton;
     private Runnable applyBulletin;
+    private SelectAnimatedEmojiDialog.SelectAnimatedEmojiDialogWindow selectAnimatedEmojiDialog;
+    private AnimatorSet headerAnimatorSet;
+    private AnimatorSet headerShadowAnimatorSet;
+    private float mediaHeaderAnimationProgress;
+    private boolean mediaHeaderVisible;
+    private AboutLinkCell aboutLinkCell;
+    private float lastEmojiStatusProgress;
+    private MessagesController.PeerColor peerColor;
+    private Property<ActionBar, Float> ACTIONBAR_HEADER_PROGRESS = new AnimationProperties.FloatProperty<ActionBar>("avatarAnimationProgress") {
+        @Override
+        public void setValue(ActionBar object, float value) {
+            mediaHeaderAnimationProgress = value;
+            if (storyView != null) {
+                storyView.setActionBarActionMode(value);
+            }
+            if (giftsView != null) {
+                giftsView.setActionBarActionMode(value);
+            }
+            topView.invalidate();
+
+            int color1 = getThemedColor(Theme.key_profile_title);
+            int color2 = getThemedColor(Theme.key_player_actionBarTitle);
+            int c = AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f);
+            nameTextView[1].setTextColor(c);
+            if (lockIconDrawable != null) {
+                lockIconDrawable.setColorFilter(c, PorterDuff.Mode.MULTIPLY);
+            }
+            if (scamDrawable != null) {
+                color1 = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
+                scamDrawable.setColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f));
+            }
+
+            color1 = peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon);
+            color2 = getThemedColor(Theme.key_actionBarActionModeDefaultIcon);
+            actionBar.setItemsColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), false);
+
+            color1 = peerColor != null ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue);
+            color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
+            actionBar.setItemsBackgroundColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), false);
+
+            topView.invalidate();
+            otherItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
+            callItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
+            videoCallItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
+            editItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
+
+            if (verifiedDrawable[0] != null) {
+                color1 = getThemedColor(Theme.key_profile_verifiedBackground);
+                color2 = getThemedColor(Theme.key_player_actionBarTitle);
+                verifiedDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+            if (verifiedDrawable[1] != null) {
+                color1 = peerColor != null ? Theme.adaptHSV(ColorUtils.blendARGB(peerColor.getColor2(), peerColor.hasColor6(Theme.isCurrentThemeDark()) ? peerColor.getColor5() : peerColor.getColor3(), .4f), +.1f, Theme.isCurrentThemeDark() ? -.1f : -.08f) : getThemedColor(Theme.key_profile_verifiedBackground);
+                color2 = getThemedColor(Theme.key_player_actionBarTitle);
+                verifiedDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+
+            if (verifiedCheckDrawable[0] != null) {
+                color1 = getThemedColor(Theme.key_profile_verifiedCheck);
+                color2 = getThemedColor(Theme.key_windowBackgroundWhite);
+                verifiedCheckDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+            if (verifiedCheckDrawable[1] != null) {
+                color1 = peerColor != null ? Color.WHITE : dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedCheck));
+                color2 = getThemedColor(Theme.key_windowBackgroundWhite);
+                verifiedCheckDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+
+
+            if (premiumStarDrawable[0] != null) {
+                color1 = getThemedColor(Theme.key_profile_verifiedBackground);
+                color2 = getThemedColor(Theme.key_player_actionBarTitle);
+                premiumStarDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+            if (premiumStarDrawable[1] != null) {
+                color1 = dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedBackground));
+                color2 = dontApplyPeerColor(getThemedColor(Theme.key_player_actionBarTitle));
+                premiumStarDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
+            }
+
+            updateEmojiStatusDrawableColor();
+
+            if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && (videoCallItemVisible || editItemVisible || callItemVisible)) {
+                needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(88f)));
+            }
+        }
+
+        @Override
+        public Float get(ActionBar object) {
+            return mediaHeaderAnimationProgress;
+        }
+    };
+    private AnimatorSet scrimAnimatorSet = null;
+    private boolean fullyVisible;
+    private ShowDrawable showStatusButton;
+    private ProfileBirthdayEffect birthdayEffect;
+    private HintView2 collectibleHint;
+    private int collectibleHintBackgroundColor;
+    private Boolean collectibleHintVisible;
+    private TLRPC.TL_emojiStatusCollectible collectibleStatus;
+
+    public ContestProfileActivity(Bundle args) {
+        this(args, null);
+    }
+
+    public ContestProfileActivity(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
+        super(args);
+        sharedMediaPreloader = preloader;
+    }
 
     public static ContestProfileActivity of(long dialogId) {
         Bundle bundle = new Bundle();
@@ -791,1072 +864,127 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         return new ContestProfileActivity(bundle);
     }
 
-    public long getTopicId() {
-        return topicId;
-    }
-
-    public static class AvatarImageView extends BackupImageView {
-
-        private final RectF rect = new RectF();
-        private final Paint placeholderPaint;
-        public boolean drawAvatar = true;
-        public float bounceScale = 1f;
-
-        private float crossfadeProgress;
-        private ImageReceiver animateFromImageReceiver;
-
-        private ImageReceiver foregroundImageReceiver;
-        private float foregroundAlpha;
-        private ImageReceiver.BitmapHolder drawableHolder;
-        boolean drawForeground = true;
-        float progressToExpand;
-
-        ContestProfileGalleryView avatarsViewPager;
-        private boolean hasStories;
-        private float progressToInsets = 1f;
-
-        public void setAvatarsViewPager(ContestProfileGalleryView avatarsViewPager) {
-            this.avatarsViewPager = avatarsViewPager;
+    public static void sendLogs(Activity activity, boolean last) {
+        if (activity == null) {
+            return;
         }
-
-        public AvatarImageView(Context context) {
-            super(context);
-            foregroundImageReceiver = new ImageReceiver(this);
-            placeholderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            placeholderPaint.setColor(Color.BLACK);
-        }
-
-        public void setAnimateFromImageReceiver(ImageReceiver imageReceiver) {
-            this.animateFromImageReceiver = imageReceiver;
-        }
-
-        public void setCrossfadeProgress(float crossfadeProgress) {
-            this.crossfadeProgress = crossfadeProgress;
-            invalidate();
-        }
-
-        public static Property<AvatarImageView, Float> CROSSFADE_PROGRESS = new AnimationProperties.FloatProperty<AvatarImageView>("crossfadeProgress") {
-            @Override
-            public void setValue(AvatarImageView object, float value) {
-                object.setCrossfadeProgress(value);
-            }
-            @Override
-            public Float get(AvatarImageView object) {
-                return object.crossfadeProgress;
-            }
-        };
-
-        public void setForegroundImage(ImageLocation imageLocation, String imageFilter, Drawable thumb) {
-            foregroundImageReceiver.setImage(imageLocation, imageFilter, thumb, 0, null, null, 0);
-            if (drawableHolder != null) {
-                drawableHolder.release();
-                drawableHolder = null;
-            }
-        }
-
-        public void setForegroundImageDrawable(ImageReceiver.BitmapHolder holder) {
-            if (holder != null) {
-                foregroundImageReceiver.setImageBitmap(holder.drawable);
-            }
-            if (drawableHolder != null) {
-                drawableHolder.release();
-                drawableHolder = null;
-            }
-            drawableHolder = holder;
-        }
-
-        public float getForegroundAlpha() {
-            return foregroundAlpha;
-        }
-
-        public void setForegroundAlpha(float value) {
-            foregroundAlpha = value;
-            invalidate();
-        }
-
-        public void clearForeground() {
-            AnimatedFileDrawable drawable = foregroundImageReceiver.getAnimation();
-            if (drawable != null) {
-                drawable.removeSecondParentView(this);
-            }
-            foregroundImageReceiver.clearImage();
-            if (drawableHolder != null) {
-                drawableHolder.release();
-                drawableHolder = null;
-            }
-            foregroundAlpha = 0f;
-            invalidate();
-        }
-
-        protected void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-            foregroundImageReceiver.onDetachedFromWindow();
-            if (drawableHolder != null) {
-                drawableHolder.release();
-                drawableHolder = null;
-            }
-        }
-
-        @Override
-        protected void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            foregroundImageReceiver.onAttachedToWindow();
-        }
-
-        @Override
-        public void setRoundRadius(int value) {
-            super.setRoundRadius(value);
-            foregroundImageReceiver.setRoundRadius(value);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            ImageReceiver imageReceiver = animatedEmojiDrawable != null ? animatedEmojiDrawable.getImageReceiver() : this.imageReceiver;
-            canvas.save();
-            canvas.scale(bounceScale, bounceScale, getMeasuredWidth() / 2f, getMeasuredHeight() / 2f);
-            float inset = hasStories ? (int) AndroidUtilities.dpf2(3.5f) : 0;
-            inset *= (1f - progressToExpand);
-            inset *= progressToInsets * (1f - foregroundAlpha);
-            float alpha = 1.0f;
-            if (animateFromImageReceiver != null) {
-                alpha *= 1.0f - crossfadeProgress;
-                if (crossfadeProgress > 0.0f) {
-                    final float fromAlpha = crossfadeProgress;
-                    final float wasImageX = animateFromImageReceiver.getImageX();
-                    final float wasImageY = animateFromImageReceiver.getImageY();
-                    final float wasImageW = animateFromImageReceiver.getImageWidth();
-                    final float wasImageH = animateFromImageReceiver.getImageHeight();
-                    final float wasAlpha = animateFromImageReceiver.getAlpha();
-                    animateFromImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
-                    animateFromImageReceiver.setAlpha(fromAlpha);
-                    animateFromImageReceiver.draw(canvas);
-                    animateFromImageReceiver.setImageCoords(wasImageX, wasImageY, wasImageW, wasImageH);
-                    animateFromImageReceiver.setAlpha(wasAlpha);
-                }
-            }
-            if (imageReceiver != null && alpha > 0 && (foregroundAlpha < 1f || !drawForeground)) {
-                imageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
-                final float wasAlpha = imageReceiver.getAlpha();
-                imageReceiver.setAlpha(wasAlpha * alpha);
-                if (drawAvatar) {
-                    imageReceiver.draw(canvas);
-                }
-                imageReceiver.setAlpha(wasAlpha);
-            }
-            if (foregroundAlpha > 0f && drawForeground && alpha > 0) {
-                if (foregroundImageReceiver.getDrawable() != null) {
-                    foregroundImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
-                    foregroundImageReceiver.setAlpha(alpha * foregroundAlpha);
-                    foregroundImageReceiver.draw(canvas);
-                } else {
-                    rect.set(0f, 0f, getMeasuredWidth(), getMeasuredHeight());
-                    placeholderPaint.setAlpha((int) (alpha * foregroundAlpha * 255f));
-                    final int radius = foregroundImageReceiver.getRoundRadius()[0];
-                    canvas.drawRoundRect(rect, radius, radius, placeholderPaint);
-                }
-            }
-            canvas.restore();
-        }
-
-        @Override
-        public void invalidate() {
-            super.invalidate();
-            if (avatarsViewPager != null) {
-                avatarsViewPager.invalidate();
-            }
-        }
-
-        public void setProgressToStoriesInsets(float progressToInsets) {
-            if (progressToInsets == this.progressToInsets) {
-                return;
-            }
-            this.progressToInsets = progressToInsets;
-            //if (hasStories) {
-            invalidate();
-            //}
-        }
-
-        public void drawForeground(boolean drawForeground) {
-            this.drawForeground = drawForeground;
-        }
-
-        public ChatActivityInterface getPrevFragment() {
-            return null;
-        }
-
-        public void setHasStories(boolean hasStories) {
-            if (this.hasStories == hasStories) {
-                return;
-            }
-            this.hasStories = hasStories;
-            invalidate();
-        }
-
-        public void setProgressToExpand(float animatedFracture) {
-            if (progressToExpand == animatedFracture) {
-                return;
-            }
-            progressToExpand = animatedFracture;
-            invalidate();
-        }
-    }
-
-    private class TopView extends FrameLayout {
-
-        private int currentColor;
-        private Paint paint = new Paint();
-
-        public TopView(Context context) {
-            super(context);
-            setWillNotDraw(false);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(widthMeasureSpec) + AndroidUtilities.dp(3));
-        }
-
-        @Override
-        public void setBackgroundColor(int color) {
-            if (color != currentColor) {
-                currentColor = color;
-                paint.setColor(color);
-                invalidate();
-                if (!hasColorById) {
-                    actionBarBackgroundColor = currentColor;
-                }
-            }
-        }
-
-        private boolean hasColorById;
-        private final AnimatedFloat hasColorAnimated = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
-        public int color1, color2;
-        private final AnimatedColor color1Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
-        private final AnimatedColor color2Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
-
-        private int backgroundGradientColor1, backgroundGradientColor2, backgroundGradientHeight;
-        private LinearGradient backgroundGradient;
-        private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        public void setBackgroundColorId(MessagesController.PeerColor peerColor, boolean animated) {
-            if (peerColor != null) {
-                hasColorById = true;
-                color1 = peerColor.getBgColor1(Theme.isCurrentThemeDark());
-                color2 = peerColor.getBgColor2(Theme.isCurrentThemeDark());
-                actionBarBackgroundColor = ColorUtils.blendARGB(color1, color2, 0.25f);
-                if (peerColor.patternColor != 0) {
-                    emojiColor = peerColor.patternColor;
-                } else {
-                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(color1);
-                }
-            } else {
-                actionBarBackgroundColor = currentColor;
-                hasColorById = false;
-                if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) > .8f) {
-                    emojiColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
-                } else if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) < .2f) {
-                    emojiColor = Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultTitle), .5f);
-                } else {
-                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(getThemedColor(Theme.key_actionBarDefault));
-                }
-            }
-            if (!animated) {
-                color1Animated.set(color1, true);
-                color2Animated.set(color2, true);
-            }
-            invalidate();
-        }
-
-        private int emojiColor;
-        private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emoji = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(this, false, dp(20), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_STATIC);
-
-        @Override
-        protected void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            emoji.attach();
-        }
-
-        @Override
-        protected void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-            emoji.detach();
-        }
-
-        public final AnimatedFloat emojiLoadedT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
-        public final AnimatedFloat emojiFullT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
-
-        private boolean hasEmoji;
-        private boolean emojiIsCollectible;
-        public void setBackgroundEmojiId(long emojiId, boolean isCollectible, boolean animated) {
-            emoji.set(emojiId, animated);
-            emoji.setColor(emojiColor);
-            emojiIsCollectible = isCollectible;
-            if (!animated) {
-                emojiFullT.force(isCollectible);
-            }
-            hasEmoji = hasEmoji || emojiId != 0 && emojiId != -1;
-            invalidate();
-        }
-
-        private boolean emojiLoaded;
-        private boolean isEmojiLoaded() {
-            if (emojiLoaded) {
-                return true;
-            }
-            if (emoji != null && emoji.getDrawable() instanceof AnimatedEmojiDrawable) {
-                AnimatedEmojiDrawable drawable = (AnimatedEmojiDrawable) emoji.getDrawable();
-                if (drawable.getImageReceiver() != null && drawable.getImageReceiver().hasImageLoaded()) {
-                    return emojiLoaded = true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            final int height = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-            final float v = extraHeight + height + searchTransitionOffset;
-
-            int y1 = (int) (v * (1.0f - mediaHeaderAnimationProgress));
-
-            if (y1 != 0) {
-                if (previousTransitionFragment != null && previousTransitionFragment.getContentView() != null) {
-                    blurBounds.set(0, 0, getMeasuredWidth(), y1);
-                    if (previousTransitionFragment.getActionBar() != null && !previousTransitionFragment.getContentView().blurWasDrawn() && previousTransitionFragment.getActionBar().getBackground() == null) {
-                        paint.setColor(Theme.getColor(Theme.key_actionBarDefault, previousTransitionFragment.getResourceProvider()));
-                        canvas.drawRect(blurBounds, paint);
-                    } else if (previousTransitionMainFragment != null && previousTransitionMainFragment instanceof DialogsActivity && previousTransitionMainFragment.getFragmentView() instanceof SizeNotifierFrameLayout) {
-                        previousTransitionMainFragment.getActionBar().blurScrimPaint.setColor(Theme.getColor(Theme.key_actionBarDefault, previousTransitionMainFragment.getResourceProvider()));
-                        ((SizeNotifierFrameLayout) previousTransitionMainFragment.getFragmentView()).drawBlurRect(canvas, getY(), blurBounds, previousTransitionMainFragment.getActionBar().blurScrimPaint, true);
-                    } else {
-                        previousTransitionFragment.getContentView().drawBlurRect(canvas, getY(), blurBounds, previousTransitionFragment.getActionBar().blurScrimPaint, true);
-                    }
-                }
-                paint.setColor(currentColor);
-                final int color1 = color1Animated.set(this.color1);
-                final int color2 = color2Animated.set(this.color2);
-                final int gradientHeight = AndroidUtilities.statusBarHeight + AndroidUtilities.dp(144);
-                if (backgroundGradient == null || backgroundGradientColor1 != color1 || backgroundGradientColor2 != color2 || backgroundGradientHeight != gradientHeight) {
-                    backgroundGradient = new LinearGradient(0, 0, 0, backgroundGradientHeight = gradientHeight, new int[] { backgroundGradientColor2 = color2, backgroundGradientColor1 = color1 }, new float[] { 0, 1 }, Shader.TileMode.CLAMP);
-                    backgroundPaint.setShader(backgroundGradient);
-                }
-                final float progressToGradient = (playProfileAnimation == 0 ? 1f : avatarAnimationProgress) * hasColorAnimated.set(hasColorById);
-                if (progressToGradient < 1) {
-                    canvas.drawRect(0, 0, getMeasuredWidth(), y1, paint);
-                }
-                if (progressToGradient > 0) {
-                    backgroundPaint.setAlpha((int) (0xFF * progressToGradient));
-                    canvas.drawRect(0, 0, getMeasuredWidth(), y1, backgroundPaint);
-                }
-                if (hasEmoji) {
-                    final float loadedScale = emojiLoadedT.set(isEmojiLoaded());
-                    final float full = emojiFullT.set(emojiIsCollectible);
-                    if (loadedScale > 0) {
-                        canvas.save();
-                        canvas.clipRect(0, 0, getMeasuredWidth(), y1);
-                        StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), ((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + dp(144)) - (1f - extraHeight / dp(88)) * dp(50), Math.min(1f, extraHeight / dp(88)), full);
-                        canvas.restore();
-                    }
-                }
-                if (previousTransitionFragment != null) {
-                    ActionBar actionBar = previousTransitionFragment.getActionBar();
-                    ActionBarMenu menu = actionBar.menu;
-                    if (actionBar != null && menu != null) {
-                        int restoreCount = canvas.save();
-                        canvas.translate(actionBar.getX() + menu.getX(), actionBar.getY() + menu.getY());
-                        canvas.saveLayerAlpha(0, 0, menu.getMeasuredWidth(), menu.getMeasuredHeight(), (int) (255 * (1f - avatarAnimationProgress)), Canvas.ALL_SAVE_FLAG);
-                        menu.draw(canvas);
-                        canvas.restoreToCount(restoreCount);
-                    }
-                }
-            }
-            if (y1 != v) {
-                int color = getThemedColor(Theme.key_windowBackgroundWhite);
-                paint.setColor(color);
-                blurBounds.set(0, y1, getMeasuredWidth(), (int) v);
-                contentView.drawBlurRect(canvas, getY(), blurBounds, paint, true);
-            }
-
-            if (parentLayout != null) {
-                parentLayout.drawHeaderShadow(canvas, (int) (headerShadowAlpha * 255), (int) v);
-            }
-        }
-        private Rect blurBounds = new Rect();
-    }
-
-    private class OverlaysView extends View implements ContestProfileGalleryView.Callback {
-
-        private final int statusBarHeight = actionBar.getOccupyStatusBar() && !inBubbleMode ? AndroidUtilities.statusBarHeight : 0;
-
-        private final Rect topOverlayRect = new Rect();
-        private final Rect bottomOverlayRect = new Rect();
-        private final RectF rect = new RectF();
-
-        private final GradientDrawable topOverlayGradient;
-        private final GradientDrawable bottomOverlayGradient;
-        private final ValueAnimator animator;
-        private final float[] animatorValues = new float[]{0f, 1f};
-        private final Paint backgroundPaint;
-        private final Paint barPaint;
-        private final Paint selectedBarPaint;
-
-        private final GradientDrawable[] pressedOverlayGradient = new GradientDrawable[2];
-        private final boolean[] pressedOverlayVisible = new boolean[2];
-        private final float[] pressedOverlayAlpha = new float[2];
-
-        private boolean isOverlaysVisible;
-        private float currentAnimationValue;
-        private float alpha = 0f;
-        private float[] alphas = null;
-        private long lastTime;
-        private float previousSelectedProgress;
-        private int previousSelectedPotision = -1;
-        private float currentProgress;
-        private int selectedPosition;
-
-        private float currentLoadingAnimationProgress;
-        private int currentLoadingAnimationDirection = 1;
-
-        public OverlaysView(Context context) {
-            super(context);
-            setVisibility(GONE);
-
-            barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            barPaint.setColor(0x55ffffff);
-            selectedBarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            selectedBarPaint.setColor(0xffffffff);
-
-            topOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0x42000000, 0});
-            topOverlayGradient.setShape(GradientDrawable.RECTANGLE);
-
-            bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
-            bottomOverlayGradient.setShape(GradientDrawable.RECTANGLE);
-
-            for (int i = 0; i < 2; i++) {
-                final GradientDrawable.Orientation orientation = i == 0 ? GradientDrawable.Orientation.LEFT_RIGHT : GradientDrawable.Orientation.RIGHT_LEFT;
-                pressedOverlayGradient[i] = new GradientDrawable(orientation, new int[]{0x32000000, 0});
-                pressedOverlayGradient[i].setShape(GradientDrawable.RECTANGLE);
-            }
-
-            backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            backgroundPaint.setColor(Color.BLACK);
-            backgroundPaint.setAlpha(66);
-            animator = ValueAnimator.ofFloat(0f, 1f);
-            animator.setDuration(250);
-            animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
-            animator.addUpdateListener(anim -> {
-                float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue = anim.getAnimatedFraction());
-                setAlphaValue(value, true);
-            });
-            animator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    if (!isOverlaysVisible) {
-                        setVisibility(GONE);
-                    }
-                }
-
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    setVisibility(VISIBLE);
-                }
-            });
-        }
-
-        public void saveCurrentPageProgress() {
-            previousSelectedProgress = currentProgress;
-            previousSelectedPotision = selectedPosition;
-            currentLoadingAnimationProgress = 0.0f;
-            currentLoadingAnimationDirection = 1;
-        }
-
-        public void setAlphaValue(float value, boolean self) {
-            if (Build.VERSION.SDK_INT > 18) {
-                int alpha = (int) (255 * value);
-                topOverlayGradient.setAlpha(alpha);
-                bottomOverlayGradient.setAlpha(alpha);
-                backgroundPaint.setAlpha((int) (66 * value));
-                barPaint.setAlpha((int) (0x55 * value));
-                selectedBarPaint.setAlpha(alpha);
-                this.alpha = value;
-            } else {
-                setAlpha(value);
-            }
-            if (!self) {
-                currentAnimationValue = value;
-            }
-            invalidate();
-        }
-
-        public boolean isOverlaysVisible() {
-            return isOverlaysVisible;
-        }
-
-        public void setOverlaysVisible() {
-            isOverlaysVisible = true;
-            setVisibility(VISIBLE);
-        }
-
-        public void setOverlaysVisible(boolean overlaysVisible, float durationFactor) {
-            if (overlaysVisible != isOverlaysVisible) {
-                isOverlaysVisible = overlaysVisible;
-                animator.cancel();
-                final float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue);
-                if (overlaysVisible) {
-                    animator.setDuration((long) ((1f - value) * 250f / durationFactor));
-                } else {
-                    animator.setDuration((long) (value * 250f / durationFactor));
-                }
-                animatorValues[0] = value;
-                animatorValues[1] = overlaysVisible ? 1f : 0f;
-                animator.start();
-            }
-        }
-
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            final int actionBarHeight = statusBarHeight + ActionBar.getCurrentActionBarHeight();
-            final float k = 0.5f;
-            topOverlayRect.set(0, 0, w, (int) (actionBarHeight * k));
-            bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(72f) * k), w, h);
-            topOverlayGradient.setBounds(0, topOverlayRect.bottom, w, actionBarHeight + AndroidUtilities.dp(16f));
-            bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(72f) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
-            pressedOverlayGradient[0].setBounds(0, 0, w / 5, h);
-            pressedOverlayGradient[1].setBounds(w - (w / 5), 0, w, h);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            for (int i = 0; i < 2; i++) {
-                if (pressedOverlayAlpha[i] > 0f) {
-                    pressedOverlayGradient[i].setAlpha((int) (pressedOverlayAlpha[i] * 255));
-                    pressedOverlayGradient[i].draw(canvas);
-                }
-            }
-
-            topOverlayGradient.draw(canvas);
-            bottomOverlayGradient.draw(canvas);
-            canvas.drawRect(topOverlayRect, backgroundPaint);
-            canvas.drawRect(bottomOverlayRect, backgroundPaint);
-
-            int count = avatarsViewPager.getRealCount();
-            selectedPosition = avatarsViewPager.getRealPosition();
-
-            if (alphas == null || alphas.length != count) {
-                alphas = new float[count];
-                Arrays.fill(alphas, 0.0f);
-            }
-
-            boolean invalidate = false;
-
-            long newTime = SystemClock.elapsedRealtime();
-            long dt = (newTime - lastTime);
-            if (dt < 0 || dt > 20) {
-                dt = 17;
-            }
-            lastTime = newTime;
-
-            if (count > 1 && count <= 20) {
-                if (overlayCountVisible == 0) {
-                    alpha = 0.0f;
-                    overlayCountVisible = 3;
-                } else if (overlayCountVisible == 1) {
-                    alpha = 0.0f;
-                    overlayCountVisible = 2;
-                }
-                if (overlayCountVisible == 2) {
-                    barPaint.setAlpha((int) (0x55 * alpha));
-                    selectedBarPaint.setAlpha((int) (0xff * alpha));
-                }
-                int width = (getMeasuredWidth() - AndroidUtilities.dp(5 * 2) - AndroidUtilities.dp(2 * (count - 1))) / count;
-                int y = AndroidUtilities.dp(4) + (Build.VERSION.SDK_INT >= 21 && !inBubbleMode ? AndroidUtilities.statusBarHeight : 0);
-                for (int a = 0; a < count; a++) {
-                    int x = AndroidUtilities.dp(5 + a * 2) + width * a;
-                    float progress;
-                    int baseAlpha = 0x55;
-                    if (a == previousSelectedPotision && Math.abs(previousSelectedProgress - 1.0f) > 0.0001f) {
-                        progress = previousSelectedProgress;
-                        canvas.save();
-                        canvas.clipRect(x + width * progress, y, x + width, y + AndroidUtilities.dp(2));
-                        rect.set(x, y, x + width, y + AndroidUtilities.dp(2));
-                        barPaint.setAlpha((int) (0x55 * alpha));
-                        canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), barPaint);
-                        baseAlpha = 0x50;
-                        canvas.restore();
-                        invalidate = true;
-                    } else if (a == selectedPosition) {
-                        if (avatarsViewPager.isCurrentItemVideo()) {
-                            progress = currentProgress = avatarsViewPager.getCurrentItemProgress();
-                            if (progress <= 0 && avatarsViewPager.isLoadingCurrentVideo() || currentLoadingAnimationProgress > 0.0f) {
-                                currentLoadingAnimationProgress += currentLoadingAnimationDirection * dt / 500.0f;
-                                if (currentLoadingAnimationProgress > 1.0f) {
-                                    currentLoadingAnimationProgress = 1.0f;
-                                    currentLoadingAnimationDirection *= -1;
-                                } else if (currentLoadingAnimationProgress <= 0) {
-                                    currentLoadingAnimationProgress = 0.0f;
-                                    currentLoadingAnimationDirection *= -1;
-                                }
-                            }
-                            rect.set(x, y, x + width, y + AndroidUtilities.dp(2));
-                            barPaint.setAlpha((int) ((0x55 + 0x30 * currentLoadingAnimationProgress) * alpha));
-                            canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), barPaint);
-                            invalidate = true;
-                            baseAlpha = 0x50;
-                        } else {
-                            progress = currentProgress = 1.0f;
-                        }
-                    } else {
-                        progress = 1.0f;
-                    }
-                    rect.set(x, y, x + width * progress, y + AndroidUtilities.dp(2));
-
-                    if (a != selectedPosition) {
-                        if (overlayCountVisible == 3) {
-                            barPaint.setAlpha((int) (AndroidUtilities.lerp(baseAlpha, 0xff, CubicBezierInterpolator.EASE_BOTH.getInterpolation(alphas[a])) * alpha));
-                        }
-                    } else {
-                        alphas[a] = 0.75f;
-                    }
-
-                    canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), a == selectedPosition ? selectedBarPaint : barPaint);
-                }
-
-                if (overlayCountVisible == 2) {
-                    if (alpha < 1.0f) {
-                        alpha += dt / 180.0f;
-                        if (alpha > 1.0f) {
-                            alpha = 1.0f;
-                        }
-                        invalidate = true;
-                    } else {
-                        overlayCountVisible = 3;
-                    }
-                } else if (overlayCountVisible == 3) {
-                    for (int i = 0; i < alphas.length; i++) {
-                        if (i != selectedPosition && alphas[i] > 0.0f) {
-                            alphas[i] -= dt / 500.0f;
-                            if (alphas[i] <= 0.0f) {
-                                alphas[i] = 0.0f;
-                                if (i == previousSelectedPotision) {
-                                    previousSelectedPotision = -1;
-                                }
-                            }
-                            invalidate = true;
-                        } else if (i == previousSelectedPotision) {
-                            previousSelectedPotision = -1;
-                        }
-                    }
-                }
-            }
-
-            for (int i = 0; i < 2; i++) {
-                if (pressedOverlayVisible[i]) {
-                    if (pressedOverlayAlpha[i] < 1f) {
-                        pressedOverlayAlpha[i] += dt / 180.0f;
-                        if (pressedOverlayAlpha[i] > 1f) {
-                            pressedOverlayAlpha[i] = 1f;
-                        }
-                        invalidate = true;
-                    }
-                } else {
-                    if (pressedOverlayAlpha[i] > 0f) {
-                        pressedOverlayAlpha[i] -= dt / 180.0f;
-                        if (pressedOverlayAlpha[i] < 0f) {
-                            pressedOverlayAlpha[i] = 0f;
-                        }
-                        invalidate = true;
-                    }
-                }
-            }
-
-            if (invalidate) {
-                postInvalidateOnAnimation();
-            }
-        }
-
-        @Override
-        public void onDown(boolean left) {
-            pressedOverlayVisible[left ? 0 : 1] = true;
-            postInvalidateOnAnimation();
-        }
-
-        @Override
-        public void onRelease() {
-            Arrays.fill(pressedOverlayVisible, false);
-            postInvalidateOnAnimation();
-        }
-
-        @Override
-        public void onPhotosLoaded() {
-            updateProfileData(false);
-        }
-
-        @Override
-        public void onVideoSet() {
-            invalidate();
-        }
-    }
-
-    private class NestedFrameLayout extends SizeNotifierFrameLayout implements NestedScrollingParent3 {
-
-        private NestedScrollingParentHelper nestedScrollingParentHelper;
-
-        public NestedFrameLayout(Context context) {
-            super(context);
-            nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
-        }
-
-        @Override
-        public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int[] consumed) {
+        AlertDialog progressDialog = new AlertDialog(activity, AlertDialog.ALERT_TYPE_SPINNER);
+        progressDialog.setCanCancel(false);
+        progressDialog.show();
+        Utilities.globalQueue.postRunnable(() -> {
             try {
-                if (target == listView && sharedMediaLayoutAttached) {
-                    RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
-                    int top = sharedMediaLayout.getTop();
-                    if (top == 0) {
-                        consumed[1] = dyUnconsumed;
-                        innerListView.scrollBy(0, dyUnconsumed);
+                File dir = AndroidUtilities.getLogsDir();
+                if (dir == null) {
+                    AndroidUtilities.runOnUIThread(progressDialog::dismiss);
+                    return;
+                }
+
+                File zipFile = new File(dir, "logs.zip");
+                if (zipFile.exists()) {
+                    zipFile.delete();
+                }
+
+                ArrayList<File> files = new ArrayList<>();
+
+                File[] logFiles = dir.listFiles();
+                for (File f : logFiles) {
+                    files.add(f);
+                }
+
+                File filesDir = ApplicationLoader.getFilesDirFixed();
+                filesDir = new File(filesDir, "malformed_database/");
+                if (filesDir.exists() && filesDir.isDirectory()) {
+                    File[] malformedDatabaseFiles = filesDir.listFiles();
+                    for (File file : malformedDatabaseFiles) {
+                        files.add(file);
                     }
                 }
-                if (dyConsumed != 0 && type == TYPE_TOUCH) {
-                    hideFloatingButton(!(sharedMediaLayout == null || sharedMediaLayout.getClosestTab() == SharedMediaLayout.TAB_STORIES || sharedMediaLayout.getClosestTab() == SharedMediaLayout.TAB_ARCHIVED_STORIES) || dyConsumed > 0);
+
+                boolean[] finished = new boolean[1];
+                long currentDate = System.currentTimeMillis();
+
+                BufferedInputStream origin = null;
+                ZipOutputStream out = null;
+                try {
+                    FileOutputStream dest = new FileOutputStream(zipFile);
+                    out = new ZipOutputStream(new BufferedOutputStream(dest));
+                    byte[] data = new byte[1024 * 64];
+
+                    for (int i = 0; i < files.size(); i++) {
+                        File file = files.get(i);
+                        if (!file.getName().contains("cache4") && (last || file.getName().contains("_mtproto")) && (currentDate - file.lastModified()) > 24 * 60 * 60 * 1000) {
+                            continue;
+                        }
+                        if (!file.exists()) {
+                            continue;
+                        }
+                        FileInputStream fi = new FileInputStream(file);
+                        origin = new BufferedInputStream(fi, data.length);
+
+                        ZipEntry entry = new ZipEntry(file.getName());
+                        out.putNextEntry(entry);
+                        int count;
+                        while ((count = origin.read(data, 0, data.length)) != -1) {
+                            out.write(data, 0, count);
+                        }
+                        origin.close();
+                        origin = null;
+                    }
+                    finished[0] = true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (origin != null) {
+                        origin.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
                 }
-            } catch (Throwable e) {
-                FileLog.e(e);
+
                 AndroidUtilities.runOnUIThread(() -> {
                     try {
-                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
-                        if (innerListView != null && innerListView.getAdapter() != null) {
-                            innerListView.getAdapter().notifyDataSetChanged();
-                        }
-                    } catch (Throwable e2) {
+                        progressDialog.dismiss();
+                    } catch (Exception ignore) {
 
                     }
-                });
-            }
-        }
+                    if (finished[0]) {
+                        Uri uri;
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            uri = FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", zipFile);
+                        } else {
+                            uri = Uri.fromFile(zipFile);
+                        }
 
-        @Override
-        public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
-
-        }
-
-        @Override
-        public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-            return super.onNestedPreFling(target, velocityX, velocityY);
-        }
-
-        @Override
-        public void onNestedPreScroll(View target, int dx, int dy, int[] consumed, int type) {
-            if (target == listView && sharedMediaRow != -1 && sharedMediaLayoutAttached) {
-                boolean searchVisible = actionBar.isSearchFieldVisible();
-                int t = sharedMediaLayout.getTop();
-                if (dy < 0) {
-                    boolean scrolledInner = false;
-                    if (t <= 0) {
-                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
-                        if (innerListView != null) {
-                            LinearLayoutManager linearLayoutManager = (LinearLayoutManager) innerListView.getLayoutManager();
-                            int pos = linearLayoutManager.findFirstVisibleItemPosition();
-                            if (pos != RecyclerView.NO_POSITION) {
-                                RecyclerView.ViewHolder holder = innerListView.findViewHolderForAdapterPosition(pos);
-                                int top = holder != null ? holder.itemView.getTop() : -1;
-                                int paddingTop = innerListView.getPaddingTop();
-                                if (top != paddingTop || pos != 0) {
-                                    consumed[1] = pos != 0 ? dy : Math.max(dy, (top - paddingTop));
-                                    innerListView.scrollBy(0, dy);
-                                    scrolledInner = true;
-                                }
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        }
+                        i.setType("message/rfc822");
+                        i.putExtra(Intent.EXTRA_EMAIL, "");
+                        i.putExtra(Intent.EXTRA_SUBJECT, "Logs from " + LocaleController.getInstance().getFormatterStats().format(System.currentTimeMillis()));
+                        i.putExtra(Intent.EXTRA_STREAM, uri);
+                        if (activity != null) {
+                            try {
+                                activity.startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
+                            } catch (Exception e) {
+                                FileLog.e(e);
                             }
                         }
-                    }
-                    if (searchVisible) {
-                        if (!scrolledInner && t < 0) {
-                            consumed[1] = dy - Math.max(t, dy);
-                        } else {
-                            consumed[1] = dy;
-                        }
-                    }
-                } else {
-                    if (searchVisible) {
-                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
-                        consumed[1] = dy;
-                        if (t > 0) {
-                            consumed[1] -= dy;
-                        }
-                        if (innerListView != null && consumed[1] > 0) {
-                            innerListView.scrollBy(0, consumed[1]);
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public boolean onStartNestedScroll(View child, View target, int axes, int type) {
-            return sharedMediaRow != -1 && axes == ViewCompat.SCROLL_AXIS_VERTICAL;
-        }
-
-        @Override
-        public void onNestedScrollAccepted(View child, View target, int axes, int type) {
-            nestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
-        }
-
-        @Override
-        public void onStopNestedScroll(View target, int type) {
-            nestedScrollingParentHelper.onStopNestedScroll(target);
-        }
-
-        @Override
-        public void onStopNestedScroll(View child) {
-
-        }
-
-        @Override
-        protected void drawList(Canvas blurCanvas, boolean top, ArrayList<IViewWithInvalidateCallback> views) {
-            super.drawList(blurCanvas, top, views);
-            blurCanvas.save();
-            blurCanvas.translate(0, listView.getY());
-            sharedMediaLayout.drawListForBlur(blurCanvas, views);
-            blurCanvas.restore();
-        }
-    }
-
-    private class PagerIndicatorView extends View {
-
-        private final RectF indicatorRect = new RectF();
-
-        private final TextPaint textPaint;
-        private final Paint backgroundPaint;
-
-        private final ValueAnimator animator;
-        private final float[] animatorValues = new float[]{0f, 1f};
-
-        private final PagerAdapter adapter = avatarsViewPager.getAdapter();
-
-        private boolean isIndicatorVisible;
-
-        public PagerIndicatorView(Context context) {
-            super(context);
-            setVisibility(GONE);
-
-            textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            textPaint.setColor(Color.WHITE);
-            textPaint.setTypeface(Typeface.SANS_SERIF);
-            textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setTextSize(AndroidUtilities.dpf2(15f));
-            backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            backgroundPaint.setColor(0x26000000);
-            animator = ValueAnimator.ofFloat(0f, 1f);
-            animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
-            animator.addUpdateListener(a -> {
-                final float value = AndroidUtilities.lerp(animatorValues, a.getAnimatedFraction());
-                if (searchItem != null && !isPulledDown) {
-                    searchItem.setScaleX(1f - value);
-                    searchItem.setScaleY(1f - value);
-                    searchItem.setAlpha(1f - value);
-                }
-                if (editItemVisible) {
-                    editItem.setScaleX(1f - value);
-                    editItem.setScaleY(1f - value);
-                    editItem.setAlpha(1f - value);
-                }
-                if (callItemVisible) {
-                    callItem.setScaleX(1f - value);
-                    callItem.setScaleY(1f - value);
-                    callItem.setAlpha(1f - value);
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setScaleX(1f - value);
-                    videoCallItem.setScaleY(1f - value);
-                    videoCallItem.setAlpha(1f - value);
-                }
-                setScaleX(value);
-                setScaleY(value);
-                setAlpha(value);
-            });
-            boolean expanded = expandPhoto;
-            animator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    if (isIndicatorVisible) {
-                        if (searchItem != null) {
-                            searchItem.setClickable(false);
-                        }
-                        if (editItemVisible) {
-                            editItem.setVisibility(GONE);
-                        }
-                        if (callItemVisible) {
-                            callItem.setVisibility(GONE);
-                        }
-                        if (videoCallItemVisible) {
-                            videoCallItem.setVisibility(GONE);
-                        }
                     } else {
-                        setVisibility(GONE);
+                        if (activity != null) {
+                            Toast.makeText(activity, LocaleController.getString(R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    updateStoriesViewBounds(false);
-                }
-
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    if (searchItem != null && !expanded) {
-                        searchItem.setClickable(true);
-                    }
-                    if (editItemVisible) {
-                        editItem.setVisibility(VISIBLE);
-                    }
-                    if (callItemVisible) {
-                        callItem.setVisibility(VISIBLE);
-                    }
-                    if (videoCallItemVisible) {
-                        videoCallItem.setVisibility(VISIBLE);
-                    }
-                    setVisibility(VISIBLE);
-                    updateStoriesViewBounds(false);
-                }
-            });
-            avatarsViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-                private int prevPage;
-
-                @Override
-                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                }
-
-                @Override
-                public void onPageSelected(int position) {
-                    int realPosition = avatarsViewPager.getRealPosition(position);
-                    invalidateIndicatorRect(prevPage != realPosition);
-                    prevPage = realPosition;
-                    updateAvatarItems();
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                }
-            });
-            adapter.registerDataSetObserver(new DataSetObserver() {
-                @Override
-                public void onChanged() {
-                    int count = avatarsViewPager.getRealCount();
-                    if (overlayCountVisible == 0 && count > 1 && count <= 20 && overlaysView.isOverlaysVisible()) {
-                        overlayCountVisible = 1;
-                    }
-                    invalidateIndicatorRect(false);
-                    refreshVisibility(1f);
-                    updateAvatarItems();
-                }
-            });
-        }
-
-        private void updateAvatarItemsInternal() {
-            if (otherItem == null || avatarsViewPager == null) {
-                return;
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (isPulledDown) {
-                int position = avatarsViewPager.getRealPosition();
-                if (position == 0) {
-                    otherItem.hideSubItem(set_as_main);
-                    otherItem.showSubItem(add_photo);
-                } else {
-                    otherItem.showSubItem(set_as_main);
-                    otherItem.hideSubItem(add_photo);
-                }
-            }
-        }
-
-        private void updateAvatarItems() {
-            if (imageUpdater == null) {
-                return;
-            }
-            if (otherItem.isSubMenuShowing()) {
-                AndroidUtilities.runOnUIThread(this::updateAvatarItemsInternal, 500);
-            } else {
-                updateAvatarItemsInternal();
-            }
-        }
-
-        public boolean isIndicatorVisible() {
-            return isIndicatorVisible;
-        }
-
-        public boolean isIndicatorFullyVisible() {
-            return isIndicatorVisible && !animator.isRunning();
-        }
-
-        public void setIndicatorVisible(boolean indicatorVisible, float durationFactor) {
-            if (indicatorVisible != isIndicatorVisible) {
-                isIndicatorVisible = indicatorVisible;
-                animator.cancel();
-                final float value = AndroidUtilities.lerp(animatorValues, animator.getAnimatedFraction());
-                if (durationFactor <= 0f) {
-                    animator.setDuration(0);
-                } else if (indicatorVisible) {
-                    animator.setDuration((long) ((1f - value) * 250f / durationFactor));
-                } else {
-                    animator.setDuration((long) (value * 250f / durationFactor));
-                }
-                animatorValues[0] = value;
-                animatorValues[1] = indicatorVisible ? 1f : 0f;
-                animator.start();
-            }
-        }
-
-        public void refreshVisibility(float durationFactor) {
-            setIndicatorVisible(isPulledDown && avatarsViewPager.getRealCount() > 20, durationFactor);
-        }
-
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            invalidateIndicatorRect(false);
-        }
-
-        private void invalidateIndicatorRect(boolean pageChanged) {
-            if (pageChanged) {
-                overlaysView.saveCurrentPageProgress();
-            }
-            overlaysView.invalidate();
-            final float textWidth = textPaint.measureText(getCurrentTitle());
-            indicatorRect.right = getMeasuredWidth() - AndroidUtilities.dp(54f) - (qrItem != null ? AndroidUtilities.dp(48) : 0);
-            indicatorRect.left = indicatorRect.right - (textWidth + AndroidUtilities.dpf2(16f));
-            indicatorRect.top = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(15f);
-            indicatorRect.bottom = indicatorRect.top + AndroidUtilities.dp(26);
-            setPivotX(indicatorRect.centerX());
-            setPivotY(indicatorRect.centerY());
-            invalidate();
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            final float radius = AndroidUtilities.dpf2(12);
-            canvas.drawRoundRect(indicatorRect, radius, radius, backgroundPaint);
-            canvas.drawText(getCurrentTitle(), indicatorRect.centerX(), indicatorRect.top + AndroidUtilities.dpf2(18.5f), textPaint);
-        }
-
-        private String getCurrentTitle() {
-            return adapter.getPageTitle(avatarsViewPager.getCurrentItem()).toString();
-        }
-
-        private ActionBarMenuItem getSecondaryMenuItem() {
-            if (callItemVisible) {
-                return callItem;
-            } else if (editItemVisible) {
-                return editItem;
-            } else if (searchItem != null) {
-                return searchItem;
-            } else {
-                return null;
-            }
-        }
+        });
     }
 
-    public ContestProfileActivity(Bundle args) {
-        this(args, null);
-    }
-
-    public ContestProfileActivity(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
-        super(args);
-        sharedMediaPreloader = preloader;
+    public long getTopicId() {
+        return topicId;
     }
 
     @Override
@@ -2295,7 +1423,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                 getNotificationCenter().postNotificationName(NotificationCenter.needDeleteDialog, dialogId, user, currentChat, param);
                             }, getResourceProvider());
                         } else {
-                            getMessagesController().unblockPeer(userId, ()-> getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of("/start", userId, null, null, null, false, null, null, null, true, 0, null, false)));
+                            getMessagesController().unblockPeer(userId, () -> getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of("/start", userId, null, null, null, false, null, null, null, true, 0, null, false)));
                             finishFragment();
                         }
                     }
@@ -2729,7 +1857,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (photo == null || avatarsViewPager.getRealPosition() == 0) {
                             TLRPC.Photo nextPhoto = avatarsViewPager.getPhoto(1);
                             if (nextPhoto != null) {
-                                getUserConfig().getCurrentUser().photo =new TLRPC.TL_userProfilePhoto();
+                                getUserConfig().getCurrentUser().photo = new TLRPC.TL_userProfilePhoto();
                                 TLRPC.PhotoSize smallSize = FileLoader.getClosestPhotoSizeWithSize(nextPhoto.sizes, 90);
                                 TLRPC.PhotoSize bigSize = FileLoader.getClosestPhotoSizeWithSize(nextPhoto.sizes, 1000);
                                 if (smallSize != null && bigSize != null) {
@@ -2796,6 +1924,12 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         fragmentView = new NestedFrameLayout(context) {
 
+            private final ArrayList<View> sortedChildren = new ArrayList<>();
+            private final Comparator<View> viewComparator = (view, view2) -> (int) (view.getY() - view2.getY());
+            private boolean ignoreLayout;
+            private Paint grayPaint = new Paint();
+            private boolean wasPortrait;
+
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
                 if (pinchToZoomHelper.isInOverlayMode()) {
@@ -2810,15 +1944,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 return super.dispatchTouchEvent(ev);
             }
 
-            private boolean ignoreLayout;
-            private Paint grayPaint = new Paint();
-
             @Override
             public boolean hasOverlappingRendering() {
                 return false;
             }
-
-            private boolean wasPortrait;
 
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -3076,10 +2205,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 super.requestLayout();
             }
 
-            private final ArrayList<View> sortedChildren = new ArrayList<>();
-            private final Comparator<View> viewComparator = (view, view2) -> (int) (view.getY() - view2.getY());
-
-
             @Override
             protected void dispatchDraw(Canvas canvas) {
                 whitePaint.setColor(getThemedColor(Theme.key_windowBackgroundWhite));
@@ -3299,7 +2424,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                             return null;
                                         }
                                         updateAvatarRoundRadius();
-                                        return StoryRecorder.SourceView.fromContestAvatarImage(avatarImage, ChatObject.isForum(currentChat));
+                                        return StoryRecorder.SourceView.fromAvatarImage(avatarImage, ChatObject.isForum(currentChat));
                                     }
                                 })
                                 .open(null);
@@ -3337,7 +2462,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             storyItem.pinned = pin;
                         }
                         getMessagesController().getStoriesController().updateStoriesInLists(dialogId, storyItems);
-                        final boolean[] undone = new boolean[] { false };
+                        final boolean[] undone = new boolean[]{false};
                         applyBulletin = () -> {
                             getMessagesController().getStoriesController().updateStoriesPinned(dialogId, storyItems, pin, null);
                         };
@@ -3390,14 +2515,17 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             protected int processColor(int color) {
                 return dontApplyPeerColor(color, false);
             }
+
             @Override
             protected void onSelectedTabChanged() {
                 updateSelectedMediaTabText();
             }
+
             @Override
             protected boolean includeSavedDialogs() {
                 return dialogId == getUserConfig().getClientUserId() && !saved;
             }
+
             @Override
             protected boolean isSelf() {
                 return myProfile;
@@ -3466,6 +2594,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             .start();
                 }
             }
+
             @Override
             protected void onTabProgress(float progress) {
                 super.onTabProgress(progress);
@@ -3514,7 +2643,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                     return null;
                                 }
                                 updateAvatarRoundRadius();
-                                return StoryRecorder.SourceView.fromContestAvatarImage(avatarImage, ChatObject.isForum(currentChat));
+                                return StoryRecorder.SourceView.fromAvatarImage(avatarImage, ChatObject.isForum(currentChat));
                             }
                         })
                         .open(StoryRecorder.SourceView.fromFloatingButton(floatingButtonContainer), true);
@@ -4412,7 +3541,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                     WebView webView = new WebView(ApplicationLoader.applicationContext);
                                     webView.clearHistory();
                                     webView.destroy();
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             } else if (which == 15) {
                                 CookieManager cookieManager = CookieManager.getInstance();
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -4554,7 +3684,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                 builder2.setTitle("Force performance class");
                                 int currentClass = SharedConfig.getDevicePerformanceClass();
                                 int trueClass = SharedConfig.measureDevicePerformanceClass();
-                                builder2.setItems(new CharSequence[] {
+                                builder2.setItems(new CharSequence[]{
                                         AndroidUtilities.replaceTags((currentClass == SharedConfig.PERFORMANCE_CLASS_HIGH ? "**HIGH**" : "HIGH") + (trueClass == SharedConfig.PERFORMANCE_CLASS_HIGH ? " (measured)" : "")),
                                         AndroidUtilities.replaceTags((currentClass == SharedConfig.PERFORMANCE_CLASS_AVERAGE ? "**AVERAGE**" : "AVERAGE") + (trueClass == SharedConfig.PERFORMANCE_CLASS_AVERAGE ? " (measured)" : "")),
                                         AndroidUtilities.replaceTags((currentClass == SharedConfig.PERFORMANCE_CLASS_LOW ? "**LOW**" : "LOW") + (trueClass == SharedConfig.PERFORMANCE_CLASS_LOW ? " (measured)" : ""))
@@ -4575,7 +3705,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                 MessagesController.getGlobalMainSettings().edit().putBoolean("dual_available", !enabled).apply();
                                 try {
                                     Toast.makeText(getParentActivity(), getString(!enabled ? R.string.DebugMenuDualOnToast : R.string.DebugMenuDualOffToast), Toast.LENGTH_SHORT).show();
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             } else if (which == 24) {
                                 SharedConfig.toggleSurfaceInStories();
                                 for (int i = 0; i < getParentLayout().getFragmentStack().size(); i++) {
@@ -4783,6 +3914,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             }
                         }
                     }
+
                     @Override
                     public void didChangeOwner(TLRPC.User user) {
                         undoView.showWithAction(-chatId, currentChat.megagroup ? UndoView.ACTION_OWNER_TRANSFERED_GROUP : UndoView.ACTION_OWNER_TRANSFERED_CHANNEL, user);
@@ -4833,7 +3965,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     invalidate();
                 }
                 if (hasFallbackPhoto && photoDescriptionProgress != 0 && customAvatarProgress != 1f) {
-                    float cy =  onlineTextView[1].getY() + onlineTextView[1].getMeasuredHeight() / 2f;
+                    float cy = onlineTextView[1].getY() + onlineTextView[1].getMeasuredHeight() / 2f;
                     float size = AndroidUtilities.dp(22);
                     float x = AndroidUtilities.dp(28) - customPhotoOffset + onlineTextView[1].getX() - size;
 
@@ -5027,7 +4159,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             avatarsViewPager.onDestroy();
         }
         overlaysView = new OverlaysView(context);
-        avatarsViewPager = new ContestProfileGalleryView(context, userId != 0 ? userId : -chatId, actionBar, listView, avatarImage, getClassGuid(), overlaysView) {
+        avatarsViewPager = new ProfileGalleryView(context, userId != 0 ? userId : -chatId, actionBar, listView, avatarImage, getClassGuid(), overlaysView) {
             @Override
             protected void setCustomAvatarProgress(float progress) {
                 customAvatarProgress = progress;
@@ -5086,6 +4218,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         info.setText(s);
                     }
                 }
+
                 @Override
                 protected void onDraw(Canvas canvas) {
                     final int wasRightDrawableX = getRightDrawableX();
@@ -5169,7 +4302,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
             onlineTextView[a].setFocusable(a == 0);
-            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118 - (a == 1 || a == 2 || a == 3? 4 : 0), (a == 1 || a == 2 || a == 3 ? -2 : 0), (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 8) - (a == 1 || a == 2 || a == 3 ? 4 : 0), 0));
+            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118 - (a == 1 || a == 2 || a == 3 ? 4 : 0), (a == 1 || a == 2 || a == 3 ? -2 : 0), (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 8) - (a == 1 || a == 2 || a == 3 ? 4 : 0), 0));
         }
         checkPhotoDescriptionAlpha();
         avatarContainer2.addView(animatedStatusView);
@@ -5188,7 +4321,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         };
         mediaCounterTextView.setAlpha(0.0f);
         avatarContainer2.addView(mediaCounterTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118.33f, -2, 8, 0));
-        storyView = new ContestProfileStoriesView(context, currentAccount, getDialogId(), isTopic, avatarContainer, avatarImage, resourcesProvider) {
+        storyView = new ProfileStoriesView(context, currentAccount, getDialogId(), isTopic, avatarContainer, avatarImage, resourcesProvider) {
             @Override
             protected void onTap(StoryViewer.PlaceProvider provider) {
                 long did = getDialogId();
@@ -5219,7 +4352,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             avatarImage.setHasStories(needInsetForStories());
         }
         avatarContainer2.addView(storyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        giftsView = new ContestProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
+        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
         avatarContainer2.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         updateProfileData(true);
 
@@ -5447,14 +4580,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
     }
 
-    FrameLayout floatingButtonContainer;
-    RLottieImageView floatingButton;
-    boolean floatingHidden;
-    float floatingButtonHideProgress;
-    boolean showBoostsAlert;
-
-    private final AccelerateDecelerateInterpolator floatingInterpolator = new AccelerateDecelerateInterpolator();
-
     private void checkCanSendStoryForPosting() {
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
         if (!ChatObject.isBoostSupported(chat)) {
@@ -5538,7 +4663,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                 return null;
                             }
                             updateAvatarRoundRadius();
-                            return StoryRecorder.SourceView.fromContestAvatarImage(avatarImage, ChatObject.isForum(currentChat));
+                            return StoryRecorder.SourceView.fromAvatarImage(avatarImage, ChatObject.isForum(currentChat));
                         }
                     });
             recorder.open(StoryRecorder.SourceView.fromFloatingButton(floatingButtonContainer), true);
@@ -5858,7 +4983,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         presentFragment(TopicsFragment.getTopicsOrChat(this, args));
     }
 
-    private SelectAnimatedEmojiDialog.SelectAnimatedEmojiDialogWindow selectAnimatedEmojiDialog;
     public void showStatusSelect() {
         if (selectAnimatedEmojiDialog != null) {
             return;
@@ -6339,7 +5463,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             BulletinFactory.of(shareAlert.bulletinContainer2, resourcesProvider)
                                     .createImageBulletin(
                                             R.drawable.filled_username,
-                                            AndroidUtilities.withLearnMore(AndroidUtilities.replaceTags(formatString(R.string.FragmentChannelUsername, usernameStr, date, cryptoAmount, TextUtils.isEmpty(amount) ? "" : "("+amount+")")), () -> {
+                                            AndroidUtilities.withLearnMore(AndroidUtilities.replaceTags(formatString(R.string.FragmentChannelUsername, usernameStr, date, cryptoAmount, TextUtils.isEmpty(amount) ? "" : "(" + amount + ")")), () -> {
                                                 Bulletin.hideVisible();
                                                 Browser.openUrl(getContext(), info.url);
                                             })
@@ -6503,7 +5627,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 fragmentInfoView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
                 fragmentInfoView.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem, resourcesProvider));
                 fragmentInfoView.setLinkTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText, resourcesProvider));
-                fragmentInfoView.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector, resourcesProvider), 0,6));
+                fragmentInfoView.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector, resourcesProvider), 0, 6));
 
                 SpannableStringBuilder spanned = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.getString(R.string.AnonymousNumberNotice)));
 
@@ -6590,7 +5714,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     return;
                 }
                 CharSequence[] items = withTranslate[0] ? new CharSequence[]{LocaleController.getString(R.string.Copy), LocaleController.getString(R.string.TranslateMessage)} : new CharSequence[]{LocaleController.getString(R.string.Copy)};
-                int[] icons = withTranslate[0] ? new int[] {R.drawable.msg_copy, R.drawable.msg_translate} : new int[] {R.drawable.msg_copy};
+                int[] icons = withTranslate[0] ? new int[]{R.drawable.msg_copy, R.drawable.msg_translate} : new int[]{R.drawable.msg_copy};
 
                 AtomicReference<ActionBarPopupWindow> popupWindowRef = new AtomicReference<>();
                 ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(getContext(), R.drawable.popup_fixed_alert, resourcesProvider) {
@@ -6825,95 +5949,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         getConnectionsManager().bindRequestToGuid(reqId, classGuid);
     }
 
-    private AnimatorSet headerAnimatorSet;
-    private AnimatorSet headerShadowAnimatorSet;
-    private float mediaHeaderAnimationProgress;
-    private boolean mediaHeaderVisible;
-    private Property<ActionBar, Float> ACTIONBAR_HEADER_PROGRESS = new AnimationProperties.FloatProperty<ActionBar>("avatarAnimationProgress") {
-        @Override
-        public void setValue(ActionBar object, float value) {
-            mediaHeaderAnimationProgress = value;
-            if (storyView != null) {
-                storyView.setActionBarActionMode(value);
-            }
-            if (giftsView != null) {
-                giftsView.setActionBarActionMode(value);
-            }
-            topView.invalidate();
-
-            int color1 = getThemedColor(Theme.key_profile_title);
-            int color2 = getThemedColor(Theme.key_player_actionBarTitle);
-            int c = AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f);
-            nameTextView[1].setTextColor(c);
-            if (lockIconDrawable != null) {
-                lockIconDrawable.setColorFilter(c, PorterDuff.Mode.MULTIPLY);
-            }
-            if (scamDrawable != null) {
-                color1 = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
-                scamDrawable.setColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f));
-            }
-
-            color1 = peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon);
-            color2 = getThemedColor(Theme.key_actionBarActionModeDefaultIcon);
-            actionBar.setItemsColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), false);
-
-            color1 = peerColor != null ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue);
-            color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
-            actionBar.setItemsBackgroundColor(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), false);
-
-            topView.invalidate();
-            otherItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            callItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            videoCallItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            editItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-
-            if (verifiedDrawable[0] != null) {
-                color1 = getThemedColor(Theme.key_profile_verifiedBackground);
-                color2 = getThemedColor(Theme.key_player_actionBarTitle);
-                verifiedDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-            if (verifiedDrawable[1] != null) {
-                color1 = peerColor != null ? Theme.adaptHSV(ColorUtils.blendARGB(peerColor.getColor2(), peerColor.hasColor6(Theme.isCurrentThemeDark()) ? peerColor.getColor5() : peerColor.getColor3(), .4f), +.1f, Theme.isCurrentThemeDark() ? -.1f : -.08f) : getThemedColor(Theme.key_profile_verifiedBackground);
-                color2 = getThemedColor(Theme.key_player_actionBarTitle);
-                verifiedDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-
-            if (verifiedCheckDrawable[0] != null) {
-                color1 = getThemedColor(Theme.key_profile_verifiedCheck);
-                color2 = getThemedColor(Theme.key_windowBackgroundWhite);
-                verifiedCheckDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-            if (verifiedCheckDrawable[1] != null) {
-                color1 = peerColor != null ? Color.WHITE : dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedCheck));
-                color2 = getThemedColor(Theme.key_windowBackgroundWhite);
-                verifiedCheckDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-
-
-            if (premiumStarDrawable[0] != null) {
-                color1 = getThemedColor(Theme.key_profile_verifiedBackground);
-                color2 = getThemedColor(Theme.key_player_actionBarTitle);
-                premiumStarDrawable[0].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-            if (premiumStarDrawable[1] != null) {
-                color1 = dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedBackground));
-                color2 = dontApplyPeerColor(getThemedColor(Theme.key_player_actionBarTitle));
-                premiumStarDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, value, 1.0f), PorterDuff.Mode.MULTIPLY);
-            }
-
-            updateEmojiStatusDrawableColor();
-
-            if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && (videoCallItemVisible || editItemVisible || callItemVisible)) {
-                needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(88f)));
-            }
-        }
-
-        @Override
-        public Float get(ActionBar object) {
-            return mediaHeaderAnimationProgress;
-        }
-    };
-
     private void setMediaHeaderVisible(boolean visible) {
         if (mediaHeaderVisible == visible) {
             return;
@@ -6982,7 +6017,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         animators.add(ObjectAnimator.ofFloat(sharedMediaLayout.photoVideoOptionsItem, View.TRANSLATION_Y, visible ? 0.0f : AndroidUtilities.dp(10)));
         animators.add(ObjectAnimator.ofFloat(actionBar, ACTIONBAR_HEADER_PROGRESS, visible ? 1.0f : 0.0f));
         animators.add(ObjectAnimator.ofFloat(onlineTextView[1], View.ALPHA, visible ? 0.0f : 1.0f));
-        if (myProfile) animators.add(ObjectAnimator.ofFloat(onlineTextView[3], View.ALPHA, visible ? 0.0f : 1.0f));
+        if (myProfile)
+            animators.add(ObjectAnimator.ofFloat(onlineTextView[3], View.ALPHA, visible ? 0.0f : 1.0f));
         animators.add(ObjectAnimator.ofFloat(mediaCounterTextView, View.ALPHA, visible ? 1.0f : 0.0f));
         if (visible) {
             animators.add(ObjectAnimator.ofFloat(this, HEADER_SHADOW, 0.0f));
@@ -8357,8 +7393,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         updateListAnimated(false);
     }
 
-    public boolean isFragmentOpened;
-
     @Override
     public void onTransitionAnimationStart(boolean isOpen, boolean backward) {
         super.onTransitionAnimationStart(isOpen, backward);
@@ -8415,8 +7449,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     public float getAvatarAnimationProgress() {
         return avatarAnimationProgress;
     }
-
-    private AboutLinkCell aboutLinkCell;
 
     @Keep
     public void setAvatarAnimationProgress(float progress) {
@@ -8502,8 +7534,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
     }
-
-    boolean profileTransitionInProgress;
 
     @Override
     public AnimatorSet onCustomTransitionAnimation(final boolean isOpen, final Runnable callback) {
@@ -8607,7 +7637,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     } else {
                         storyView.setAlpha(1f);
                         storyView.setFragmentTransitionProgress(0);
-                        animators.add(ObjectAnimator.ofFloat(storyView, ContestProfileStoriesView.FRAGMENT_TRANSITION_PROPERTY, 1.0f));
+                        animators.add(ObjectAnimator.ofFloat(storyView, ProfileStoriesView.FRAGMENT_TRANSITION_PROPERTY, 1.0f));
                     }
                 }
                 if (giftsView != null) {
@@ -8695,7 +7725,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     if (dialogId > 0) {
                         animators.add(ObjectAnimator.ofFloat(storyView, View.ALPHA, 0.0f));
                     } else {
-                        animators.add(ObjectAnimator.ofFloat(storyView, ContestProfileStoriesView.FRAGMENT_TRANSITION_PROPERTY, 0.0f));
+                        animators.add(ObjectAnimator.ofFloat(storyView, ProfileStoriesView.FRAGMENT_TRANSITION_PROPERTY, 0.0f));
                     }
                 }
                 if (giftsView != null) {
@@ -8818,7 +7848,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
     private int getAverageColor(ImageReceiver imageReceiver) {
         if (imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable) {
-            return ((VectorAvatarThumbDrawable)imageReceiver.getDrawable()).gradientTools.getAverageColor();
+            return ((VectorAvatarThumbDrawable) imageReceiver.getDrawable()).gradientTools.getAverageColor();
         }
         return AndroidUtilities.calcBitmapColor(avatarImage.getImageReceiver().getBitmap());
     }
@@ -9255,8 +8285,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
 
                 if (isBot) {
-                    if (botLocation == null && getContext() != null) botLocation = BotLocation.get(getContext(), currentAccount, userId);
-                    if (botBiometry == null && getContext() != null) botBiometry = BotBiometry.get(getContext(), currentAccount, userId);
+                    if (botLocation == null && getContext() != null)
+                        botLocation = BotLocation.get(getContext(), currentAccount, userId);
+                    if (botBiometry == null && getContext() != null)
+                        botBiometry = BotBiometry.get(getContext(), currentAccount, userId);
                     final boolean containsPermissionLocation = botLocation != null && botLocation.asked();
                     final boolean containsPermissionBiometry = botBiometry != null && botBiometry.asked();
                     final boolean containsPermissionEmojiStatus = userInfo != null && userInfo.bot_can_manage_emoji_status || SetupEmojiStatusSheet.getAccessRequested(getContext(), currentAccount, userId);
@@ -9552,6 +8584,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
         return premiumCrossfadeDrawable[a];
     }
+
     private Drawable getBotVerificationDrawable(long icon, boolean animated, int a) {
         if (botVerificationDrawable[a] == null) {
             botVerificationDrawable[a] = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(nameTextView[a], AndroidUtilities.dp(17), a == 0 ? AnimatedEmojiDrawable.CACHE_TYPE_EMOJI_STATUS : AnimatedEmojiDrawable.CACHE_TYPE_KEYBOARD);
@@ -9608,10 +8641,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         return emojiStatusDrawable[a];
     }
 
-    private float lastEmojiStatusProgress;
     private void updateEmojiStatusDrawableColor() {
         updateEmojiStatusDrawableColor(lastEmojiStatusProgress);
     }
+
     private void updateEmojiStatusDrawableColor(float progress) {
         for (int a = 0; a < 2; ++a) {
             final int fromColor;
@@ -9642,8 +8675,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 nameTextView[1].getY() + (nameTextView[1].getHeight() - (nameTextView[1].getHeight() - nameTextView[1].getRightDrawableY()) * nameTextView[1].getScaleY())
         );
     }
-
-    private MessagesController.PeerColor peerColor;
 
     private void updateProfileData(boolean reload) {
         if (avatarContainer == null || nameTextView == null || getParentActivity() == null) {
@@ -9858,7 +8889,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         rightIconIsStatus = false;
                         rightIconIsPremium = true;
                         nameTextView[a].setRightDrawable(getEmojiStatusDrawable(null, false, false, a));
-                        nameTextViewRightDrawableContentDescription = LocaleController.getString( R.string.AccDescrPremium);
+                        nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.AccDescrPremium);
                     } else {
                         nameTextView[a].setRightDrawable(null);
                         nameTextViewRightDrawableContentDescription = null;
@@ -10184,7 +9215,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
                     } else if (chat.verified) {
-                        nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a)) ;
+                        nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
                     } else if (getMessagesController().isDialogMuted(-chatId, topicId)) {
                         nameTextView[a].setRightDrawable2(getThemedDrawable(Theme.key_drawable_muteIconDrawable));
                     } else {
@@ -10377,7 +9408,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         return dontApplyPeerColor(color, actionBar, null);
     }
 
-    private final SparseIntArray adaptedColors = new SparseIntArray();
     private int dontApplyPeerColor(int color, boolean actionBar, Boolean online) {
         return color;
     }
@@ -11035,7 +10065,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         avatarProgressView.setProgress(0.0f);
     }
 
-    int avatarUploadingRequest;
     @Override
     public void didUploadPhoto(final TLRPC.InputFile photo, final TLRPC.InputFile video, double videoStartTimestamp, String videoPath, TLRPC.PhotoSize bigSize, final TLRPC.PhotoSize smallSize, boolean isVideo, TLRPC.VideoSize emojiMarkup) {
         AndroidUtilities.runOnUIThread(() -> {
@@ -11212,123 +10241,2010 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
     }
 
-    public static void sendLogs(Activity activity, boolean last) {
-        if (activity == null) {
+    private void openUrl(String url, Browser.Progress progress) {
+        if (url.startsWith("@")) {
+            getMessagesController().openByUserName(url.substring(1), ContestProfileActivity.this, 0, progress);
+        } else if (url.startsWith("#") || url.startsWith("$")) {
+            DialogsActivity fragment = new DialogsActivity(null);
+            fragment.setSearchString(url);
+            presentFragment(fragment);
+        } else if (url.startsWith("/")) {
+            if (parentLayout.getFragmentStack().size() > 1) {
+                BaseFragment previousFragment = parentLayout.getFragmentStack().get(parentLayout.getFragmentStack().size() - 2);
+                if (previousFragment instanceof ChatActivity) {
+                    finishFragment();
+                    ((ChatActivity) previousFragment).chatActivityEnterView.setCommand(null, url, false, false);
+                }
+            }
+        }
+    }
+
+    private void dimBehindView(View view, boolean enable) {
+        scrimView = view;
+        dimBehindView(enable);
+    }
+
+    private void dimBehindView(View view, float value) {
+        scrimView = view;
+        dimBehindView(value);
+    }
+
+    private void dimBehindView(boolean enable) {
+        dimBehindView(enable ? 0.2f : 0);
+    }
+
+    private void dimBehindView(float value) {
+        boolean enable = value > 0;
+        fragmentView.invalidate();
+        if (scrimAnimatorSet != null) {
+            scrimAnimatorSet.cancel();
+        }
+        scrimAnimatorSet = new AnimatorSet();
+        ArrayList<Animator> animators = new ArrayList<>();
+        ValueAnimator scrimPaintAlphaAnimator;
+        if (enable) {
+            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(0, value));
+        } else {
+            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(scrimPaint.getAlpha() / 255f, 0));
+        }
+        scrimPaintAlphaAnimator.addUpdateListener(a -> {
+            scrimPaint.setAlpha((int) (255 * (float) a.getAnimatedValue()));
+        });
+        scrimAnimatorSet.playTogether(animators);
+        scrimAnimatorSet.setDuration(enable ? 150 : 220);
+        if (!enable) {
+            scrimAnimatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    scrimView = null;
+                    fragmentView.invalidate();
+                }
+            });
+        }
+        scrimAnimatorSet.start();
+    }
+
+    @Override
+    public ArrayList<ThemeDescription> getThemeDescriptions() {
+        if (resourcesProvider != null) {
+            return null;
+        }
+        ThemeDescription.ThemeDescriptionDelegate themeDelegate = () -> {
+            if (listView != null) {
+                int count = listView.getChildCount();
+                for (int a = 0; a < count; a++) {
+                    View child = listView.getChildAt(a);
+                    if (child instanceof UserCell) {
+                        ((UserCell) child).update(0);
+                    }
+                }
+            }
+            if (!isPulledDown) {
+                if (onlineTextView[1] != null) {
+                    final Object onlineTextViewTag = onlineTextView[1].getTag();
+                    for (int i = 0; i < 2; i++) {
+                        if (onlineTextViewTag instanceof Integer) {
+                            onlineTextView[i + 1].setTextColor(applyPeerColor(getThemedColor((Integer) onlineTextViewTag), true, isOnline[0]));
+                        } else {
+                            onlineTextView[i + 1].setTextColor(applyPeerColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue), true, true));
+                        }
+                    }
+                }
+                if (lockIconDrawable != null) {
+                    lockIconDrawable.setColorFilter(getThemedColor(Theme.key_chat_lockIcon), PorterDuff.Mode.MULTIPLY);
+                }
+                if (scamDrawable != null) {
+                    scamDrawable.setColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue));
+                }
+                if (nameTextView[1] != null) {
+                    nameTextView[1].setTextColor(getThemedColor(Theme.key_profile_title));
+                }
+                if (actionBar != null) {
+                    actionBar.setItemsColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), false);
+                    actionBar.setItemsBackgroundColor(peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
+                }
+            }
+            updateEmojiStatusDrawableColor();
+        };
+        ArrayList<ThemeDescription> arrayList = new ArrayList<>();
+        if (sharedMediaLayout != null) {
+            arrayList.addAll(sharedMediaLayout.getThemeDescriptions());
+        }
+
+        arrayList.add(new ThemeDescription(listView, 0, null, null, null, null, Theme.key_windowBackgroundWhite));
+        arrayList.add(new ThemeDescription(searchListView, 0, null, null, null, null, Theme.key_windowBackgroundWhite));
+        arrayList.add(new ThemeDescription(listView, 0, null, null, null, null, Theme.key_windowBackgroundGray));
+        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUBACKGROUND, null, null, null, null, Theme.key_actionBarDefaultSubmenuBackground));
+        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUITEM, null, null, null, null, Theme.key_actionBarDefaultSubmenuItem));
+        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUITEM | ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_actionBarDefaultSubmenuItemIcon));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_actionBarDefaultIcon));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_actionBarSelectorBlue));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_chat_lockIcon));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_subtitleInProfileBlue));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundActionBarBlue));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_profile_title));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_profile_status));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_subtitleInProfileBlue));
+
+        if (mediaCounterTextView != null) {
+            arrayList.add(new ThemeDescription(mediaCounterTextView.getTextView(), ThemeDescription.FLAG_TEXTCOLOR, null, null, null, themeDelegate, Theme.key_player_actionBarSubtitle));
+            arrayList.add(new ThemeDescription(mediaCounterTextView.getNextTextView(), ThemeDescription.FLAG_TEXTCOLOR, null, null, null, themeDelegate, Theme.key_player_actionBarSubtitle));
+        }
+
+        arrayList.add(new ThemeDescription(topView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_avatar_backgroundActionBarBlue));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider));
+
+        arrayList.add(new ThemeDescription(avatarImage, 0, null, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
+        arrayList.add(new ThemeDescription(avatarImage, 0, null, null, new Drawable[]{avatarDrawable}, null, Theme.key_avatar_backgroundInProfileBlue));
+
+        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_profile_actionIcon));
+        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_profile_actionBackground));
+        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_profile_actionPressedBackground));
+
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGreenText2));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_text_RedRegular));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText2));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueButton));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueIcon));
+
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextDetailCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextDetailCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
+
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_LINKCOLOR, new Class[]{SettingsSuggestionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteLinkText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_buttonText));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_addButton));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_addButtonPressed));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_buttonText));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_addButton));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_addButtonPressed));
+
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrackChecked));
+
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{UserCell.class}, new String[]{"adminTextView"}, null, null, null, Theme.key_profile_creatorIcon));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusColor"}, null, null, themeDelegate, Theme.key_windowBackgroundWhiteGrayText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusOnlineColor"}, null, null, themeDelegate, Theme.key_windowBackgroundWhiteBlueText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundRed));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundOrange));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundViolet));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundGreen));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundCyan));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundBlue));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundPink));
+
+        arrayList.add(new ThemeDescription(undoView, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_undo_background));
+        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoImageView"}, null, null, null, Theme.key_undo_cancelColor));
+        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoTextView"}, null, null, null, Theme.key_undo_cancelColor));
+        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"infoTextView"}, null, null, null, Theme.key_undo_infoColor));
+        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"textPaint"}, null, null, null, Theme.key_undo_infoColor));
+        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"progressPaint"}, null, null, null, Theme.key_undo_infoColor));
+        arrayList.add(new ThemeDescription(undoView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{UndoView.class}, new String[]{"leftImageView"}, null, null, null, Theme.key_undo_infoColor));
+
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{AboutLinkCell.class}, Theme.profile_aboutTextPaint, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_LINKCOLOR, new Class[]{AboutLinkCell.class}, Theme.profile_aboutTextPaint, null, null, Theme.key_windowBackgroundWhiteLinkText));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{AboutLinkCell.class}, Theme.linkSelectionPaint, null, null, Theme.key_windowBackgroundWhiteLinkSelection));
+
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{ShadowSectionCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
+
+        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
+        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
+
+        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
+
+        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{GraySectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_graySectionText));
+        arrayList.add(new ThemeDescription(searchListView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{GraySectionCell.class}, null, null, null, Theme.key_graySection));
+
+        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
+
+        if (mediaHeaderVisible) {
+            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedCheckDrawable, null, Theme.key_player_actionBarTitle));
+            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedDrawable, null, Theme.key_windowBackgroundWhite));
+        } else {
+            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedCheckDrawable, null, Theme.key_profile_verifiedCheck));
+            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedDrawable, null, Theme.key_profile_verifiedBackground));
+        }
+
+        return arrayList;
+    }
+
+    public void updateListAnimated(boolean updateOnlineCount) {
+        updateListAnimated(updateOnlineCount, false);
+    }
+
+    private void updateListAnimated(boolean updateOnlineCount, boolean triedInLayout) {
+        if (listAdapter == null) {
+            if (updateOnlineCount) {
+                updateOnlineCount(false);
+            }
+            updateRowsIds();
             return;
         }
-        AlertDialog progressDialog = new AlertDialog(activity, AlertDialog.ALERT_TYPE_SPINNER);
-        progressDialog.setCanCancel(false);
-        progressDialog.show();
-        Utilities.globalQueue.postRunnable(() -> {
-            try {
-                File dir = AndroidUtilities.getLogsDir();
-                if (dir == null) {
-                    AndroidUtilities.runOnUIThread(progressDialog::dismiss);
-                    return;
+
+        if (!triedInLayout && listView.isInLayout()) {
+            if (!listView.isAttachedToWindow()) return;
+            listView.post(() -> updateListAnimated(updateOnlineCount, true));
+            return;
+        }
+
+        DiffCallback diffCallback = new DiffCallback();
+        diffCallback.oldRowCount = rowCount;
+        diffCallback.fillPositions(diffCallback.oldPositionToItem);
+        diffCallback.oldChatParticipant.clear();
+        diffCallback.oldChatParticipantSorted.clear();
+        diffCallback.oldChatParticipant.addAll(visibleChatParticipants);
+        diffCallback.oldChatParticipantSorted.addAll(visibleSortedUsers);
+        diffCallback.oldMembersStartRow = membersStartRow;
+        diffCallback.oldMembersEndRow = membersEndRow;
+        if (updateOnlineCount) {
+            updateOnlineCount(false);
+        }
+        saveScrollPosition();
+        updateRowsIds();
+        diffCallback.fillPositions(diffCallback.newPositionToItem);
+        try {
+            DiffUtil.calculateDiff(diffCallback).dispatchUpdatesTo(listAdapter);
+        } catch (Exception e) {
+            FileLog.e(e);
+            listAdapter.notifyDataSetChanged();
+        }
+        if (savedScrollPosition >= 0) {
+            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
+        }
+        AndroidUtilities.updateVisibleRows(listView);
+    }
+
+    private void saveScrollPosition() {
+        if (listView != null && layoutManager != null && listView.getChildCount() > 0 && !savedScrollToSharedMedia) {
+            View view = null;
+            int position = -1;
+            int top = Integer.MAX_VALUE;
+            for (int i = 0; i < listView.getChildCount(); i++) {
+                int childPosition = listView.getChildAdapterPosition(listView.getChildAt(i));
+                View child = listView.getChildAt(i);
+                if (childPosition != RecyclerListView.NO_POSITION && child.getTop() < top) {
+                    view = child;
+                    position = childPosition;
+                    top = child.getTop();
+                }
+            }
+            if (view != null) {
+                savedScrollPosition = position;
+                savedScrollOffset = view.getTop();
+                if (savedScrollPosition == 0 && !allowPullingDown && savedScrollOffset > AndroidUtilities.dp(88)) {
+                    savedScrollOffset = AndroidUtilities.dp(88);
                 }
 
-                File zipFile = new File(dir, "logs.zip");
-                if (zipFile.exists()) {
-                    zipFile.delete();
+                layoutManager.scrollToPositionWithOffset(position, view.getTop() - listView.getPaddingTop());
+            }
+        }
+    }
+
+    public void scrollToSharedMedia() {
+        scrollToSharedMedia(false);
+    }
+
+    public void scrollToSharedMedia(boolean animated) {
+        if (sharedMediaRow >= 0) {
+            if (animated) {
+                LinearSmoothScrollerCustom linearSmoothScroller = new LinearSmoothScrollerCustom(getContext(), LinearSmoothScrollerCustom.POSITION_TOP, .6f);
+                linearSmoothScroller.setTargetPosition(sharedMediaRow);
+                linearSmoothScroller.setOffset(-listView.getPaddingTop());
+                layoutManager.startSmoothScroll(linearSmoothScroller);
+            } else {
+                layoutManager.scrollToPositionWithOffset(sharedMediaRow, -listView.getPaddingTop());
+            }
+        }
+    }
+
+    private void onTextDetailCellImageClicked(View view) {
+        View parent = (View) view.getParent();
+        if (parent.getTag() != null && ((int) parent.getTag()) == usernameRow) {
+            Bundle args = new Bundle();
+            args.putLong("chat_id", chatId);
+            args.putLong("user_id", userId);
+            presentFragment(new QrActivity(args));
+        } else if (parent.getTag() != null && ((int) parent.getTag()) == birthdayRow) {
+            if (userId == getUserConfig().getClientUserId()) {
+                presentFragment(new PremiumPreviewFragment("my_profile_gift"));
+                return;
+            }
+            if (UserObject.areGiftsDisabled(userInfo)) {
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.error, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserDisallowedGifts, DialogObject.getShortName(userId)))).show();
+                return;
+            }
+            showDialog(new GiftSheet(getContext(), currentAccount, userId, null, null));
+        }
+    }
+
+    @Override
+    public void onBecomeFullyVisible() {
+        super.onBecomeFullyVisible();
+        writeButtonSetBackground();
+        fullyVisible = true;
+        createBirthdayEffect();
+    }
+
+    private void writeButtonSetBackground() {
+        if (writeButton == null) return;
+        try {
+            Drawable shadowDrawable = fragmentView.getContext().getResources().getDrawable(R.drawable.floating_shadow_profile).mutate();
+            shadowDrawable.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.MULTIPLY));
+            int color1 = getThemedColor(Theme.key_profile_actionBackground);
+            int color2 = getThemedColor(Theme.key_profile_actionPressedBackground);
+            int iconColor = getThemedColor(Theme.key_profile_actionIcon);
+            if (peerColor != null && Theme.hasHue(color1)) {
+                color1 = Theme.adaptHSV(peerColor.getBgColor1(false), +.05f, -.04f);
+                color2 = applyPeerColor2(color2);
+                iconColor = Color.WHITE;
+            }
+            CombinedDrawable combinedDrawable = new CombinedDrawable(shadowDrawable,
+                    Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), color1, color2),
+                    0, 0);
+            combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
+            writeButton.setBackground(combinedDrawable);
+            writeButton.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.MULTIPLY));
+        } catch (Exception e) {
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void openAddToContact(TLRPC.User user, Bundle args) {
+        ContactAddActivity contactAddActivity = new ContactAddActivity(args, resourcesProvider);
+        contactAddActivity.setDelegate(() -> {
+            int currentAddToContactsRow = addToContactsRow;
+            if (currentAddToContactsRow >= 0) {
+                if (sharedMediaRow == -1) {
+                    updateRowsIds();
+                    listAdapter.notifyDataSetChanged();
+                } else {
+                    updateListAnimated(false);
                 }
+            }
 
-                ArrayList<File> files = new ArrayList<>();
-
-                File[] logFiles = dir.listFiles();
-                for (File f : logFiles) {
-                    files.add(f);
+            if (sharedMediaRow == -1) {
+                if (isInLandscapeMode || AndroidUtilities.isTablet()) {
+                    listView.setPadding(0, AndroidUtilities.dp(88), 0, 0);
+                    expandAnimator.cancel();
+                    expandAnimatorValues[0] = 1f;
+                    expandAnimatorValues[1] = 0f;
+                    setAvatarExpandProgress(1f);
+                    extraHeight = AndroidUtilities.dp(88);
+                } else {
+                    final int actionBarHeight = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
+                    int ws = View.MeasureSpec.makeMeasureSpec(listView.getMeasuredWidth(), View.MeasureSpec.EXACTLY);
+                    int hs = View.MeasureSpec.makeMeasureSpec(listView.getMeasuredHeight(), View.MeasureSpec.UNSPECIFIED);
+                    int contentHeight = 0;
+                    for (int i = 0; i < listAdapter.getItemCount(); i++) {
+                        RecyclerView.ViewHolder holder = listAdapter.createViewHolder(null, listAdapter.getItemViewType(i));
+                        listAdapter.onBindViewHolder(holder, i);
+                        holder.itemView.measure(ws, hs);
+                        contentHeight += holder.itemView.getMeasuredHeight();
+                    }
+                    int paddingBottom = Math.max(0, fragmentView.getMeasuredHeight() - (contentHeight + AndroidUtilities.dp(88) + actionBarHeight));
+                    listView.setPadding(0, listView.getPaddingTop(), 0, paddingBottom);
                 }
+            }
+            undoView.showWithAction(dialogId, UndoView.ACTION_CONTACT_ADDED, user);
+        });
+        presentFragment(contactAddActivity);
+    }
 
-                File filesDir = ApplicationLoader.getFilesDirFixed();
-                filesDir = new File(filesDir, "malformed_database/");
-                if (filesDir.exists() && filesDir.isDirectory()) {
-                    File[] malformedDatabaseFiles = filesDir.listFiles();
-                    for (File file : malformedDatabaseFiles) {
-                        files.add(file);
+    private boolean isQrNeedVisible() {
+        return true;
+    }
+
+    @Override
+    public boolean isLightStatusBar() {
+        int color;
+        if (isPulledDown) {
+            return false;
+        }
+        if (actionBar.isActionModeShowed()) {
+            color = getThemedColor(Theme.key_actionBarActionModeDefault);
+        } else if (mediaHeaderVisible) {
+            color = getThemedColor(Theme.key_windowBackgroundWhite);
+        } else if (peerColor != null) {
+            color = peerColor.getBgColor2(Theme.isCurrentThemeDark());
+        } else {
+            color = getThemedColor(Theme.key_actionBarDefault);
+        }
+        return ColorUtils.calculateLuminance(color) > 0.7f;
+    }
+
+    public String getLink(String username, int topicId) {
+        String link = getMessagesController().linkPrefix + "/" + username;
+        if (topicId != 0) {
+            link += "/" + topicId;
+        }
+        return link;
+    }
+
+    private void checkPhotoDescriptionAlpha() {
+        float p = photoDescriptionProgress;
+        if (playProfileAnimation == 1 && (!fragmentOpened || openAnimationInProgress)) {
+            photoDescriptionProgress = 0;
+        } else if (playProfileAnimation == 2 && (!fragmentOpened || openAnimationInProgress)) {
+            photoDescriptionProgress = onlineTextView[1] == null ? 0 : onlineTextView[1].getAlpha();
+        } else {
+            if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
+                photoDescriptionProgress = currentExpandAnimatorValue * (1f - customAvatarProgress);
+            } else {
+                photoDescriptionProgress = currentExpandAnimatorValue * customAvatarProgress;
+            }
+        }
+//        if (p == photoDescriptionProgress) {
+//            return;
+//        }
+        if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
+            if (hasFallbackPhoto) {
+                customPhotoOffset = AndroidUtilities.dp(28) * photoDescriptionProgress;
+                if (onlineTextView[2] != null) {
+                    onlineTextView[2].setAlpha(currentExpandAnimatorValue);
+                    onlineTextView[3].setAlpha(1f - currentExpandAnimatorValue);
+                    //  onlineTextView[1].setAlpha(1f - expandProgress);
+                    onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                    avatarContainer2.invalidate();
+                    if (showStatusButton != null) {
+                        showStatusButton.setAlpha2(1f - currentExpandAnimatorValue);
                     }
                 }
+            } else {
+                if (onlineTextView[2] != null) {
+                    onlineTextView[2].setAlpha(0);
+                    onlineTextView[3].setAlpha(0);
+                }
+                if (showStatusButton != null) {
+                    showStatusButton.setAlpha2(1f);
+                }
+            }
 
-                boolean[] finished = new boolean[1];
-                long currentDate = System.currentTimeMillis();
+        } else {
+            if (hasCustomPhoto) {
+                if (onlineTextView[2] != null) {
+                    onlineTextView[2].setAlpha(photoDescriptionProgress);
+                }
+                if (showStatusButton != null) {
+                    showStatusButton.setAlpha2(1f - photoDescriptionProgress);
+                }
+            } else {
+                if (onlineTextView[2] != null) {
+                    onlineTextView[2].setAlpha(0);
+                }
+                if (showStatusButton != null) {
+                    showStatusButton.setAlpha2(1f);
+                }
+            }
+        }
+    }
 
-                BufferedInputStream origin = null;
-                ZipOutputStream out = null;
-                try {
-                    FileOutputStream dest = new FileOutputStream(zipFile);
-                    out = new ZipOutputStream(new BufferedOutputStream(dest));
-                    byte[] data = new byte[1024 * 64];
+    private void updateStoriesViewBounds(boolean animated) {
+        if (storyView == null && giftsView == null || actionBar == null) {
+            return;
+        }
+        float atop = actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0;
+        float aleft = 0;
+        float aright = actionBar.getWidth();
 
-                    for (int i = 0; i < files.size(); i++) {
-                        File file = files.get(i);
-                        if (!file.getName().contains("cache4") && (last || file.getName().contains("_mtproto")) && (currentDate - file.lastModified()) > 24 * 60 * 60 * 1000) {
-                            continue;
-                        }
-                        if (!file.exists()) {
-                            continue;
-                        }
-                        FileInputStream fi = new FileInputStream(file);
-                        origin = new BufferedInputStream(fi, data.length);
+        if (actionBar.getBackButton() != null) {
+            aleft = Math.max(aleft, actionBar.getBackButton().getRight());
+        }
+        if (actionBar.menu != null) {
+            for (int i = 0; i < actionBar.menu.getChildCount(); ++i) {
+                View child = actionBar.menu.getChildAt(i);
+                if (child.getAlpha() <= 0 || child.getVisibility() != View.VISIBLE) {
+                    continue;
+                }
+                int left = actionBar.menu.getLeft() + (int) child.getX();
+                if (left < aright) {
+                    aright = AndroidUtilities.lerp(aright, left, child.getAlpha());
+                }
+            }
+        }
+        if (storyView != null) {
+            storyView.setBounds(aleft, aright, atop + (actionBar.getHeight() - atop) / 2f, !animated);
+        }
+        if (giftsView != null) {
+            giftsView.setBounds(aleft, aright, atop + (actionBar.getHeight() - atop) / 2f, !animated);
+        }
+    }
 
-                        ZipEntry entry = new ZipEntry(file.getName());
-                        out.putNextEntry(entry);
-                        int count;
-                        while ((count = origin.read(data, 0, data.length)) != -1) {
-                            out.write(data, 0, count);
-                        }
-                        origin.close();
-                        origin = null;
-                    }
-                    finished[0] = true;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    if (origin != null) {
-                        origin.close();
-                    }
-                    if (out != null) {
-                        out.close();
+    private void listCodecs(String type, StringBuilder info) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
+            return;
+        }
+        try {
+            final int allCodecsCount = MediaCodecList.getCodecCount();
+            final ArrayList<Integer> decoderIndexes = new ArrayList<>();
+            final ArrayList<Integer> encoderIndexes = new ArrayList<>();
+            boolean first = true;
+            for (int i = 0; i < allCodecsCount; ++i) {
+                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(i);
+                if (codec == null) {
+                    continue;
+                }
+                String[] types = codec.getSupportedTypes();
+                if (types == null) {
+                    continue;
+                }
+                boolean found = false;
+                for (int j = 0; j < types.length; ++j) {
+                    if (types[j].equals(type)) {
+                        found = true;
+                        break;
                     }
                 }
-
-                AndroidUtilities.runOnUIThread(() -> {
-                    try {
-                        progressDialog.dismiss();
-                    } catch (Exception ignore) {
-
+                if (found) {
+                    (codec.isEncoder() ? encoderIndexes : decoderIndexes).add(i);
+                }
+            }
+            if (decoderIndexes.isEmpty() && encoderIndexes.isEmpty()) {
+                return;
+            }
+            info.append("\n").append(decoderIndexes.size()).append("+").append(encoderIndexes.size()).append(" ").append(type.substring(6)).append(" codecs:\n");
+            for (int a = 0; a < decoderIndexes.size(); ++a) {
+                if (a > 0) {
+                    info.append("\n");
+                }
+                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(decoderIndexes.get(a));
+                info.append("{d} ").append(codec.getName()).append(" (");
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    if (codec.isHardwareAccelerated()) {
+                        info.append("gpu"); // as Gpu
                     }
-                    if (finished[0]) {
-                        Uri uri;
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            uri = FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", zipFile);
-                        } else {
-                            uri = Uri.fromFile(zipFile);
-                        }
-
-                        Intent i = new Intent(Intent.ACTION_SEND);
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        }
-                        i.setType("message/rfc822");
-                        i.putExtra(Intent.EXTRA_EMAIL, "");
-                        i.putExtra(Intent.EXTRA_SUBJECT, "Logs from " + LocaleController.getInstance().getFormatterStats().format(System.currentTimeMillis()));
-                        i.putExtra(Intent.EXTRA_STREAM, uri);
-                        if (activity != null) {
-                            try {
-                                activity.startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
-                            } catch (Exception e) {
-                                FileLog.e(e);
-                            }
-                        }
-                    } else {
-                        if (activity != null) {
-                            Toast.makeText(activity, LocaleController.getString(R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
-                        }
+                    if (codec.isSoftwareOnly()) {
+                        info.append("cpu"); // as Cpu
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
+                    if (codec.isVendor()) {
+                        info.append(", v"); // as Vendor
+                    }
+                }
+                MediaCodecInfo.CodecCapabilities capabilities = codec.getCapabilitiesForType(type);
+                info.append("; mi=").append(capabilities.getMaxSupportedInstances()).append(")");
+            }
+            for (int a = 0; a < encoderIndexes.size(); ++a) {
+                if (a > 0 || !decoderIndexes.isEmpty()) {
+                    info.append("\n");
+                }
+                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(encoderIndexes.get(a));
+                info.append("{e} ").append(codec.getName()).append(" (");
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    if (codec.isHardwareAccelerated()) {
+                        info.append("gpu"); // as Gpu
+                    }
+                    if (codec.isSoftwareOnly()) {
+                        info.append("cpu"); // as Cpu
+                    }
+                    if (codec.isVendor()) {
+                        info.append(", v"); // as Vendor
+                    }
+                }
+                MediaCodecInfo.CodecCapabilities capabilities = codec.getCapabilitiesForType(type);
+                info.append("; mi=").append(capabilities.getMaxSupportedInstances()).append(")");
+            }
+            info.append("\n");
+        } catch (Exception ignore) {
+        }
+    }
+
+    @Override
+    public void onTransitionAnimationProgress(boolean isOpen, float progress) {
+        super.onTransitionAnimationProgress(isOpen, progress);
+        if (blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
+            if (isOpen) {
+                blurredView.setAlpha(1.0f - progress);
+            } else {
+                blurredView.setAlpha(progress);
+            }
+        }
+    }
+
+    public void prepareBlurBitmap() {
+        if (blurredView == null) {
+            return;
+        }
+        int w = (int) (fragmentView.getMeasuredWidth() / 6.0f);
+        int h = (int) (fragmentView.getMeasuredHeight() / 6.0f);
+        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.scale(1.0f / 6.0f, 1.0f / 6.0f);
+        fragmentView.draw(canvas);
+        Utilities.stackBlurBitmap(bitmap, Math.max(7, Math.max(w, h) / 180));
+        blurredView.setBackground(new BitmapDrawable(bitmap));
+        blurredView.setAlpha(0.0f);
+        blurredView.setVisibility(View.VISIBLE);
+    }
+
+    public ShowDrawable getShowStatusButton() {
+        if (showStatusButton == null) {
+            showStatusButton = new ShowDrawable(LocaleController.getString(R.string.StatusHiddenShow));
+            showStatusButton.setAlpha((int) (0xFF * Math.min(1f, extraHeight / AndroidUtilities.dp(88f))));
+            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
+        }
+        return showStatusButton;
+    }
+
+    public void setLoadingSpan(CharacterStyle span) {
+        if (loadingSpan == span) return;
+        loadingSpan = span;
+        AndroidUtilities.forEachViews(listView, view -> {
+            if (view instanceof TextDetailCell) {
+                ((TextDetailCell) view).textView.setLoading(loadingSpan);
+                ((TextDetailCell) view).valueTextView.setLoading(loadingSpan);
             }
         });
+    }
+
+    private void createBirthdayEffect() {
+        if (fragmentView == null || !fullyVisible || birthdayFetcher == null || getContext() == null)
+            return;
+
+        if (birthdayEffect != null) {
+            birthdayEffect.updateFetcher(birthdayFetcher);
+            birthdayEffect.invalidate();
+            return;
+        }
+
+        birthdayEffect = new ProfileBirthdayEffect(this, birthdayFetcher);
+        ((FrameLayout) fragmentView).addView(birthdayEffect, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL_HORIZONTAL | Gravity.TOP));
+    }
+
+    private void openLocation(boolean inMapsApp) {
+        if (userInfo == null || userInfo.business_location == null) return;
+        if (userInfo.business_location.geo_point != null && !inMapsApp) {
+            LocationActivity fragment = new LocationActivity(3) {
+                @Override
+                protected boolean disablePermissionCheck() {
+                    return true;
+                }
+            };
+            fragment.setResourceProvider(resourcesProvider);
+            TLRPC.TL_message message = new TLRPC.TL_message();
+            message.local_id = -1;
+            message.peer_id = getMessagesController().getPeer(getDialogId());
+            TLRPC.TL_messageMediaGeo media = new TLRPC.TL_messageMediaGeo();
+            media.geo = userInfo.business_location.geo_point;
+            media.address = userInfo.business_location.address;
+            message.media = media;
+            fragment.setSharingAllowed(false);
+            fragment.setMessageObject(new MessageObject(UserConfig.selectedAccount, message, false, false));
+            presentFragment(fragment);
+        } else {
+            String domain;
+            if (BuildVars.isHuaweiStoreApp()) {
+                domain = "mapapp://navigation";
+            } else {
+                domain = "http://maps.google.com/maps";
+            }
+//                    if (myLocation != null) {
+//                        try {
+//                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, domain + "?saddr=%f,%f&daddr=%f,%f", myLocation.getLatitude(), myLocation.getLongitude(), daddrLat, daddrLong)));
+//                            getParentActivity().startActivity(intent);
+//                        } catch (Exception e) {
+//                            FileLog.e(e);
+//                        }
+//                    } else {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, domain + "?q=" + userInfo.business_location.address)));
+                getParentActivity().startActivity(intent);
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+//                    }
+        }
+
+    }
+
+    private boolean editRow(View view, int position) {
+        if (!myProfile) return false;
+
+        if (view instanceof ProfileChannelCell) {
+            view = ((ProfileChannelCell) view).dialogCell;
+        }
+
+        TLRPC.User user = getUserConfig().getCurrentUser();
+        if (user == null) return false;
+        TLRPC.UserFull userFull = userInfo == null ? getMessagesController().getUserFull(user.id) : userInfo;
+        if (userFull == null) return false;
+
+        String copyButton = getString(R.string.Copy);
+        String textToCopy = null;
+        if (position == channelInfoRow || position == userInfoRow || position == bioRow) {
+            textToCopy = userFull.about;
+        } else if (position == bizHoursRow) {
+            textToCopy = OpeningHoursActivity.toString(currentAccount, user, userFull.business_work_hours);
+            copyButton = getString(R.string.ProfileHoursCopy);
+        } else if (position == bizLocationRow) {
+            textToCopy = userFull.business_location.address;
+            copyButton = getString(R.string.ProfileLocationCopy);
+        } else if (position == usernameRow) {
+            textToCopy = UserObject.getPublicUsername(user);
+            if (textToCopy != null) textToCopy = "@" + textToCopy;
+            copyButton = getString(R.string.ProfileCopyUsername);
+        } else if (position == phoneRow) {
+            textToCopy = user.phone;
+        } else if (position == birthdayRow) {
+            textToCopy = UserInfoActivity.birthdayString(userInfo.birthday);
+        }
+
+        ItemOptions itemOptions = ItemOptions.makeOptions(contentView, resourcesProvider, view);
+        itemOptions.setGravity(Gravity.LEFT);
+
+        if (position == bizLocationRow && userFull.business_location != null) {
+            if (userFull.business_location.geo_point != null) {
+                itemOptions.add(R.drawable.msg_view_file, getString(R.string.ProfileLocationView), () -> {
+                    openLocation(false);
+                });
+            }
+            itemOptions.add(R.drawable.msg_map, getString(R.string.ProfileLocationMaps), () -> {
+                openLocation(true);
+            });
+        }
+
+        if (textToCopy != null) {
+            final String text = textToCopy;
+            itemOptions.add(R.drawable.msg_copy, copyButton, () -> {
+                AndroidUtilities.addToClipboard(text);
+            });
+        }
+
+        if (position == bizHoursRow) {
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileHoursEdit), () -> {
+                presentFragment(new OpeningHoursActivity());
+            });
+            itemOptions.add(R.drawable.msg_delete, getString(R.string.ProfileHoursRemove), true, () -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.BusinessHoursClearTitle));
+                builder.setMessage(LocaleController.getString(R.string.BusinessHoursClearMessage));
+                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
+                    TL_account.updateBusinessWorkHours req = new TL_account.updateBusinessWorkHours();
+                    if (userFull != null) {
+                        userFull.business_work_hours = null;
+                        userFull.flags2 &= ~1;
+                    }
+                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
+                        if (err != null) {
+                            BulletinFactory.showError(err);
+                        } else if (res instanceof TLRPC.TL_boolFalse) {
+                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
+                        }
+                    }));
+                    updateRowsIds();
+                    listAdapter.notifyItemRemoved(position);
+                    getMessagesStorage().updateUserInfo(userFull, false);
+                });
+                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(builder.create());
+            });
+        } else if (position == bizLocationRow) {
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileLocationEdit), () -> {
+                presentFragment(new org.telegram.ui.Business.LocationActivity());
+            });
+            itemOptions.add(R.drawable.msg_delete, getString(R.string.ProfileLocationRemove), true, () -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.BusinessLocationClearTitle));
+                builder.setMessage(LocaleController.getString(R.string.BusinessLocationClearMessage));
+                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
+                    TL_account.updateBusinessLocation req = new TL_account.updateBusinessLocation();
+                    if (userFull != null) {
+                        userFull.business_location = null;
+                        userFull.flags2 &= ~2;
+                    }
+                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
+                        if (err != null) {
+                            BulletinFactory.showError(err);
+                        } else if (res instanceof TLRPC.TL_boolFalse) {
+                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
+                        }
+                    }));
+                    updateRowsIds();
+                    listAdapter.notifyItemRemoved(position);
+                    getMessagesStorage().updateUserInfo(userFull, false);
+                });
+                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(builder.create());
+            });
+        } else if (position == usernameRow) {
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileUsernameEdit), () -> {
+                presentFragment(new ChangeUsernameActivity());
+            });
+        } else if (position == channelInfoRow || position == userInfoRow || position == bioRow) {
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileEditBio), () -> {
+                presentFragment(new UserInfoActivity());
+            });
+        } else if (position == phoneRow) {
+            itemOptions.add(R.drawable.menu_storage_path, getString(R.string.ProfilePhoneEdit), () -> {
+                presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANGE_PHONE_NUMBER));
+            });
+        } else if (position == birthdayRow) {
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileBirthdayChange), () -> {
+                showDialog(AlertsCreator.createBirthdayPickerDialog(getContext(), getString(R.string.EditProfileBirthdayTitle), getString(R.string.EditProfileBirthdayButton), userFull.birthday, birthday -> {
+                    TL_account.updateBirthday req = new TL_account.updateBirthday();
+                    req.flags |= 1;
+                    req.birthday = birthday;
+                    TL_account.TL_birthday oldBirthday = userFull != null ? userFull.birthday : null;
+                    if (userFull != null) {
+                        userFull.flags2 |= 32;
+                        userFull.birthday = birthday;
+                    }
+                    getMessagesController().invalidateContentSettings();
+                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
+                        if (res instanceof TLRPC.TL_boolTrue) {
+                            BulletinFactory.of(ContestProfileActivity.this)
+                                    .createSimpleBulletin(R.raw.contact_check, LocaleController.getString(R.string.PrivacyBirthdaySetDone))
+                                    .setDuration(Bulletin.DURATION_PROLONG).show();
+                        } else {
+                            if (userFull != null) {
+                                if (oldBirthday == null) {
+                                    userFull.flags2 &= ~32;
+                                } else {
+                                    userFull.flags2 |= 32;
+                                }
+                                userFull.birthday = oldBirthday;
+                                getMessagesStorage().updateUserInfo(userFull, false);
+                            }
+                            if (err != null && err.text != null && err.text.startsWith("FLOOD_WAIT_")) {
+                                if (getContext() != null) {
+                                    showDialog(
+                                            new AlertDialog.Builder(getContext(), resourceProvider)
+                                                    .setTitle(getString(R.string.PrivacyBirthdayTooOftenTitle))
+                                                    .setMessage(getString(R.string.PrivacyBirthdayTooOftenMessage))
+                                                    .setPositiveButton(getString(R.string.OK), null)
+                                                    .create()
+                                    );
+                                }
+                            } else {
+                                BulletinFactory.of(ContestProfileActivity.this)
+                                        .createSimpleBulletin(R.raw.error, LocaleController.getString(R.string.UnknownError))
+                                        .show();
+                            }
+                        }
+                    }), ConnectionsManager.RequestFlagDoNotWaitFloodWait);
+                }, () -> {
+                    BaseFragment.BottomSheetParams params = new BaseFragment.BottomSheetParams();
+                    params.transitionFromLeft = true;
+                    params.allowNestedScroll = false;
+                    showAsSheet(new PrivacyControlActivity(PrivacyControlActivity.PRIVACY_RULES_TYPE_BIRTHDAY), params);
+                }, getResourceProvider()).create());
+            });
+            itemOptions.add(R.drawable.msg_delete, getString(R.string.Remove), true, () -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.BirthdayClearTitle));
+                builder.setMessage(LocaleController.getString(R.string.BirthdayClearMessage));
+                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
+                    TL_account.updateBirthday req = new TL_account.updateBirthday();
+                    if (userFull != null) {
+                        userFull.birthday = null;
+                        userFull.flags2 &= ~32;
+                    }
+                    getMessagesController().invalidateContentSettings();
+                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
+                        if (err != null) {
+                            BulletinFactory.showError(err);
+                        } else if (res instanceof TLRPC.TL_boolFalse) {
+                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
+                        }
+                    }));
+                    updateListAnimated(false);
+                    getMessagesStorage().updateUserInfo(userFull, false);
+                });
+                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(builder.create());
+            });
+        } else if (position == channelRow) {
+            TLRPC.Chat channel = getMessagesController().getChat(userFull.personal_channel_id);
+            if (channel != null && ChatObject.getPublicUsername(channel) != null) {
+                itemOptions.add(R.drawable.msg_copy, getString(R.string.ProfileChannelCopy), () -> {
+                    AndroidUtilities.addToClipboard("https://" + getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel));
+                });
+            }
+            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileChannelChange), () -> {
+                presentFragment(new UserInfoActivity());
+            });
+            itemOptions.add(R.drawable.msg_delete, getString(R.string.Remove), true, () -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.ProfileChannelClearTitle));
+                builder.setMessage(LocaleController.getString(R.string.ProfileChannelClearMessage));
+                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
+                    TL_account.updatePersonalChannel req = new TL_account.updatePersonalChannel();
+                    req.channel = new TLRPC.TL_inputChannelEmpty();
+                    if (userFull != null) {
+                        userFull.personal_channel_id = 0;
+                        userFull.personal_channel_message = 0;
+                        userFull.flags2 &= ~64;
+                    }
+                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
+                        if (err != null) {
+                            BulletinFactory.showError(err);
+                        } else if (res instanceof TLRPC.TL_boolFalse) {
+                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
+                        }
+                    }));
+                    updateListAnimated(false);
+                    getMessagesStorage().updateUserInfo(userFull, false);
+                });
+                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(builder.create());
+            });
+        }
+
+        if (itemOptions.getItemsCount() <= 0) {
+            return false;
+        }
+
+        itemOptions.show();
+
+        return true;
+    }
+
+    private void updateItemsUsername() {
+        if (!myProfile || setUsernameItem == null || linkItem == null) return;
+        TLRPC.User user = getMessagesController().getUser(userId);
+        if (user == null) {
+            return;
+        }
+        final boolean hasUsername = UserObject.getPublicUsername(user) != null;
+        setUsernameItem.setIcon(hasUsername ? R.drawable.menu_username_change : R.drawable.menu_username_set);
+        setUsernameItem.setText(hasUsername ? getString(R.string.ProfileUsernameEdit) : getString(R.string.ProfileUsernameSet));
+        linkItem.setVisibility(UserObject.getPublicUsername(user) != null ? View.VISIBLE : View.GONE);
+    }
+
+    private void updateEditColorIcon() {
+        if (getContext() == null || editColorItem == null) return;
+        if (getUserConfig().isPremium()) {
+            editColorItem.setIcon(R.drawable.menu_profile_colors);
+        } else {
+            Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.menu_profile_colors_locked);
+            icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_actionBarDefaultSubmenuItemIcon), PorterDuff.Mode.SRC_IN));
+            Drawable lockIcon = ContextCompat.getDrawable(getContext(), R.drawable.msg_gallery_locked2);
+            lockIcon.setColorFilter(new PorterDuffColorFilter(ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.5f), PorterDuff.Mode.MULTIPLY));
+            CombinedDrawable combinedDrawable = new CombinedDrawable(icon, lockIcon, dp(1), -dp(1)) {
+                @Override
+                public void setColorFilter(ColorFilter colorFilter) {
+                }
+            };
+            editColorItem.setIcon(combinedDrawable);
+        }
+    }
+
+    public boolean hasPrivacyCommand() {
+        if (!isBot) return false;
+        if (userInfo == null || userInfo.bot_info == null) return false;
+        if (userInfo.bot_info.privacy_policy_url != null) return true;
+        for (TLRPC.TL_botCommand command : userInfo.bot_info.commands) {
+            if ("privacy".equals(command.command)) {
+                return true;
+            }
+        }
+        return true;
+    }
+
+    public void setCollectibleGiftStatus(TLRPC.TL_emojiStatusCollectible status) {
+        if (avatarContainer2 == null) return;
+        if (collectibleStatus == status) return;
+        if (collectibleStatus != null && status != null && collectibleStatus.collectible_id == status.collectible_id)
+            return;
+        collectibleStatus = status;
+        if (collectibleHint != null) {
+            collectibleHint.hide();
+        }
+        if (status != null && !TextUtils.isEmpty(status.slug)) {
+            collectibleHintVisible = null;
+            collectibleHint = new HintView2(getContext(), HintView2.DIRECTION_BOTTOM);
+            collectibleHintBackgroundColor = Theme.blendOver(status.center_color | 0xFF000000, Theme.multAlpha(status.pattern_color | 0xFF000000, .5f));
+            collectibleHint.setPadding(dp(4), 0, dp(4), dp(2));
+            collectibleHint.setFlicker(.66f, Theme.multAlpha(status.text_color | 0xFF000000, 0.5f));
+            avatarContainer2.addView(collectibleHint, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 24));
+            collectibleHint.setTextSize(9.33f);
+            collectibleHint.setTextTypeface(AndroidUtilities.bold());
+            collectibleHint.setText(status.title);
+            collectibleHint.setDuration(-1);
+            collectibleHint.setInnerPadding(4.66f + 1, 2.66f, 4.66f + 1, 2.66f);
+            collectibleHint.setArrowSize(4, 2.66f);
+            collectibleHint.setRoundingWithCornerEffect(false);
+            collectibleHint.setRounding(16);
+            collectibleHint.show();
+            final String slug = status.slug;
+            collectibleHint.setOnClickListener(v -> {
+                Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + slug);
+            });
+            if (extraHeight < dp(82)) {
+                collectibleHintVisible = false;
+                collectibleHint.setAlpha(0.0f);
+            }
+            updateCollectibleHint();
+            AndroidUtilities.runOnUIThread(collectibleHint::hide, 6 * 1000);
+        }
+    }
+
+    public void updateCollectibleHint() {
+        if (collectibleHint == null) return;
+        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + (nameTextView[1].getRightDrawableX() - nameTextView[1].getRightDrawableWidth() * lerp(0.45f, 0.25f, currentExpandAnimatorValue)) * nameTextView[1].getScaleX());
+        final float expanded = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
+        collectibleHint.setTranslationY(-collectibleHint.getPaddingBottom() + nameTextView[1].getY() - dp(24) + lerp(dp(6), -dp(12), expanded));
+        collectibleHint.setBgColor(ColorUtils.blendARGB(collectibleHintBackgroundColor, 0x50000000, expanded));
+        final boolean visible = extraHeight >= dp(82);
+        if (collectibleHintVisible == null || collectibleHintVisible != visible) {
+            collectibleHint.animate().alpha((collectibleHintVisible = visible) ? 1.0f : 0.0f).setInterpolator(CubicBezierInterpolator.EASE_OUT).setDuration(200).start();
+        }
+    }
+
+    public static class ShowDrawable extends Drawable implements SimpleTextView.PressableDrawable {
+
+        public final AnimatedTextView.AnimatedTextDrawable textDrawable;
+        public final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final ButtonBounce bounce = new ButtonBounce(null) {
+            @Override
+            public void invalidate() {
+                invalidateSelf();
+            }
+        };
+        private int textColor;
+        private float alpha = 1f, alpha2 = 1f;
+        private boolean pressed;
+        private View view;
+
+        public ShowDrawable(String string) {
+            textDrawable = new AnimatedTextView.AnimatedTextDrawable();
+            textDrawable.setCallback(new Callback() {
+                @Override
+                public void invalidateDrawable(@NonNull Drawable who) {
+                    if (view != null) {
+                        view.invalidate();
+                    }
+                }
+
+                @Override
+                public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {
+                }
+
+                @Override
+                public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {
+                }
+            });
+            textDrawable.setText(string);
+            textDrawable.setTextSize(dp(11));
+            textDrawable.setGravity(Gravity.CENTER);
+            backgroundPaint.setColor(0x1f000000);
+        }
+
+        public void setBackgroundColor(int backgroundColor) {
+            if (backgroundPaint.getColor() != backgroundColor) {
+                backgroundPaint.setColor(backgroundColor);
+                invalidateSelf();
+            }
+        }
+
+        public void setTextColor(int textColor) {
+            if (this.textColor != textColor) {
+                this.textColor = textColor;
+                invalidateSelf();
+            }
+        }
+
+        @Override
+        public void draw(@NonNull Canvas canvas) {
+            final float alpha = this.alpha * this.alpha2;
+            if (alpha <= 0) return;
+            AndroidUtilities.rectTmp.set(getBounds());
+            canvas.save();
+            final float s = bounce.getScale(0.1f);
+            canvas.scale(s, s, AndroidUtilities.rectTmp.centerX(), AndroidUtilities.rectTmp.centerY());
+            final int wasAlpha = backgroundPaint.getAlpha();
+            backgroundPaint.setAlpha((int) (wasAlpha * alpha));
+            canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(20), dp(20), backgroundPaint);
+            backgroundPaint.setAlpha(wasAlpha);
+            textDrawable.setTextColor(textColor);
+            textDrawable.setAlpha((int) (0xFF * alpha));
+            textDrawable.setBounds((int) AndroidUtilities.rectTmp.left, (int) AndroidUtilities.rectTmp.top, (int) AndroidUtilities.rectTmp.right, (int) AndroidUtilities.rectTmp.bottom);
+            textDrawable.draw(canvas);
+            canvas.restore();
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            this.alpha = alpha / 255f;
+            invalidateSelf();
+        }
+
+        public void setAlpha2(float alpha) {
+            this.alpha2 = alpha;
+            invalidateSelf();
+        }
+
+        @Override
+        public void setColorFilter(@Nullable ColorFilter colorFilter) {
+
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return (int) (textDrawable.getAnimateToWidth() + dp(11));
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return dp(17.33f);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSPARENT;
+        }
+
+        @Override
+        public boolean isPressed() {
+            return pressed;
+        }
+
+        @Override
+        public void setPressed(boolean pressed) {
+            bounce.setPressed(pressed);
+            this.pressed = pressed;
+        }
+
+        public void setView(View view) {
+            this.view = view;
+        }
+    }
+
+    private class TopView extends FrameLayout {
+
+        public final AnimatedFloat emojiLoadedT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
+        public final AnimatedFloat emojiFullT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final AnimatedFloat hasColorAnimated = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final AnimatedColor color1Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final AnimatedColor color2Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emoji = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(this, false, dp(20), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_STATIC);
+        public int color1, color2;
+        private int currentColor;
+        private Paint paint = new Paint();
+        private boolean hasColorById;
+        private int backgroundGradientColor1, backgroundGradientColor2, backgroundGradientHeight;
+        private LinearGradient backgroundGradient;
+        private int emojiColor;
+        private boolean hasEmoji;
+        private boolean emojiIsCollectible;
+        private boolean emojiLoaded;
+        private Rect blurBounds = new Rect();
+
+        public TopView(Context context) {
+            super(context);
+            setWillNotDraw(false);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(widthMeasureSpec) + AndroidUtilities.dp(3));
+        }
+
+        @Override
+        public void setBackgroundColor(int color) {
+            if (color != currentColor) {
+                currentColor = color;
+                paint.setColor(color);
+                invalidate();
+                if (!hasColorById) {
+                    actionBarBackgroundColor = currentColor;
+                }
+            }
+        }
+
+        public void setBackgroundColorId(MessagesController.PeerColor peerColor, boolean animated) {
+            if (peerColor != null) {
+                hasColorById = true;
+                color1 = peerColor.getBgColor1(Theme.isCurrentThemeDark());
+                color2 = peerColor.getBgColor2(Theme.isCurrentThemeDark());
+                actionBarBackgroundColor = ColorUtils.blendARGB(color1, color2, 0.25f);
+                if (peerColor.patternColor != 0) {
+                    emojiColor = peerColor.patternColor;
+                } else {
+                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(color1);
+                }
+            } else {
+                actionBarBackgroundColor = currentColor;
+                hasColorById = false;
+                if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) > .8f) {
+                    emojiColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
+                } else if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) < .2f) {
+                    emojiColor = Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultTitle), .5f);
+                } else {
+                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(getThemedColor(Theme.key_actionBarDefault));
+                }
+            }
+            if (!animated) {
+                color1Animated.set(color1, true);
+                color2Animated.set(color2, true);
+            }
+            invalidate();
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            emoji.attach();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            emoji.detach();
+        }
+
+        public void setBackgroundEmojiId(long emojiId, boolean isCollectible, boolean animated) {
+            emoji.set(emojiId, animated);
+            emoji.setColor(emojiColor);
+            emojiIsCollectible = isCollectible;
+            if (!animated) {
+                emojiFullT.force(isCollectible);
+            }
+            hasEmoji = hasEmoji || emojiId != 0 && emojiId != -1;
+            invalidate();
+        }
+
+        private boolean isEmojiLoaded() {
+            if (emojiLoaded) {
+                return true;
+            }
+            if (emoji != null && emoji.getDrawable() instanceof AnimatedEmojiDrawable) {
+                AnimatedEmojiDrawable drawable = (AnimatedEmojiDrawable) emoji.getDrawable();
+                if (drawable.getImageReceiver() != null && drawable.getImageReceiver().hasImageLoaded()) {
+                    return emojiLoaded = true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            final int height = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
+            final float v = extraHeight + height + searchTransitionOffset;
+
+            int y1 = (int) (v * (1.0f - mediaHeaderAnimationProgress));
+
+            if (y1 != 0) {
+                if (previousTransitionFragment != null && previousTransitionFragment.getContentView() != null) {
+                    blurBounds.set(0, 0, getMeasuredWidth(), y1);
+                    if (previousTransitionFragment.getActionBar() != null && !previousTransitionFragment.getContentView().blurWasDrawn() && previousTransitionFragment.getActionBar().getBackground() == null) {
+                        paint.setColor(Theme.getColor(Theme.key_actionBarDefault, previousTransitionFragment.getResourceProvider()));
+                        canvas.drawRect(blurBounds, paint);
+                    } else if (previousTransitionMainFragment != null && previousTransitionMainFragment instanceof DialogsActivity && previousTransitionMainFragment.getFragmentView() instanceof SizeNotifierFrameLayout) {
+                        previousTransitionMainFragment.getActionBar().blurScrimPaint.setColor(Theme.getColor(Theme.key_actionBarDefault, previousTransitionMainFragment.getResourceProvider()));
+                        ((SizeNotifierFrameLayout) previousTransitionMainFragment.getFragmentView()).drawBlurRect(canvas, getY(), blurBounds, previousTransitionMainFragment.getActionBar().blurScrimPaint, true);
+                    } else {
+                        previousTransitionFragment.getContentView().drawBlurRect(canvas, getY(), blurBounds, previousTransitionFragment.getActionBar().blurScrimPaint, true);
+                    }
+                }
+                paint.setColor(currentColor);
+                final int color1 = color1Animated.set(this.color1);
+                final int color2 = color2Animated.set(this.color2);
+                final int gradientHeight = AndroidUtilities.statusBarHeight + AndroidUtilities.dp(144);
+                if (backgroundGradient == null || backgroundGradientColor1 != color1 || backgroundGradientColor2 != color2 || backgroundGradientHeight != gradientHeight) {
+                    backgroundGradient = new LinearGradient(0, 0, 0, backgroundGradientHeight = gradientHeight, new int[]{backgroundGradientColor2 = color2, backgroundGradientColor1 = color1}, new float[]{0, 1}, Shader.TileMode.CLAMP);
+                    backgroundPaint.setShader(backgroundGradient);
+                }
+                final float progressToGradient = (playProfileAnimation == 0 ? 1f : avatarAnimationProgress) * hasColorAnimated.set(hasColorById);
+                if (progressToGradient < 1) {
+                    canvas.drawRect(0, 0, getMeasuredWidth(), y1, paint);
+                }
+                if (progressToGradient > 0) {
+                    backgroundPaint.setAlpha((int) (0xFF * progressToGradient));
+                    canvas.drawRect(0, 0, getMeasuredWidth(), y1, backgroundPaint);
+                }
+                if (hasEmoji) {
+                    final float loadedScale = emojiLoadedT.set(isEmojiLoaded());
+                    final float full = emojiFullT.set(emojiIsCollectible);
+                    if (loadedScale > 0) {
+                        canvas.save();
+                        canvas.clipRect(0, 0, getMeasuredWidth(), y1);
+                        StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), ((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + dp(144)) - (1f - extraHeight / dp(88)) * dp(50), Math.min(1f, extraHeight / dp(88)), full);
+                        canvas.restore();
+                    }
+                }
+                if (previousTransitionFragment != null) {
+                    ActionBar actionBar = previousTransitionFragment.getActionBar();
+                    ActionBarMenu menu = actionBar.menu;
+                    if (actionBar != null && menu != null) {
+                        int restoreCount = canvas.save();
+                        canvas.translate(actionBar.getX() + menu.getX(), actionBar.getY() + menu.getY());
+                        canvas.saveLayerAlpha(0, 0, menu.getMeasuredWidth(), menu.getMeasuredHeight(), (int) (255 * (1f - avatarAnimationProgress)), Canvas.ALL_SAVE_FLAG);
+                        menu.draw(canvas);
+                        canvas.restoreToCount(restoreCount);
+                    }
+                }
+            }
+            if (y1 != v) {
+                int color = getThemedColor(Theme.key_windowBackgroundWhite);
+                paint.setColor(color);
+                blurBounds.set(0, y1, getMeasuredWidth(), (int) v);
+                contentView.drawBlurRect(canvas, getY(), blurBounds, paint, true);
+            }
+
+            if (parentLayout != null) {
+                parentLayout.drawHeaderShadow(canvas, (int) (headerShadowAlpha * 255), (int) v);
+            }
+        }
+    }
+
+    private class OverlaysView extends View implements ProfileGalleryView.Callback {
+
+        private final int statusBarHeight = actionBar.getOccupyStatusBar() && !inBubbleMode ? AndroidUtilities.statusBarHeight : 0;
+
+        private final Rect topOverlayRect = new Rect();
+        private final Rect bottomOverlayRect = new Rect();
+        private final RectF rect = new RectF();
+
+        private final GradientDrawable topOverlayGradient;
+        private final GradientDrawable bottomOverlayGradient;
+        private final ValueAnimator animator;
+        private final float[] animatorValues = new float[]{0f, 1f};
+        private final Paint backgroundPaint;
+        private final Paint barPaint;
+        private final Paint selectedBarPaint;
+
+        private final GradientDrawable[] pressedOverlayGradient = new GradientDrawable[2];
+        private final boolean[] pressedOverlayVisible = new boolean[2];
+        private final float[] pressedOverlayAlpha = new float[2];
+
+        private boolean isOverlaysVisible;
+        private float currentAnimationValue;
+        private float alpha = 0f;
+        private float[] alphas = null;
+        private long lastTime;
+        private float previousSelectedProgress;
+        private int previousSelectedPotision = -1;
+        private float currentProgress;
+        private int selectedPosition;
+
+        private float currentLoadingAnimationProgress;
+        private int currentLoadingAnimationDirection = 1;
+
+        public OverlaysView(Context context) {
+            super(context);
+            setVisibility(GONE);
+
+            barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            barPaint.setColor(0x55ffffff);
+            selectedBarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            selectedBarPaint.setColor(0xffffffff);
+
+            topOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0x42000000, 0});
+            topOverlayGradient.setShape(GradientDrawable.RECTANGLE);
+
+            bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
+            bottomOverlayGradient.setShape(GradientDrawable.RECTANGLE);
+
+            for (int i = 0; i < 2; i++) {
+                final GradientDrawable.Orientation orientation = i == 0 ? GradientDrawable.Orientation.LEFT_RIGHT : GradientDrawable.Orientation.RIGHT_LEFT;
+                pressedOverlayGradient[i] = new GradientDrawable(orientation, new int[]{0x32000000, 0});
+                pressedOverlayGradient[i].setShape(GradientDrawable.RECTANGLE);
+            }
+
+            backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            backgroundPaint.setColor(Color.BLACK);
+            backgroundPaint.setAlpha(66);
+            animator = ValueAnimator.ofFloat(0f, 1f);
+            animator.setDuration(250);
+            animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+            animator.addUpdateListener(anim -> {
+                float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue = anim.getAnimatedFraction());
+                setAlphaValue(value, true);
+            });
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    if (!isOverlaysVisible) {
+                        setVisibility(GONE);
+                    }
+                }
+
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    setVisibility(VISIBLE);
+                }
+            });
+        }
+
+        public void saveCurrentPageProgress() {
+            previousSelectedProgress = currentProgress;
+            previousSelectedPotision = selectedPosition;
+            currentLoadingAnimationProgress = 0.0f;
+            currentLoadingAnimationDirection = 1;
+        }
+
+        public void setAlphaValue(float value, boolean self) {
+            if (Build.VERSION.SDK_INT > 18) {
+                int alpha = (int) (255 * value);
+                topOverlayGradient.setAlpha(alpha);
+                bottomOverlayGradient.setAlpha(alpha);
+                backgroundPaint.setAlpha((int) (66 * value));
+                barPaint.setAlpha((int) (0x55 * value));
+                selectedBarPaint.setAlpha(alpha);
+                this.alpha = value;
+            } else {
+                setAlpha(value);
+            }
+            if (!self) {
+                currentAnimationValue = value;
+            }
+            invalidate();
+        }
+
+        public boolean isOverlaysVisible() {
+            return isOverlaysVisible;
+        }
+
+        public void setOverlaysVisible() {
+            isOverlaysVisible = true;
+            setVisibility(VISIBLE);
+        }
+
+        public void setOverlaysVisible(boolean overlaysVisible, float durationFactor) {
+            if (overlaysVisible != isOverlaysVisible) {
+                isOverlaysVisible = overlaysVisible;
+                animator.cancel();
+                final float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue);
+                if (overlaysVisible) {
+                    animator.setDuration((long) ((1f - value) * 250f / durationFactor));
+                } else {
+                    animator.setDuration((long) (value * 250f / durationFactor));
+                }
+                animatorValues[0] = value;
+                animatorValues[1] = overlaysVisible ? 1f : 0f;
+                animator.start();
+            }
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            final int actionBarHeight = statusBarHeight + ActionBar.getCurrentActionBarHeight();
+            final float k = 0.5f;
+            topOverlayRect.set(0, 0, w, (int) (actionBarHeight * k));
+            bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(72f) * k), w, h);
+            topOverlayGradient.setBounds(0, topOverlayRect.bottom, w, actionBarHeight + AndroidUtilities.dp(16f));
+            bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(72f) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
+            pressedOverlayGradient[0].setBounds(0, 0, w / 5, h);
+            pressedOverlayGradient[1].setBounds(w - (w / 5), 0, w, h);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            for (int i = 0; i < 2; i++) {
+                if (pressedOverlayAlpha[i] > 0f) {
+                    pressedOverlayGradient[i].setAlpha((int) (pressedOverlayAlpha[i] * 255));
+                    pressedOverlayGradient[i].draw(canvas);
+                }
+            }
+
+            topOverlayGradient.draw(canvas);
+            bottomOverlayGradient.draw(canvas);
+            canvas.drawRect(topOverlayRect, backgroundPaint);
+            canvas.drawRect(bottomOverlayRect, backgroundPaint);
+
+            int count = avatarsViewPager.getRealCount();
+            selectedPosition = avatarsViewPager.getRealPosition();
+
+            if (alphas == null || alphas.length != count) {
+                alphas = new float[count];
+                Arrays.fill(alphas, 0.0f);
+            }
+
+            boolean invalidate = false;
+
+            long newTime = SystemClock.elapsedRealtime();
+            long dt = (newTime - lastTime);
+            if (dt < 0 || dt > 20) {
+                dt = 17;
+            }
+            lastTime = newTime;
+
+            if (count > 1 && count <= 20) {
+                if (overlayCountVisible == 0) {
+                    alpha = 0.0f;
+                    overlayCountVisible = 3;
+                } else if (overlayCountVisible == 1) {
+                    alpha = 0.0f;
+                    overlayCountVisible = 2;
+                }
+                if (overlayCountVisible == 2) {
+                    barPaint.setAlpha((int) (0x55 * alpha));
+                    selectedBarPaint.setAlpha((int) (0xff * alpha));
+                }
+                int width = (getMeasuredWidth() - AndroidUtilities.dp(5 * 2) - AndroidUtilities.dp(2 * (count - 1))) / count;
+                int y = AndroidUtilities.dp(4) + (Build.VERSION.SDK_INT >= 21 && !inBubbleMode ? AndroidUtilities.statusBarHeight : 0);
+                for (int a = 0; a < count; a++) {
+                    int x = AndroidUtilities.dp(5 + a * 2) + width * a;
+                    float progress;
+                    int baseAlpha = 0x55;
+                    if (a == previousSelectedPotision && Math.abs(previousSelectedProgress - 1.0f) > 0.0001f) {
+                        progress = previousSelectedProgress;
+                        canvas.save();
+                        canvas.clipRect(x + width * progress, y, x + width, y + AndroidUtilities.dp(2));
+                        rect.set(x, y, x + width, y + AndroidUtilities.dp(2));
+                        barPaint.setAlpha((int) (0x55 * alpha));
+                        canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), barPaint);
+                        baseAlpha = 0x50;
+                        canvas.restore();
+                        invalidate = true;
+                    } else if (a == selectedPosition) {
+                        if (avatarsViewPager.isCurrentItemVideo()) {
+                            progress = currentProgress = avatarsViewPager.getCurrentItemProgress();
+                            if (progress <= 0 && avatarsViewPager.isLoadingCurrentVideo() || currentLoadingAnimationProgress > 0.0f) {
+                                currentLoadingAnimationProgress += currentLoadingAnimationDirection * dt / 500.0f;
+                                if (currentLoadingAnimationProgress > 1.0f) {
+                                    currentLoadingAnimationProgress = 1.0f;
+                                    currentLoadingAnimationDirection *= -1;
+                                } else if (currentLoadingAnimationProgress <= 0) {
+                                    currentLoadingAnimationProgress = 0.0f;
+                                    currentLoadingAnimationDirection *= -1;
+                                }
+                            }
+                            rect.set(x, y, x + width, y + AndroidUtilities.dp(2));
+                            barPaint.setAlpha((int) ((0x55 + 0x30 * currentLoadingAnimationProgress) * alpha));
+                            canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), barPaint);
+                            invalidate = true;
+                            baseAlpha = 0x50;
+                        } else {
+                            progress = currentProgress = 1.0f;
+                        }
+                    } else {
+                        progress = 1.0f;
+                    }
+                    rect.set(x, y, x + width * progress, y + AndroidUtilities.dp(2));
+
+                    if (a != selectedPosition) {
+                        if (overlayCountVisible == 3) {
+                            barPaint.setAlpha((int) (AndroidUtilities.lerp(baseAlpha, 0xff, CubicBezierInterpolator.EASE_BOTH.getInterpolation(alphas[a])) * alpha));
+                        }
+                    } else {
+                        alphas[a] = 0.75f;
+                    }
+
+                    canvas.drawRoundRect(rect, AndroidUtilities.dp(1), AndroidUtilities.dp(1), a == selectedPosition ? selectedBarPaint : barPaint);
+                }
+
+                if (overlayCountVisible == 2) {
+                    if (alpha < 1.0f) {
+                        alpha += dt / 180.0f;
+                        if (alpha > 1.0f) {
+                            alpha = 1.0f;
+                        }
+                        invalidate = true;
+                    } else {
+                        overlayCountVisible = 3;
+                    }
+                } else if (overlayCountVisible == 3) {
+                    for (int i = 0; i < alphas.length; i++) {
+                        if (i != selectedPosition && alphas[i] > 0.0f) {
+                            alphas[i] -= dt / 500.0f;
+                            if (alphas[i] <= 0.0f) {
+                                alphas[i] = 0.0f;
+                                if (i == previousSelectedPotision) {
+                                    previousSelectedPotision = -1;
+                                }
+                            }
+                            invalidate = true;
+                        } else if (i == previousSelectedPotision) {
+                            previousSelectedPotision = -1;
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                if (pressedOverlayVisible[i]) {
+                    if (pressedOverlayAlpha[i] < 1f) {
+                        pressedOverlayAlpha[i] += dt / 180.0f;
+                        if (pressedOverlayAlpha[i] > 1f) {
+                            pressedOverlayAlpha[i] = 1f;
+                        }
+                        invalidate = true;
+                    }
+                } else {
+                    if (pressedOverlayAlpha[i] > 0f) {
+                        pressedOverlayAlpha[i] -= dt / 180.0f;
+                        if (pressedOverlayAlpha[i] < 0f) {
+                            pressedOverlayAlpha[i] = 0f;
+                        }
+                        invalidate = true;
+                    }
+                }
+            }
+
+            if (invalidate) {
+                postInvalidateOnAnimation();
+            }
+        }
+
+        @Override
+        public void onDown(boolean left) {
+            pressedOverlayVisible[left ? 0 : 1] = true;
+            postInvalidateOnAnimation();
+        }
+
+        @Override
+        public void onRelease() {
+            Arrays.fill(pressedOverlayVisible, false);
+            postInvalidateOnAnimation();
+        }
+
+        @Override
+        public void onPhotosLoaded() {
+            updateProfileData(false);
+        }
+
+        @Override
+        public void onVideoSet() {
+            invalidate();
+        }
+    }
+
+    private class NestedFrameLayout extends SizeNotifierFrameLayout implements NestedScrollingParent3 {
+
+        private NestedScrollingParentHelper nestedScrollingParentHelper;
+
+        public NestedFrameLayout(Context context) {
+            super(context);
+            nestedScrollingParentHelper = new NestedScrollingParentHelper(this);
+        }
+
+        @Override
+        public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int[] consumed) {
+            try {
+                if (target == listView && sharedMediaLayoutAttached) {
+                    RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
+                    int top = sharedMediaLayout.getTop();
+                    if (top == 0) {
+                        consumed[1] = dyUnconsumed;
+                        innerListView.scrollBy(0, dyUnconsumed);
+                    }
+                }
+                if (dyConsumed != 0 && type == TYPE_TOUCH) {
+                    hideFloatingButton(!(sharedMediaLayout == null || sharedMediaLayout.getClosestTab() == SharedMediaLayout.TAB_STORIES || sharedMediaLayout.getClosestTab() == SharedMediaLayout.TAB_ARCHIVED_STORIES) || dyConsumed > 0);
+                }
+            } catch (Throwable e) {
+                FileLog.e(e);
+                AndroidUtilities.runOnUIThread(() -> {
+                    try {
+                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
+                        if (innerListView != null && innerListView.getAdapter() != null) {
+                            innerListView.getAdapter().notifyDataSetChanged();
+                        }
+                    } catch (Throwable e2) {
+
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+
+        }
+
+        @Override
+        public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+            return super.onNestedPreFling(target, velocityX, velocityY);
+        }
+
+        @Override
+        public void onNestedPreScroll(View target, int dx, int dy, int[] consumed, int type) {
+            if (target == listView && sharedMediaRow != -1 && sharedMediaLayoutAttached) {
+                boolean searchVisible = actionBar.isSearchFieldVisible();
+                int t = sharedMediaLayout.getTop();
+                if (dy < 0) {
+                    boolean scrolledInner = false;
+                    if (t <= 0) {
+                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
+                        if (innerListView != null) {
+                            LinearLayoutManager linearLayoutManager = (LinearLayoutManager) innerListView.getLayoutManager();
+                            int pos = linearLayoutManager.findFirstVisibleItemPosition();
+                            if (pos != RecyclerView.NO_POSITION) {
+                                RecyclerView.ViewHolder holder = innerListView.findViewHolderForAdapterPosition(pos);
+                                int top = holder != null ? holder.itemView.getTop() : -1;
+                                int paddingTop = innerListView.getPaddingTop();
+                                if (top != paddingTop || pos != 0) {
+                                    consumed[1] = pos != 0 ? dy : Math.max(dy, (top - paddingTop));
+                                    innerListView.scrollBy(0, dy);
+                                    scrolledInner = true;
+                                }
+                            }
+                        }
+                    }
+                    if (searchVisible) {
+                        if (!scrolledInner && t < 0) {
+                            consumed[1] = dy - Math.max(t, dy);
+                        } else {
+                            consumed[1] = dy;
+                        }
+                    }
+                } else {
+                    if (searchVisible) {
+                        RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
+                        consumed[1] = dy;
+                        if (t > 0) {
+                            consumed[1] -= dy;
+                        }
+                        if (innerListView != null && consumed[1] > 0) {
+                            innerListView.scrollBy(0, consumed[1]);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public boolean onStartNestedScroll(View child, View target, int axes, int type) {
+            return sharedMediaRow != -1 && axes == ViewCompat.SCROLL_AXIS_VERTICAL;
+        }
+
+        @Override
+        public void onNestedScrollAccepted(View child, View target, int axes, int type) {
+            nestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
+        }
+
+        @Override
+        public void onStopNestedScroll(View target, int type) {
+            nestedScrollingParentHelper.onStopNestedScroll(target);
+        }
+
+        @Override
+        public void onStopNestedScroll(View child) {
+
+        }
+
+        @Override
+        protected void drawList(Canvas blurCanvas, boolean top, ArrayList<IViewWithInvalidateCallback> views) {
+            super.drawList(blurCanvas, top, views);
+            blurCanvas.save();
+            blurCanvas.translate(0, listView.getY());
+            sharedMediaLayout.drawListForBlur(blurCanvas, views);
+            blurCanvas.restore();
+        }
+    }
+
+    private class PagerIndicatorView extends View {
+
+        private final RectF indicatorRect = new RectF();
+
+        private final TextPaint textPaint;
+        private final Paint backgroundPaint;
+
+        private final ValueAnimator animator;
+        private final float[] animatorValues = new float[]{0f, 1f};
+
+        private final PagerAdapter adapter = avatarsViewPager.getAdapter();
+
+        private boolean isIndicatorVisible;
+
+        public PagerIndicatorView(Context context) {
+            super(context);
+            setVisibility(GONE);
+
+            textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTypeface(Typeface.SANS_SERIF);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setTextSize(AndroidUtilities.dpf2(15f));
+            backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            backgroundPaint.setColor(0x26000000);
+            animator = ValueAnimator.ofFloat(0f, 1f);
+            animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+            animator.addUpdateListener(a -> {
+                final float value = AndroidUtilities.lerp(animatorValues, a.getAnimatedFraction());
+                if (searchItem != null && !isPulledDown) {
+                    searchItem.setScaleX(1f - value);
+                    searchItem.setScaleY(1f - value);
+                    searchItem.setAlpha(1f - value);
+                }
+                if (editItemVisible) {
+                    editItem.setScaleX(1f - value);
+                    editItem.setScaleY(1f - value);
+                    editItem.setAlpha(1f - value);
+                }
+                if (callItemVisible) {
+                    callItem.setScaleX(1f - value);
+                    callItem.setScaleY(1f - value);
+                    callItem.setAlpha(1f - value);
+                }
+                if (videoCallItemVisible) {
+                    videoCallItem.setScaleX(1f - value);
+                    videoCallItem.setScaleY(1f - value);
+                    videoCallItem.setAlpha(1f - value);
+                }
+                setScaleX(value);
+                setScaleY(value);
+                setAlpha(value);
+            });
+            boolean expanded = expandPhoto;
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    if (isIndicatorVisible) {
+                        if (searchItem != null) {
+                            searchItem.setClickable(false);
+                        }
+                        if (editItemVisible) {
+                            editItem.setVisibility(GONE);
+                        }
+                        if (callItemVisible) {
+                            callItem.setVisibility(GONE);
+                        }
+                        if (videoCallItemVisible) {
+                            videoCallItem.setVisibility(GONE);
+                        }
+                    } else {
+                        setVisibility(GONE);
+                    }
+                    updateStoriesViewBounds(false);
+                }
+
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    if (searchItem != null && !expanded) {
+                        searchItem.setClickable(true);
+                    }
+                    if (editItemVisible) {
+                        editItem.setVisibility(VISIBLE);
+                    }
+                    if (callItemVisible) {
+                        callItem.setVisibility(VISIBLE);
+                    }
+                    if (videoCallItemVisible) {
+                        videoCallItem.setVisibility(VISIBLE);
+                    }
+                    setVisibility(VISIBLE);
+                    updateStoriesViewBounds(false);
+                }
+            });
+            avatarsViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+                private int prevPage;
+
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    int realPosition = avatarsViewPager.getRealPosition(position);
+                    invalidateIndicatorRect(prevPage != realPosition);
+                    prevPage = realPosition;
+                    updateAvatarItems();
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                }
+            });
+            adapter.registerDataSetObserver(new DataSetObserver() {
+                @Override
+                public void onChanged() {
+                    int count = avatarsViewPager.getRealCount();
+                    if (overlayCountVisible == 0 && count > 1 && count <= 20 && overlaysView.isOverlaysVisible()) {
+                        overlayCountVisible = 1;
+                    }
+                    invalidateIndicatorRect(false);
+                    refreshVisibility(1f);
+                    updateAvatarItems();
+                }
+            });
+        }
+
+        private void updateAvatarItemsInternal() {
+            if (otherItem == null || avatarsViewPager == null) {
+                return;
+            }
+            if (isPulledDown) {
+                int position = avatarsViewPager.getRealPosition();
+                if (position == 0) {
+                    otherItem.hideSubItem(set_as_main);
+                    otherItem.showSubItem(add_photo);
+                } else {
+                    otherItem.showSubItem(set_as_main);
+                    otherItem.hideSubItem(add_photo);
+                }
+            }
+        }
+
+        private void updateAvatarItems() {
+            if (imageUpdater == null) {
+                return;
+            }
+            if (otherItem.isSubMenuShowing()) {
+                AndroidUtilities.runOnUIThread(this::updateAvatarItemsInternal, 500);
+            } else {
+                updateAvatarItemsInternal();
+            }
+        }
+
+        public boolean isIndicatorVisible() {
+            return isIndicatorVisible;
+        }
+
+        public boolean isIndicatorFullyVisible() {
+            return isIndicatorVisible && !animator.isRunning();
+        }
+
+        public void setIndicatorVisible(boolean indicatorVisible, float durationFactor) {
+            if (indicatorVisible != isIndicatorVisible) {
+                isIndicatorVisible = indicatorVisible;
+                animator.cancel();
+                final float value = AndroidUtilities.lerp(animatorValues, animator.getAnimatedFraction());
+                if (durationFactor <= 0f) {
+                    animator.setDuration(0);
+                } else if (indicatorVisible) {
+                    animator.setDuration((long) ((1f - value) * 250f / durationFactor));
+                } else {
+                    animator.setDuration((long) (value * 250f / durationFactor));
+                }
+                animatorValues[0] = value;
+                animatorValues[1] = indicatorVisible ? 1f : 0f;
+                animator.start();
+            }
+        }
+
+        public void refreshVisibility(float durationFactor) {
+            setIndicatorVisible(isPulledDown && avatarsViewPager.getRealCount() > 20, durationFactor);
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            invalidateIndicatorRect(false);
+        }
+
+        private void invalidateIndicatorRect(boolean pageChanged) {
+            if (pageChanged) {
+                overlaysView.saveCurrentPageProgress();
+            }
+            overlaysView.invalidate();
+            final float textWidth = textPaint.measureText(getCurrentTitle());
+            indicatorRect.right = getMeasuredWidth() - AndroidUtilities.dp(54f) - (qrItem != null ? AndroidUtilities.dp(48) : 0);
+            indicatorRect.left = indicatorRect.right - (textWidth + AndroidUtilities.dpf2(16f));
+            indicatorRect.top = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(15f);
+            indicatorRect.bottom = indicatorRect.top + AndroidUtilities.dp(26);
+            setPivotX(indicatorRect.centerX());
+            setPivotY(indicatorRect.centerY());
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            final float radius = AndroidUtilities.dpf2(12);
+            canvas.drawRoundRect(indicatorRect, radius, radius, backgroundPaint);
+            canvas.drawText(getCurrentTitle(), indicatorRect.centerX(), indicatorRect.top + AndroidUtilities.dpf2(18.5f), textPaint);
+        }
+
+        private String getCurrentTitle() {
+            return adapter.getPageTitle(avatarsViewPager.getCurrentItem()).toString();
+        }
+
+        private ActionBarMenuItem getSecondaryMenuItem() {
+            if (callItemVisible) {
+                return callItem;
+            } else if (editItemVisible) {
+                return editItem;
+            } else if (searchItem != null) {
+                return searchItem;
+            } else {
+                return null;
+            }
+        }
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -11356,7 +12272,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 VIEW_TYPE_BOT_APP = 25,
                 VIEW_TYPE_SHADOW_TEXT = 26,
                 VIEW_TYPE_COLORFUL_TEXT = 27;
-
+        private final HashMap<TLRPC.TL_username, ClickableSpan> usernameSpans = new HashMap<TLRPC.TL_username, ClickableSpan>();
         private Context mContext;
 
         public ListAdapter(Context context) {
@@ -11883,7 +12799,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         } else {
                             value = LocaleController.formatTTLString(encryptedChat.ttl);
                         }
-                        textCell.setTextAndValue(LocaleController.getString(R.string.MessageLifetime), value, false,false);
+                        textCell.setTextAndValue(LocaleController.getString(R.string.MessageLifetime), value, false, false);
                     } else if (position == unblockRow) {
                         textCell.setText(LocaleController.getString(R.string.Unblock), false);
                         textCell.setColors(-1, Theme.key_text_RedRegular);
@@ -11991,7 +12907,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (chat != null && ChatObject.canBlockUsers(chat)) {
                             textCell.setTextAndIcon(LocaleController.getString(R.string.ReportReactionAndBan), R.drawable.msg_block2, false);
                         } else {
-                            textCell.setTextAndIcon(LocaleController.getString(R.string.ReportReaction), R.drawable.msg_report,false);
+                            textCell.setTextAndIcon(LocaleController.getString(R.string.ReportReaction), R.drawable.msg_report, false);
                         }
 
                         textCell.setColors(Theme.key_text_RedBold, Theme.key_text_RedRegular);
@@ -12180,6 +13096,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                             public void onClick(View widget) {
                                                 Browser.openUrl(getContext(), url);
                                             }
+
                                             @Override
                                             public void updateDrawState(@NonNull TextPaint ds) {
                                                 ds.setUnderlineText(true);
@@ -12354,7 +13271,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
 
-        private final HashMap<TLRPC.TL_username, ClickableSpan> usernameSpans = new HashMap<TLRPC.TL_username, ClickableSpan>();
         public ClickableSpan makeUsernameLinkSpan(TLRPC.TL_username usernameObj) {
             ClickableSpan span = usernameSpans.get(usernameObj);
             if (span != null) return span;
@@ -12522,68 +13438,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
     private class SearchAdapter extends RecyclerListView.SelectionAdapter {
 
-        private class SearchResult {
-
-            private String searchTitle;
-            private Runnable openRunnable;
-            private String rowName;
-            private String[] path;
-            private int iconResId;
-            private int guid;
-            private int num;
-
-            public SearchResult(int g, String search, int icon, Runnable open) {
-                this(g, search, null, null, null, icon, open);
-            }
-
-            public SearchResult(int g, String search, String pathArg1, int icon, Runnable open) {
-                this(g, search, null, pathArg1, null, icon, open);
-            }
-
-            public SearchResult(int g, String search, String row, String pathArg1, int icon, Runnable open) {
-                this(g, search, row, pathArg1, null, icon, open);
-            }
-
-            public SearchResult(int g, String search, String row, String pathArg1, String pathArg2, int icon, Runnable open) {
-                guid = g;
-                searchTitle = search;
-                rowName = row;
-                openRunnable = open;
-                iconResId = icon;
-                if (pathArg1 != null && pathArg2 != null) {
-                    path = new String[]{pathArg1, pathArg2};
-                } else if (pathArg1 != null) {
-                    path = new String[]{pathArg1};
-                }
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (!(obj instanceof SearchResult)) {
-                    return false;
-                }
-                SearchResult result = (SearchResult) obj;
-                return guid == result.guid;
-            }
-
-            @Override
-            public String toString() {
-                SerializedData data = new SerializedData();
-                data.writeInt32(num);
-                data.writeInt32(1);
-                data.writeInt32(guid);
-                return Utilities.bytesToHex(data.toByteArray());
-            }
-
-            private void open() {
-                openRunnable.run();
-                AndroidUtilities.scrollToFragmentRow(parentLayout, rowName);
-            }
-        }
-
         private SearchResult[] searchArray = onCreateSearchArray();
         private ArrayList<MessagesController.FaqSearchResult> faqSearchArray = new ArrayList<>();
-
         private Context mContext;
         private ArrayList<CharSequence> resultNames = new ArrayList<>();
         private ArrayList<SearchResult> searchResults = new ArrayList<>();
@@ -12594,7 +13450,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         private String lastSearchString;
         private TLRPC.WebPage faqWebPage;
         private boolean loadingFaqPage;
-
         public SearchAdapter(Context context) {
             mContext = context;
 
@@ -12713,7 +13568,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (!getUserConfig().isPremium()) {
                             try {
                                 fragmentView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                             BulletinFactory.of(ContestProfileActivity.this).createRestrictVoiceMessagesPremiumBulletin().show();
                             return;
                         }
@@ -13272,419 +14128,65 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         public boolean isSearchWas() {
             return searchWas;
         }
-    }
 
-    private void openUrl(String url, Browser.Progress progress) {
-        if (url.startsWith("@")) {
-            getMessagesController().openByUserName(url.substring(1), ContestProfileActivity.this, 0, progress);
-        } else if (url.startsWith("#") || url.startsWith("$")) {
-            DialogsActivity fragment = new DialogsActivity(null);
-            fragment.setSearchString(url);
-            presentFragment(fragment);
-        } else if (url.startsWith("/")) {
-            if (parentLayout.getFragmentStack().size() > 1) {
-                BaseFragment previousFragment = parentLayout.getFragmentStack().get(parentLayout.getFragmentStack().size() - 2);
-                if (previousFragment instanceof ChatActivity) {
-                    finishFragment();
-                    ((ChatActivity) previousFragment).chatActivityEnterView.setCommand(null, url, false, false);
-                }
+        private class SearchResult {
+
+            private String searchTitle;
+            private Runnable openRunnable;
+            private String rowName;
+            private String[] path;
+            private int iconResId;
+            private int guid;
+            private int num;
+
+            public SearchResult(int g, String search, int icon, Runnable open) {
+                this(g, search, null, null, null, icon, open);
             }
-        }
-    }
 
-    private void dimBehindView(View view, boolean enable) {
-        scrimView = view;
-        dimBehindView(enable);
-    }
-
-    private void dimBehindView(View view, float value) {
-        scrimView = view;
-        dimBehindView(value);
-    }
-
-    private void dimBehindView(boolean enable) {
-        dimBehindView(enable ? 0.2f : 0);
-    }
-
-    private AnimatorSet scrimAnimatorSet = null;
-
-    private void dimBehindView(float value) {
-        boolean enable = value > 0;
-        fragmentView.invalidate();
-        if (scrimAnimatorSet != null) {
-            scrimAnimatorSet.cancel();
-        }
-        scrimAnimatorSet = new AnimatorSet();
-        ArrayList<Animator> animators = new ArrayList<>();
-        ValueAnimator scrimPaintAlphaAnimator;
-        if (enable) {
-            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(0, value));
-        } else {
-            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(scrimPaint.getAlpha() / 255f, 0));
-        }
-        scrimPaintAlphaAnimator.addUpdateListener(a -> {
-            scrimPaint.setAlpha((int) (255 * (float) a.getAnimatedValue()));
-        });
-        scrimAnimatorSet.playTogether(animators);
-        scrimAnimatorSet.setDuration(enable ? 150 : 220);
-        if (!enable) {
-            scrimAnimatorSet.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    scrimView = null;
-                    fragmentView.invalidate();
-                }
-            });
-        }
-        scrimAnimatorSet.start();
-    }
-
-    @Override
-    public ArrayList<ThemeDescription> getThemeDescriptions() {
-        if (resourcesProvider != null) {
-            return null;
-        }
-        ThemeDescription.ThemeDescriptionDelegate themeDelegate = () -> {
-            if (listView != null) {
-                int count = listView.getChildCount();
-                for (int a = 0; a < count; a++) {
-                    View child = listView.getChildAt(a);
-                    if (child instanceof UserCell) {
-                        ((UserCell) child).update(0);
-                    }
-                }
+            public SearchResult(int g, String search, String pathArg1, int icon, Runnable open) {
+                this(g, search, null, pathArg1, null, icon, open);
             }
-            if (!isPulledDown) {
-                if (onlineTextView[1] != null) {
-                    final Object onlineTextViewTag = onlineTextView[1].getTag();
-                    for (int i = 0; i < 2; i++) {
-                        if (onlineTextViewTag instanceof Integer) {
-                            onlineTextView[i + 1].setTextColor(applyPeerColor(getThemedColor((Integer) onlineTextViewTag), true, isOnline[0]));
-                        } else {
-                            onlineTextView[i + 1].setTextColor(applyPeerColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue), true, true));
-                        }
-                    }
-                }
-                if (lockIconDrawable != null) {
-                    lockIconDrawable.setColorFilter(getThemedColor(Theme.key_chat_lockIcon), PorterDuff.Mode.MULTIPLY);
-                }
-                if (scamDrawable != null) {
-                    scamDrawable.setColor(getThemedColor(Theme.key_avatar_subtitleInProfileBlue));
-                }
-                if (nameTextView[1] != null) {
-                    nameTextView[1].setTextColor(getThemedColor(Theme.key_profile_title));
-                }
-                if (actionBar != null) {
-                    actionBar.setItemsColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), false);
-                    actionBar.setItemsBackgroundColor(peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
-                }
+
+            public SearchResult(int g, String search, String row, String pathArg1, int icon, Runnable open) {
+                this(g, search, row, pathArg1, null, icon, open);
             }
-            updateEmojiStatusDrawableColor();
-        };
-        ArrayList<ThemeDescription> arrayList = new ArrayList<>();
-        if (sharedMediaLayout != null) {
-            arrayList.addAll(sharedMediaLayout.getThemeDescriptions());
-        }
 
-        arrayList.add(new ThemeDescription(listView, 0, null, null, null, null, Theme.key_windowBackgroundWhite));
-        arrayList.add(new ThemeDescription(searchListView, 0, null, null, null, null, Theme.key_windowBackgroundWhite));
-        arrayList.add(new ThemeDescription(listView, 0, null, null, null, null, Theme.key_windowBackgroundGray));
-        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUBACKGROUND, null, null, null, null, Theme.key_actionBarDefaultSubmenuBackground));
-        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUITEM, null, null, null, null, Theme.key_actionBarDefaultSubmenuItem));
-        arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUITEM | ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_actionBarDefaultSubmenuItemIcon));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_actionBarDefaultIcon));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_actionBarSelectorBlue));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_chat_lockIcon));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_subtitleInProfileBlue));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundActionBarBlue));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_profile_title));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_profile_status));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_subtitleInProfileBlue));
-
-        if (mediaCounterTextView != null) {
-            arrayList.add(new ThemeDescription(mediaCounterTextView.getTextView(), ThemeDescription.FLAG_TEXTCOLOR, null, null, null, themeDelegate, Theme.key_player_actionBarSubtitle));
-            arrayList.add(new ThemeDescription(mediaCounterTextView.getNextTextView(), ThemeDescription.FLAG_TEXTCOLOR, null, null, null, themeDelegate, Theme.key_player_actionBarSubtitle));
-        }
-
-        arrayList.add(new ThemeDescription(topView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_avatar_backgroundActionBarBlue));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider));
-
-        arrayList.add(new ThemeDescription(avatarImage, 0, null, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
-        arrayList.add(new ThemeDescription(avatarImage, 0, null, null, new Drawable[]{avatarDrawable}, null, Theme.key_avatar_backgroundInProfileBlue));
-
-        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_profile_actionIcon));
-        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_profile_actionBackground));
-        arrayList.add(new ThemeDescription(writeButton, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_profile_actionPressedBackground));
-
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGreenText2));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_text_RedRegular));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText2));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueButton));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueIcon));
-
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextDetailCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextDetailCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
-
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
-
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_LINKCOLOR, new Class[]{SettingsSuggestionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteLinkText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_buttonText));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_addButton));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, new Class[]{SettingsSuggestionCell.class}, new String[]{"yesButton"}, null, null, null, Theme.key_featuredStickers_addButtonPressed));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_buttonText));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_addButton));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_USEBACKGROUNDDRAWABLE | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, new Class[]{SettingsSuggestionCell.class}, new String[]{"noButton"}, null, null, null, Theme.key_featuredStickers_addButtonPressed));
-
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{NotificationsCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrackChecked));
-
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{UserCell.class}, new String[]{"adminTextView"}, null, null, null, Theme.key_profile_creatorIcon));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusColor"}, null, null, themeDelegate, Theme.key_windowBackgroundWhiteGrayText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusOnlineColor"}, null, null, themeDelegate, Theme.key_windowBackgroundWhiteBlueText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{UserCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundRed));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundOrange));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundViolet));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundGreen));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundCyan));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundBlue));
-        arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_avatar_backgroundPink));
-
-        arrayList.add(new ThemeDescription(undoView, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_undo_background));
-        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoImageView"}, null, null, null, Theme.key_undo_cancelColor));
-        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoTextView"}, null, null, null, Theme.key_undo_cancelColor));
-        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"infoTextView"}, null, null, null, Theme.key_undo_infoColor));
-        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"textPaint"}, null, null, null, Theme.key_undo_infoColor));
-        arrayList.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"progressPaint"}, null, null, null, Theme.key_undo_infoColor));
-        arrayList.add(new ThemeDescription(undoView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{UndoView.class}, new String[]{"leftImageView"}, null, null, null, Theme.key_undo_infoColor));
-
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{AboutLinkCell.class}, Theme.profile_aboutTextPaint, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_LINKCOLOR, new Class[]{AboutLinkCell.class}, Theme.profile_aboutTextPaint, null, null, Theme.key_windowBackgroundWhiteLinkText));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{AboutLinkCell.class}, Theme.linkSelectionPaint, null, null, Theme.key_windowBackgroundWhiteLinkSelection));
-
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{ShadowSectionCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
-
-        arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
-        arrayList.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
-
-        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
-
-        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{GraySectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_graySectionText));
-        arrayList.add(new ThemeDescription(searchListView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{GraySectionCell.class}, null, null, null, Theme.key_graySection));
-
-        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
-        arrayList.add(new ThemeDescription(searchListView, 0, new Class[]{SettingsSearchCell.class}, new String[]{"imageView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayIcon));
-
-        if (mediaHeaderVisible) {
-            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedCheckDrawable, null, Theme.key_player_actionBarTitle));
-            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedDrawable, null, Theme.key_windowBackgroundWhite));
-        } else {
-            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedCheckDrawable, null, Theme.key_profile_verifiedCheck));
-            arrayList.add(new ThemeDescription(nameTextView[1], 0, null, null, verifiedDrawable, null, Theme.key_profile_verifiedBackground));
-        }
-
-        return arrayList;
-    }
-
-    public void updateListAnimated(boolean updateOnlineCount) {
-        updateListAnimated(updateOnlineCount, false);
-    }
-
-    private void updateListAnimated(boolean updateOnlineCount, boolean triedInLayout) {
-        if (listAdapter == null) {
-            if (updateOnlineCount) {
-                updateOnlineCount(false);
-            }
-            updateRowsIds();
-            return;
-        }
-
-        if (!triedInLayout && listView.isInLayout()) {
-            if (!listView.isAttachedToWindow()) return;
-            listView.post(() -> updateListAnimated(updateOnlineCount, true));
-            return;
-        }
-
-        DiffCallback diffCallback = new DiffCallback();
-        diffCallback.oldRowCount = rowCount;
-        diffCallback.fillPositions(diffCallback.oldPositionToItem);
-        diffCallback.oldChatParticipant.clear();
-        diffCallback.oldChatParticipantSorted.clear();
-        diffCallback.oldChatParticipant.addAll(visibleChatParticipants);
-        diffCallback.oldChatParticipantSorted.addAll(visibleSortedUsers);
-        diffCallback.oldMembersStartRow = membersStartRow;
-        diffCallback.oldMembersEndRow = membersEndRow;
-        if (updateOnlineCount) {
-            updateOnlineCount(false);
-        }
-        saveScrollPosition();
-        updateRowsIds();
-        diffCallback.fillPositions(diffCallback.newPositionToItem);
-        try {
-            DiffUtil.calculateDiff(diffCallback).dispatchUpdatesTo(listAdapter);
-        } catch (Exception e) {
-            FileLog.e(e);
-            listAdapter.notifyDataSetChanged();
-        }
-        if (savedScrollPosition >= 0) {
-            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
-        }
-        AndroidUtilities.updateVisibleRows(listView);
-    }
-
-    int savedScrollPosition = -1;
-    int savedScrollOffset;
-    boolean savedScrollToSharedMedia;
-
-    private void saveScrollPosition() {
-        if (listView != null && layoutManager != null && listView.getChildCount() > 0 && !savedScrollToSharedMedia) {
-            View view = null;
-            int position = -1;
-            int top = Integer.MAX_VALUE;
-            for (int i = 0; i < listView.getChildCount(); i++) {
-                int childPosition = listView.getChildAdapterPosition(listView.getChildAt(i));
-                View child = listView.getChildAt(i);
-                if (childPosition != RecyclerListView.NO_POSITION && child.getTop() < top) {
-                    view = child;
-                    position = childPosition;
-                    top = child.getTop();
-                }
-            }
-            if (view != null) {
-                savedScrollPosition = position;
-                savedScrollOffset = view.getTop();
-                if (savedScrollPosition == 0 && !allowPullingDown && savedScrollOffset > AndroidUtilities.dp(88)) {
-                    savedScrollOffset = AndroidUtilities.dp(88);
-                }
-
-                layoutManager.scrollToPositionWithOffset(position, view.getTop() - listView.getPaddingTop());
-            }
-        }
-    }
-
-    public void scrollToSharedMedia() {
-        scrollToSharedMedia(false);
-    }
-    public void scrollToSharedMedia(boolean animated) {
-        if (sharedMediaRow >= 0) {
-            if (animated) {
-                LinearSmoothScrollerCustom linearSmoothScroller = new LinearSmoothScrollerCustom(getContext(), LinearSmoothScrollerCustom.POSITION_TOP, .6f);
-                linearSmoothScroller.setTargetPosition(sharedMediaRow);
-                linearSmoothScroller.setOffset(-listView.getPaddingTop());
-                layoutManager.startSmoothScroll(linearSmoothScroller);
-            } else {
-                layoutManager.scrollToPositionWithOffset(sharedMediaRow, -listView.getPaddingTop());
-            }
-        }
-    }
-
-    private void onTextDetailCellImageClicked(View view) {
-        View parent = (View) view.getParent();
-        if (parent.getTag() != null && ((int) parent.getTag()) == usernameRow) {
-            Bundle args = new Bundle();
-            args.putLong("chat_id", chatId);
-            args.putLong("user_id", userId);
-            presentFragment(new QrActivity(args));
-        } else if (parent.getTag() != null && ((int) parent.getTag()) == birthdayRow) {
-            if (userId == getUserConfig().getClientUserId()) {
-                presentFragment(new PremiumPreviewFragment("my_profile_gift"));
-                return;
-            }
-            if (UserObject.areGiftsDisabled(userInfo)) {
-                BulletinFactory.of(this).createSimpleBulletin(R.raw.error, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserDisallowedGifts, DialogObject.getShortName(userId)))).show();
-                return;
-            }
-            showDialog(new GiftSheet(getContext(), currentAccount, userId, null, null));
-        }
-    }
-
-    private boolean fullyVisible;
-
-    @Override
-    public void onBecomeFullyVisible() {
-        super.onBecomeFullyVisible();
-        writeButtonSetBackground();
-        fullyVisible = true;
-        createBirthdayEffect();
-    }
-
-    private void writeButtonSetBackground() {
-        if (writeButton == null) return;
-        try {
-            Drawable shadowDrawable = fragmentView.getContext().getResources().getDrawable(R.drawable.floating_shadow_profile).mutate();
-            shadowDrawable.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.MULTIPLY));
-            int color1 = getThemedColor(Theme.key_profile_actionBackground);
-            int color2 = getThemedColor(Theme.key_profile_actionPressedBackground);
-            int iconColor = getThemedColor(Theme.key_profile_actionIcon);
-            if (peerColor != null && Theme.hasHue(color1)) {
-                color1 = Theme.adaptHSV(peerColor.getBgColor1(false), +.05f, -.04f);
-                color2 = applyPeerColor2(color2);
-                iconColor = Color.WHITE;
-            }
-            CombinedDrawable combinedDrawable = new CombinedDrawable(shadowDrawable,
-                    Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), color1, color2),
-                    0, 0);
-            combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
-            writeButton.setBackground(combinedDrawable);
-            writeButton.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.MULTIPLY));
-        } catch (Exception e) {}
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private void openAddToContact(TLRPC.User user, Bundle args) {
-        ContactAddActivity contactAddActivity = new ContactAddActivity(args, resourcesProvider);
-        contactAddActivity.setDelegate(() -> {
-            int currentAddToContactsRow = addToContactsRow;
-            if (currentAddToContactsRow >= 0) {
-                if (sharedMediaRow == -1) {
-                    updateRowsIds();
-                    listAdapter.notifyDataSetChanged();
-                } else {
-                    updateListAnimated(false);
+            public SearchResult(int g, String search, String row, String pathArg1, String pathArg2, int icon, Runnable open) {
+                guid = g;
+                searchTitle = search;
+                rowName = row;
+                openRunnable = open;
+                iconResId = icon;
+                if (pathArg1 != null && pathArg2 != null) {
+                    path = new String[]{pathArg1, pathArg2};
+                } else if (pathArg1 != null) {
+                    path = new String[]{pathArg1};
                 }
             }
 
-            if (sharedMediaRow == -1) {
-                if (isInLandscapeMode || AndroidUtilities.isTablet()) {
-                    listView.setPadding(0, AndroidUtilities.dp(88), 0, 0);
-                    expandAnimator.cancel();
-                    expandAnimatorValues[0] = 1f;
-                    expandAnimatorValues[1] = 0f;
-                    setAvatarExpandProgress(1f);
-                    extraHeight = AndroidUtilities.dp(88);
-                } else {
-                    final int actionBarHeight = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-                    int ws = View.MeasureSpec.makeMeasureSpec(listView.getMeasuredWidth(), View.MeasureSpec.EXACTLY);
-                    int hs = View.MeasureSpec.makeMeasureSpec(listView.getMeasuredHeight(), View.MeasureSpec.UNSPECIFIED);
-                    int contentHeight = 0;
-                    for (int i = 0; i < listAdapter.getItemCount(); i++) {
-                        RecyclerView.ViewHolder holder = listAdapter.createViewHolder(null, listAdapter.getItemViewType(i));
-                        listAdapter.onBindViewHolder(holder, i);
-                        holder.itemView.measure(ws, hs);
-                        contentHeight += holder.itemView.getMeasuredHeight();
-                    }
-                    int paddingBottom = Math.max(0, fragmentView.getMeasuredHeight() - (contentHeight + AndroidUtilities.dp(88) + actionBarHeight));
-                    listView.setPadding(0, listView.getPaddingTop(), 0, paddingBottom);
+            @Override
+            public boolean equals(Object obj) {
+                if (!(obj instanceof SearchResult)) {
+                    return false;
                 }
+                SearchResult result = (SearchResult) obj;
+                return guid == result.guid;
             }
-            undoView.showWithAction(dialogId, UndoView.ACTION_CONTACT_ADDED, user);
-        });
-        presentFragment(contactAddActivity);
-    }
 
-    private boolean isQrNeedVisible() {
-        return true;
+            @Override
+            public String toString() {
+                SerializedData data = new SerializedData();
+                data.writeInt32(num);
+                data.writeInt32(1);
+                data.writeInt32(guid);
+                return Utilities.bytesToHex(data.toByteArray());
+            }
+
+            private void open() {
+                openRunnable.run();
+                AndroidUtilities.scrollToFragmentRow(parentLayout, rowName);
+            }
+        }
     }
 
     private class DiffCallback extends DiffUtil.Callback {
@@ -13842,122 +14344,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
     }
 
-    @Override
-    public boolean isLightStatusBar() {
-        int color;
-        if (isPulledDown) {
-            return false;
-        }
-        if (actionBar.isActionModeShowed()) {
-            color = getThemedColor(Theme.key_actionBarActionModeDefault);
-        } else if (mediaHeaderVisible) {
-            color = getThemedColor(Theme.key_windowBackgroundWhite);
-        } else if (peerColor != null) {
-            color = peerColor.getBgColor2(Theme.isCurrentThemeDark());
-        } else {
-            color = getThemedColor(Theme.key_actionBarDefault);
-        }
-        return ColorUtils.calculateLuminance(color) > 0.7f;
-    }
-
-    public String getLink(String username, int topicId) {
-        String link = getMessagesController().linkPrefix + "/" + username;
-        if (topicId != 0) {
-            link += "/" + topicId;
-        }
-        return link;
-    }
-
-    float photoDescriptionProgress = -1;
-    private void checkPhotoDescriptionAlpha() {
-        float p = photoDescriptionProgress;
-        if (playProfileAnimation == 1 && (!fragmentOpened || openAnimationInProgress)) {
-            photoDescriptionProgress = 0;
-        } else if (playProfileAnimation == 2 && (!fragmentOpened || openAnimationInProgress)) {
-            photoDescriptionProgress = onlineTextView[1] == null ? 0 : onlineTextView[1].getAlpha();
-        } else {
-            if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
-                photoDescriptionProgress = currentExpandAnimatorValue * (1f - customAvatarProgress);
-            } else {
-                photoDescriptionProgress = currentExpandAnimatorValue * customAvatarProgress;
-            }
-        }
-//        if (p == photoDescriptionProgress) {
-//            return;
-//        }
-        if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
-            if (hasFallbackPhoto) {
-                customPhotoOffset = AndroidUtilities.dp(28) * photoDescriptionProgress;
-                if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(currentExpandAnimatorValue);
-                    onlineTextView[3].setAlpha(1f - currentExpandAnimatorValue);
-                    //  onlineTextView[1].setAlpha(1f - expandProgress);
-                    onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                    avatarContainer2.invalidate();
-                    if (showStatusButton != null) {
-                        showStatusButton.setAlpha2(1f - currentExpandAnimatorValue);
-                    }
-                }
-            } else {
-                if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(0);
-                    onlineTextView[3].setAlpha(0);
-                }
-                if (showStatusButton != null) {
-                    showStatusButton.setAlpha2(1f);
-                }
-            }
-
-        } else {
-            if (hasCustomPhoto) {
-                if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(photoDescriptionProgress);
-                }
-                if (showStatusButton != null) {
-                    showStatusButton.setAlpha2(1f - photoDescriptionProgress);
-                }
-            } else {
-                if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(0);
-                }
-                if (showStatusButton != null) {
-                    showStatusButton.setAlpha2(1f);
-                }
-            }
-        }
-    }
-
-    private void updateStoriesViewBounds(boolean animated) {
-        if (storyView == null && giftsView == null || actionBar == null) {
-            return;
-        }
-        float atop = actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0;
-        float aleft = 0;
-        float aright = actionBar.getWidth();
-
-        if (actionBar.getBackButton() != null) {
-            aleft = Math.max(aleft, actionBar.getBackButton().getRight());
-        }
-        if (actionBar.menu != null) {
-            for (int i = 0; i < actionBar.menu.getChildCount(); ++i) {
-                View child = actionBar.menu.getChildAt(i);
-                if (child.getAlpha() <= 0 || child.getVisibility() != View.VISIBLE) {
-                    continue;
-                }
-                int left = actionBar.menu.getLeft() + (int) child.getX();
-                if (left < aright) {
-                    aright = AndroidUtilities.lerp(aright, left, child.getAlpha());
-                }
-            }
-        }
-        if (storyView != null) {
-            storyView.setBounds(aleft, aright, atop + (actionBar.getHeight() - atop) / 2f, !animated);
-        }
-        if (giftsView != null) {
-            giftsView.setBounds(aleft, aright, atop + (actionBar.getHeight() - atop) / 2f, !animated);
-        }
-    }
-
     private class ClippedListView extends RecyclerListView implements StoriesListPlaceProvider.ClippedView {
         public ClippedListView(Context context) {
             super(context);
@@ -13967,646 +14353,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         public void updateClip(int[] clip) {
             clip[0] = actionBar.getMeasuredHeight();
             clip[1] = getMeasuredHeight() - getPaddingBottom();
-        }
-    }
-
-    private void listCodecs(String type, StringBuilder info) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
-            return;
-        }
-        try {
-            final int allCodecsCount = MediaCodecList.getCodecCount();
-            final ArrayList<Integer> decoderIndexes = new ArrayList<>();
-            final ArrayList<Integer> encoderIndexes = new ArrayList<>();
-            boolean first = true;
-            for (int i = 0; i < allCodecsCount; ++i) {
-                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(i);
-                if (codec == null) {
-                    continue;
-                }
-                String[] types = codec.getSupportedTypes();
-                if (types == null) {
-                    continue;
-                }
-                boolean found = false;
-                for (int j = 0; j < types.length; ++j) {
-                    if (types[j].equals(type)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) {
-                    (codec.isEncoder() ? encoderIndexes : decoderIndexes).add(i);
-                }
-            }
-            if (decoderIndexes.isEmpty() && encoderIndexes.isEmpty()) {
-                return;
-            }
-            info.append("\n").append(decoderIndexes.size()).append("+").append(encoderIndexes.size()).append(" ").append(type.substring(6)).append(" codecs:\n");
-            for (int a = 0; a < decoderIndexes.size(); ++a) {
-                if (a > 0) {
-                    info.append("\n");
-                }
-                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(decoderIndexes.get(a));
-                info.append("{d} ").append(codec.getName()).append(" (");
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    if (codec.isHardwareAccelerated()) {
-                        info.append("gpu"); // as Gpu
-                    }
-                    if (codec.isSoftwareOnly()) {
-                        info.append("cpu"); // as Cpu
-                    }
-                    if (codec.isVendor()) {
-                        info.append(", v"); // as Vendor
-                    }
-                }
-                MediaCodecInfo.CodecCapabilities capabilities = codec.getCapabilitiesForType(type);
-                info.append("; mi=").append(capabilities.getMaxSupportedInstances()).append(")");
-            }
-            for (int a = 0; a < encoderIndexes.size(); ++a) {
-                if (a > 0 || !decoderIndexes.isEmpty()) {
-                    info.append("\n");
-                }
-                MediaCodecInfo codec = MediaCodecList.getCodecInfoAt(encoderIndexes.get(a));
-                info.append("{e} ").append(codec.getName()).append(" (");
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    if (codec.isHardwareAccelerated()) {
-                        info.append("gpu"); // as Gpu
-                    }
-                    if (codec.isSoftwareOnly()) {
-                        info.append("cpu"); // as Cpu
-                    }
-                    if (codec.isVendor()) {
-                        info.append(", v"); // as Vendor
-                    }
-                }
-                MediaCodecInfo.CodecCapabilities capabilities = codec.getCapabilitiesForType(type);
-                info.append("; mi=").append(capabilities.getMaxSupportedInstances()).append(")");
-            }
-            info.append("\n");
-        } catch (Exception ignore) {}
-    }
-
-    @Override
-    public void onTransitionAnimationProgress(boolean isOpen, float progress) {
-        super.onTransitionAnimationProgress(isOpen, progress);
-        if (blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
-            if (isOpen) {
-                blurredView.setAlpha(1.0f - progress);
-            } else {
-                blurredView.setAlpha(progress);
-            }
-        }
-    }
-
-    public void prepareBlurBitmap() {
-        if (blurredView == null) {
-            return;
-        }
-        int w = (int) (fragmentView.getMeasuredWidth() / 6.0f);
-        int h = (int) (fragmentView.getMeasuredHeight() / 6.0f);
-        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        canvas.scale(1.0f / 6.0f, 1.0f / 6.0f);
-        fragmentView.draw(canvas);
-        Utilities.stackBlurBitmap(bitmap, Math.max(7, Math.max(w, h) / 180));
-        blurredView.setBackground(new BitmapDrawable(bitmap));
-        blurredView.setAlpha(0.0f);
-        blurredView.setVisibility(View.VISIBLE);
-    }
-
-    private ShowDrawable showStatusButton;
-    public ShowDrawable getShowStatusButton() {
-        if (showStatusButton == null) {
-            showStatusButton = new ShowDrawable(LocaleController.getString(R.string.StatusHiddenShow));
-            showStatusButton.setAlpha((int) (0xFF * Math.min(1f, extraHeight / AndroidUtilities.dp(88f))));
-            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
-        }
-        return showStatusButton;
-    }
-
-    public static class ShowDrawable extends Drawable implements SimpleTextView.PressableDrawable {
-
-        public final AnimatedTextView.AnimatedTextDrawable textDrawable;
-        public final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        public ShowDrawable(String string) {
-            textDrawable = new AnimatedTextView.AnimatedTextDrawable();
-            textDrawable.setCallback(new Callback() {
-                @Override
-                public void invalidateDrawable(@NonNull Drawable who) {
-                    if (view != null) {
-                        view.invalidate();
-                    }
-                }
-                @Override
-                public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {}
-                @Override
-                public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {}
-            });
-            textDrawable.setText(string);
-            textDrawable.setTextSize(dp(11));
-            textDrawable.setGravity(Gravity.CENTER);
-            backgroundPaint.setColor(0x1f000000);
-        }
-
-        private int textColor;
-        public void setBackgroundColor(int backgroundColor) {
-            if (backgroundPaint.getColor() != backgroundColor) {
-                backgroundPaint.setColor(backgroundColor);
-                invalidateSelf();
-            }
-        }
-        public void setTextColor(int textColor) {
-            if (this.textColor != textColor) {
-                this.textColor = textColor;
-                invalidateSelf();
-            }
-        }
-
-        @Override
-        public void draw(@NonNull Canvas canvas) {
-            final float alpha = this.alpha * this.alpha2;
-            if (alpha <= 0) return;
-            AndroidUtilities.rectTmp.set(getBounds());
-            canvas.save();
-            final float s = bounce.getScale(0.1f);
-            canvas.scale(s, s, AndroidUtilities.rectTmp.centerX(), AndroidUtilities.rectTmp.centerY());
-            final int wasAlpha = backgroundPaint.getAlpha();
-            backgroundPaint.setAlpha((int) (wasAlpha * alpha));
-            canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(20), dp(20), backgroundPaint);
-            backgroundPaint.setAlpha(wasAlpha);
-            textDrawable.setTextColor(textColor);
-            textDrawable.setAlpha((int) (0xFF * alpha));
-            textDrawable.setBounds((int) AndroidUtilities.rectTmp.left, (int) AndroidUtilities.rectTmp.top, (int) AndroidUtilities.rectTmp.right, (int) AndroidUtilities.rectTmp.bottom);
-            textDrawable.draw(canvas);
-            canvas.restore();
-        }
-
-        private float alpha = 1f, alpha2 = 1f;
-        @Override
-        public void setAlpha(int alpha) {
-            this.alpha = alpha / 255f;
-            invalidateSelf();
-        }
-
-        public void setAlpha2(float alpha) {
-            this.alpha2 = alpha;
-            invalidateSelf();
-        }
-
-        @Override
-        public void setColorFilter(@Nullable ColorFilter colorFilter) {
-
-        }
-
-        @Override
-        public int getIntrinsicWidth() {
-            return (int) (textDrawable.getAnimateToWidth() + dp(11));
-        }
-
-        @Override
-        public int getIntrinsicHeight() {
-            return dp(17.33f);
-        }
-
-        @Override
-        public int getOpacity() {
-            return PixelFormat.TRANSPARENT;
-        }
-
-        private boolean pressed;
-        private final ButtonBounce bounce = new ButtonBounce(null) {
-            @Override
-            public void invalidate() {
-                invalidateSelf();
-            }
-        };
-
-        @Override
-        public void setPressed(boolean pressed) {
-            bounce.setPressed(pressed);
-            this.pressed = pressed;
-        }
-
-        @Override
-        public boolean isPressed() {
-            return pressed;
-        }
-
-        private View view;
-        public void setView(View view) {
-            this.view = view;
-        }
-    }
-
-    public void setLoadingSpan(CharacterStyle span) {
-        if (loadingSpan == span) return;
-        loadingSpan = span;
-        AndroidUtilities.forEachViews(listView, view -> {
-            if (view instanceof TextDetailCell) {
-                ((TextDetailCell) view).textView.setLoading(loadingSpan);
-                ((TextDetailCell) view).valueTextView.setLoading(loadingSpan);
-            }
-        });
-    }
-
-    private ProfileBirthdayEffect birthdayEffect;
-
-    private void createBirthdayEffect() {
-        if (fragmentView == null || !fullyVisible || birthdayFetcher == null || getContext() == null)
-            return;
-
-        if (birthdayEffect != null) {
-            birthdayEffect.updateFetcher(birthdayFetcher);
-            birthdayEffect.invalidate();
-            return;
-        }
-
-        birthdayEffect = new ProfileBirthdayEffect(this, birthdayFetcher);
-        ((FrameLayout) fragmentView).addView(birthdayEffect, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL_HORIZONTAL | Gravity.TOP));
-    }
-
-    private void openLocation(boolean inMapsApp) {
-        if (userInfo == null || userInfo.business_location == null) return;
-        if (userInfo.business_location.geo_point != null && !inMapsApp) {
-            LocationActivity fragment = new LocationActivity(3) {
-                @Override
-                protected boolean disablePermissionCheck() {
-                    return true;
-                }
-            };
-            fragment.setResourceProvider(resourcesProvider);
-            TLRPC.TL_message message = new TLRPC.TL_message();
-            message.local_id = -1;
-            message.peer_id = getMessagesController().getPeer(getDialogId());
-            TLRPC.TL_messageMediaGeo media = new TLRPC.TL_messageMediaGeo();
-            media.geo = userInfo.business_location.geo_point;
-            media.address = userInfo.business_location.address;
-            message.media = media;
-            fragment.setSharingAllowed(false);
-            fragment.setMessageObject(new MessageObject(UserConfig.selectedAccount, message, false, false));
-            presentFragment(fragment);
-        } else {
-            String domain;
-            if (BuildVars.isHuaweiStoreApp()) {
-                domain = "mapapp://navigation";
-            } else {
-                domain = "http://maps.google.com/maps";
-            }
-//                    if (myLocation != null) {
-//                        try {
-//                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, domain + "?saddr=%f,%f&daddr=%f,%f", myLocation.getLatitude(), myLocation.getLongitude(), daddrLat, daddrLong)));
-//                            getParentActivity().startActivity(intent);
-//                        } catch (Exception e) {
-//                            FileLog.e(e);
-//                        }
-//                    } else {
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, domain + "?q=" + userInfo.business_location.address )));
-                getParentActivity().startActivity(intent);
-            } catch (Exception e) {
-                FileLog.e(e);
-            }
-//                    }
-        }
-
-    }
-
-    private boolean editRow(View view, int position) {
-        if (!myProfile) return false;
-
-        if (view instanceof ProfileChannelCell) {
-            view = ((ProfileChannelCell) view).dialogCell;
-        }
-
-        TLRPC.User user = getUserConfig().getCurrentUser();
-        if (user == null) return false;
-        TLRPC.UserFull userFull = userInfo == null ? getMessagesController().getUserFull(user.id) : userInfo;
-        if (userFull == null) return false;
-
-        String copyButton = getString(R.string.Copy);
-        String textToCopy = null;
-        if (position == channelInfoRow || position == userInfoRow || position == bioRow) {
-            textToCopy = userFull.about;
-        } else if (position == bizHoursRow) {
-            textToCopy = OpeningHoursActivity.toString(currentAccount, user, userFull.business_work_hours);
-            copyButton = getString(R.string.ProfileHoursCopy);
-        } else if (position == bizLocationRow) {
-            textToCopy = userFull.business_location.address;
-            copyButton = getString(R.string.ProfileLocationCopy);
-        } else if (position == usernameRow) {
-            textToCopy = UserObject.getPublicUsername(user);
-            if (textToCopy != null) textToCopy = "@" + textToCopy;
-            copyButton = getString(R.string.ProfileCopyUsername);
-        } else if (position == phoneRow) {
-            textToCopy = user.phone;
-        } else if (position == birthdayRow) {
-            textToCopy = UserInfoActivity.birthdayString(userInfo.birthday);
-        }
-
-        ItemOptions itemOptions = ItemOptions.makeOptions(contentView, resourcesProvider, view);
-        itemOptions.setGravity(Gravity.LEFT);
-
-        if (position == bizLocationRow && userFull.business_location != null) {
-            if (userFull.business_location.geo_point != null) {
-                itemOptions.add(R.drawable.msg_view_file, getString(R.string.ProfileLocationView), () -> {
-                    openLocation(false);
-                });
-            }
-            itemOptions.add(R.drawable.msg_map, getString(R.string.ProfileLocationMaps), () -> {
-                openLocation(true);
-            });
-        }
-
-        if (textToCopy != null) {
-            final String text = textToCopy;
-            itemOptions.add(R.drawable.msg_copy, copyButton, () -> {
-                AndroidUtilities.addToClipboard(text);
-            });
-        }
-
-        if (position == bizHoursRow) {
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileHoursEdit), () -> {
-                presentFragment(new OpeningHoursActivity());
-            });
-            itemOptions.add(R.drawable.msg_delete, getString(R.string.ProfileHoursRemove), true, () -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.BusinessHoursClearTitle));
-                builder.setMessage(LocaleController.getString(R.string.BusinessHoursClearMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
-                    TL_account.updateBusinessWorkHours req = new TL_account.updateBusinessWorkHours();
-                    if (userFull != null) {
-                        userFull.business_work_hours = null;
-                        userFull.flags2 &=~ 1;
-                    }
-                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (err != null) {
-                            BulletinFactory.showError(err);
-                        } else if (res instanceof TLRPC.TL_boolFalse) {
-                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
-                        }
-                    }));
-                    updateRowsIds();
-                    listAdapter.notifyItemRemoved(position);
-                    getMessagesStorage().updateUserInfo(userFull, false);
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-            });
-        } else if (position == bizLocationRow) {
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileLocationEdit), () -> {
-                presentFragment(new org.telegram.ui.Business.LocationActivity());
-            });
-            itemOptions.add(R.drawable.msg_delete, getString(R.string.ProfileLocationRemove), true, () -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.BusinessLocationClearTitle));
-                builder.setMessage(LocaleController.getString(R.string.BusinessLocationClearMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
-                    TL_account.updateBusinessLocation req = new TL_account.updateBusinessLocation();
-                    if (userFull != null) {
-                        userFull.business_location = null;
-                        userFull.flags2 &=~ 2;
-                    }
-                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (err != null) {
-                            BulletinFactory.showError(err);
-                        } else if (res instanceof TLRPC.TL_boolFalse) {
-                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
-                        }
-                    }));
-                    updateRowsIds();
-                    listAdapter.notifyItemRemoved(position);
-                    getMessagesStorage().updateUserInfo(userFull, false);
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-            });
-        } else if (position == usernameRow) {
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileUsernameEdit), () -> {
-                presentFragment(new ChangeUsernameActivity());
-            });
-        } else if (position == channelInfoRow || position == userInfoRow || position == bioRow) {
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileEditBio), () -> {
-                presentFragment(new UserInfoActivity());
-            });
-        } else if (position == phoneRow) {
-            itemOptions.add(R.drawable.menu_storage_path, getString(R.string.ProfilePhoneEdit), () -> {
-                presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANGE_PHONE_NUMBER));
-            });
-        } else if (position == birthdayRow) {
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileBirthdayChange), () -> {
-                showDialog(AlertsCreator.createBirthdayPickerDialog(getContext(), getString(R.string.EditProfileBirthdayTitle), getString(R.string.EditProfileBirthdayButton), userFull.birthday, birthday -> {
-                    TL_account.updateBirthday req = new TL_account.updateBirthday();
-                    req.flags |= 1;
-                    req.birthday = birthday;
-                    TL_account.TL_birthday oldBirthday = userFull != null ? userFull.birthday : null;
-                    if (userFull != null) {
-                        userFull.flags2 |= 32;
-                        userFull.birthday = birthday;
-                    }
-                    getMessagesController().invalidateContentSettings();
-                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (res instanceof TLRPC.TL_boolTrue) {
-                            BulletinFactory.of(ContestProfileActivity.this)
-                                    .createSimpleBulletin(R.raw.contact_check, LocaleController.getString(R.string.PrivacyBirthdaySetDone))
-                                    .setDuration(Bulletin.DURATION_PROLONG).show();
-                        } else {
-                            if (userFull != null) {
-                                if (oldBirthday == null) {
-                                    userFull.flags2 &=~ 32;
-                                } else {
-                                    userFull.flags2 |= 32;
-                                }
-                                userFull.birthday = oldBirthday;
-                                getMessagesStorage().updateUserInfo(userFull, false);
-                            }
-                            if (err != null && err.text != null && err.text.startsWith("FLOOD_WAIT_")) {
-                                if (getContext() != null) {
-                                    showDialog(
-                                            new AlertDialog.Builder(getContext(), resourceProvider)
-                                                    .setTitle(getString(R.string.PrivacyBirthdayTooOftenTitle))
-                                                    .setMessage(getString(R.string.PrivacyBirthdayTooOftenMessage))
-                                                    .setPositiveButton(getString(R.string.OK), null)
-                                                    .create()
-                                    );
-                                }
-                            } else {
-                                BulletinFactory.of(ContestProfileActivity.this)
-                                        .createSimpleBulletin(R.raw.error, LocaleController.getString(R.string.UnknownError))
-                                        .show();
-                            }
-                        }
-                    }), ConnectionsManager.RequestFlagDoNotWaitFloodWait);
-                }, () -> {
-                    BaseFragment.BottomSheetParams params = new BaseFragment.BottomSheetParams();
-                    params.transitionFromLeft = true;
-                    params.allowNestedScroll = false;
-                    showAsSheet(new PrivacyControlActivity(PrivacyControlActivity.PRIVACY_RULES_TYPE_BIRTHDAY), params);
-                }, getResourceProvider()).create());
-            });
-            itemOptions.add(R.drawable.msg_delete, getString(R.string.Remove), true, () -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.BirthdayClearTitle));
-                builder.setMessage(LocaleController.getString(R.string.BirthdayClearMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
-                    TL_account.updateBirthday req = new TL_account.updateBirthday();
-                    if (userFull != null) {
-                        userFull.birthday = null;
-                        userFull.flags2 &=~ 32;
-                    }
-                    getMessagesController().invalidateContentSettings();
-                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (err != null) {
-                            BulletinFactory.showError(err);
-                        } else if (res instanceof TLRPC.TL_boolFalse) {
-                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
-                        }
-                    }));
-                    updateListAnimated(false);
-                    getMessagesStorage().updateUserInfo(userFull, false);
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-            });
-        } else if (position == channelRow) {
-            TLRPC.Chat channel = getMessagesController().getChat(userFull.personal_channel_id);
-            if (channel != null && ChatObject.getPublicUsername(channel) != null) {
-                itemOptions.add(R.drawable.msg_copy, getString(R.string.ProfileChannelCopy), () -> {
-                    AndroidUtilities.addToClipboard("https://" + getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel));
-                });
-            }
-            itemOptions.add(R.drawable.msg_edit, getString(R.string.ProfileChannelChange), () -> {
-                presentFragment(new UserInfoActivity());
-            });
-            itemOptions.add(R.drawable.msg_delete, getString(R.string.Remove), true, () -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.ProfileChannelClearTitle));
-                builder.setMessage(LocaleController.getString(R.string.ProfileChannelClearMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
-                    TL_account.updatePersonalChannel req = new TL_account.updatePersonalChannel();
-                    req.channel = new TLRPC.TL_inputChannelEmpty();
-                    if (userFull != null) {
-                        userFull.personal_channel_id = 0;
-                        userFull.personal_channel_message = 0;
-                        userFull.flags2 &=~ 64;
-                    }
-                    getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (err != null) {
-                            BulletinFactory.showError(err);
-                        } else if (res instanceof TLRPC.TL_boolFalse) {
-                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
-                        }
-                    }));
-                    updateListAnimated(false);
-                    getMessagesStorage().updateUserInfo(userFull, false);
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-            });
-        }
-
-        if (itemOptions.getItemsCount() <= 0) {
-            return false;
-        }
-
-        itemOptions.show();
-
-        return true;
-    }
-
-    private void updateItemsUsername() {
-        if (!myProfile || setUsernameItem == null || linkItem == null) return;
-        TLRPC.User user = getMessagesController().getUser(userId);
-        if (user == null) {
-            return;
-        }
-        final boolean hasUsername = UserObject.getPublicUsername(user) != null;
-        setUsernameItem.setIcon(hasUsername ? R.drawable.menu_username_change : R.drawable.menu_username_set);
-        setUsernameItem.setText(hasUsername ? getString(R.string.ProfileUsernameEdit) : getString(R.string.ProfileUsernameSet));
-        linkItem.setVisibility(UserObject.getPublicUsername(user) != null ? View.VISIBLE : View.GONE);
-    }
-
-    private void updateEditColorIcon() {
-        if (getContext() == null || editColorItem == null) return;
-        if (getUserConfig().isPremium()) {
-            editColorItem.setIcon(R.drawable.menu_profile_colors);
-        } else {
-            Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.menu_profile_colors_locked);
-            icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_actionBarDefaultSubmenuItemIcon), PorterDuff.Mode.SRC_IN));
-            Drawable lockIcon = ContextCompat.getDrawable(getContext(), R.drawable.msg_gallery_locked2);
-            lockIcon.setColorFilter(new PorterDuffColorFilter(ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.5f), PorterDuff.Mode.MULTIPLY));
-            CombinedDrawable combinedDrawable = new CombinedDrawable(icon, lockIcon, dp(1), -dp(1)) {
-                @Override
-                public void setColorFilter(ColorFilter colorFilter) {}
-            };
-            editColorItem.setIcon(combinedDrawable);
-        }
-    }
-
-    public boolean hasPrivacyCommand() {
-        if (!isBot) return false;
-        if (userInfo == null || userInfo.bot_info == null) return false;
-        if (userInfo.bot_info.privacy_policy_url != null) return true;
-        for (TLRPC.TL_botCommand command : userInfo.bot_info.commands) {
-            if ("privacy".equals(command.command)) {
-                return true;
-            }
-        }
-        return true;
-    }
-
-
-    private HintView2 collectibleHint;
-    private int collectibleHintBackgroundColor;
-    private Boolean collectibleHintVisible;
-    private TLRPC.TL_emojiStatusCollectible collectibleStatus;
-
-    public void setCollectibleGiftStatus(TLRPC.TL_emojiStatusCollectible status) {
-        if (avatarContainer2 == null) return;
-        if (collectibleStatus == status) return;
-        if (collectibleStatus != null && status != null && collectibleStatus.collectible_id == status.collectible_id) return;
-        collectibleStatus = status;
-        if (collectibleHint != null) {
-            collectibleHint.hide();
-        }
-        if (status != null && !TextUtils.isEmpty(status.slug)) {
-            collectibleHintVisible = null;
-            collectibleHint = new HintView2(getContext(), HintView2.DIRECTION_BOTTOM);
-            collectibleHintBackgroundColor = Theme.blendOver(status.center_color | 0xFF000000, Theme.multAlpha(status.pattern_color | 0xFF000000, .5f));
-            collectibleHint.setPadding(dp(4), 0, dp(4), dp(2));
-            collectibleHint.setFlicker(.66f, Theme.multAlpha(status.text_color | 0xFF000000, 0.5f));
-            avatarContainer2.addView(collectibleHint, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 24));
-            collectibleHint.setTextSize(9.33f);
-            collectibleHint.setTextTypeface(AndroidUtilities.bold());
-            collectibleHint.setText(status.title);
-            collectibleHint.setDuration(-1);
-            collectibleHint.setInnerPadding(4.66f + 1, 2.66f, 4.66f + 1, 2.66f);
-            collectibleHint.setArrowSize(4, 2.66f);
-            collectibleHint.setRoundingWithCornerEffect(false);
-            collectibleHint.setRounding(16);
-            collectibleHint.show();
-            final String slug = status.slug;
-            collectibleHint.setOnClickListener(v -> {
-                Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + slug);
-            });
-            if (extraHeight < dp(82)) {
-                collectibleHintVisible = false;
-                collectibleHint.setAlpha(0.0f);
-            }
-            updateCollectibleHint();
-            AndroidUtilities.runOnUIThread(collectibleHint::hide, 6 * 1000);
-        }
-    }
-
-    public void updateCollectibleHint() {
-        if (collectibleHint == null) return;
-        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + (nameTextView[1].getRightDrawableX() - nameTextView[1].getRightDrawableWidth() * lerp(0.45f, 0.25f, currentExpandAnimatorValue)) * nameTextView[1].getScaleX());
-        final float expanded = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
-        collectibleHint.setTranslationY(-collectibleHint.getPaddingBottom() + nameTextView[1].getY() - dp(24) + lerp(dp(6), -dp(12), expanded));
-        collectibleHint.setBgColor(ColorUtils.blendARGB(collectibleHintBackgroundColor, 0x50000000, expanded));
-        final boolean visible = extraHeight >= dp(82);
-        if (collectibleHintVisible == null || collectibleHintVisible != visible) {
-            collectibleHint.animate().alpha((collectibleHintVisible = visible) ? 1.0f : 0.0f).setInterpolator(CubicBezierInterpolator.EASE_OUT).setDuration(200).start();
         }
     }
 
