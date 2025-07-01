@@ -46,6 +46,7 @@ import org.telegram.ui.Components.AvatarsDrawable;
 import org.telegram.ui.Components.ButtonBounce;
 import org.telegram.ui.Components.ColoredImageSpan;
 import org.telegram.ui.Components.Text;
+import org.telegram.ui.ContestProfileActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.ProfileActivity;
 
@@ -433,7 +434,7 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
                         args.putLong("chat_id", -dialogId);
                     }
                     args.putBoolean("open_common", true);
-                    fragment.presentFragment(new ProfileActivity(args));
+                    fragment.presentFragment(new ContestProfileActivity(args));
                 }
                 invalidate();
             }
