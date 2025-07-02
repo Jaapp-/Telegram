@@ -75,6 +75,7 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -315,6 +316,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ContestProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate, IProfileActivity {
+    public static final String TAG = "CONTEST";
     private final static int PHONE_OPTION_CALL = 0,
             PHONE_OPTION_COPY = 1,
             PHONE_OPTION_TELEGRAM_CALL = 2,
@@ -356,6 +358,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private final static int bot_privacy = 44;
 
     private final static float EXTRA_HEIGHT_DP = 190;
+    private final static float HEADER_BUTTON_HEIGHT_DP = 54;
+    private final static float HEADER_BUTTON_MARGIN_DP = 12;
 
     private final Drawable[] verifiedDrawable = new Drawable[2];
     private final Drawable[] premiumStarDrawable = new Drawable[2];
@@ -845,6 +849,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private int collectibleHintBackgroundColor;
     private Boolean collectibleHintVisible;
     private TLRPC.TL_emojiStatusCollectible collectibleStatus;
+    private LinearLayout headerButtonLayout;
 
     public ContestProfileActivity(Bundle args) {
         this(args, null);
@@ -4362,7 +4367,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
 
-        needLayout(false);
 
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -4394,6 +4398,31 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 updateBottomButtonY();
             }
         });
+
+        HeaderButtonView button1 = new HeaderButtonView(context);
+        button1.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
+        button1.setOnClickListener(v -> {
+            Log.i(TAG, "button1 click");
+        });
+        HeaderButtonView button2 = new HeaderButtonView(context);
+        button2.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.mute);
+        HeaderButtonView button3 = new HeaderButtonView(context);
+        button3.setTextAndIcon(LocaleController.getString(R.string.Call), R.drawable.call);
+        HeaderButtonView button4 = new HeaderButtonView(context);
+        button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
+
+        headerButtonLayout = new LinearLayout(getContext());
+        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
+        params.setMargins(AndroidUtilities.dp(10f/3), 0, AndroidUtilities.dp(10f/3), 0);
+        headerButtonLayout.addView(button1, params);
+        headerButtonLayout.addView(button2, params);
+        headerButtonLayout.addView(button3, params);
+        headerButtonLayout.addView(button4, params);
+
+        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26/3f, 0f, 26/3f, 0f));
+
+        needLayout(false);
 
         undoView = new UndoView(context, null, false, resourcesProvider);
         frameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
@@ -6522,6 +6551,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             overlaysLp.height = (int) (extraHeight + newTop);
             overlaysView.requestLayout();
         }
+
+        float headerY = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
+        headerButtonLayout.setTranslationY(headerY + extraHeight - AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
 
         updateEmojiStatusEffectPosition();
     }
@@ -11240,6 +11272,31 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         public void setView(View view) {
             this.view = view;
+        }
+    }
+
+    static class HeaderButtonView extends FrameLayout {
+
+        private final ImageView imageView;
+        private final TextView textView;
+
+        public HeaderButtonView(@NonNull Context context) {
+            super(context);
+            setWillNotDraw(false);
+            imageView = new ImageView(context);
+            textView = new TextView(context);
+            textView.setTextColor(Color.WHITE);
+            textView.setTypeface(AndroidUtilities.bold());
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            addView(imageView, LayoutHelper.createFrame(24, 24, Gravity.CENTER_HORIZONTAL));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 27, 0, 0));
+            setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6));
+            setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(10), ColorUtils.setAlphaComponent(Color.BLACK, 20), ColorUtils.setAlphaComponent(Color.BLACK, 80)));
+        }
+
+        public void setTextAndIcon(CharSequence text, int icon) {
+            textView.setText(text);
+            imageView.setImageDrawable(ContextCompat.getDrawable(getContext(), icon));
         }
     }
 
