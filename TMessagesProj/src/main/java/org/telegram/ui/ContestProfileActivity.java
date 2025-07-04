@@ -465,8 +465,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private boolean videoCallItemVisible;
     private boolean editItemVisible;
     private ActionBarMenuItem animatingItem;
-    private ActionBarMenuItem callItem;
-    private ActionBarMenuItem videoCallItem;
+//    private ActionBarMenuItem callItem;
+//    private ActionBarMenuItem videoCallItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem otherItem;
     private ActionBarMenuItem searchItem;
@@ -791,8 +791,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
             topView.invalidate();
             otherItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            callItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            videoCallItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
             editItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
 
             if (verifiedDrawable[0] != null) {
@@ -2551,8 +2549,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 avatarContainer2.setPivotX(avatarContainer2.getMeasuredWidth() / 2f);
                 AndroidUtilities.updateViewVisibilityAnimated(avatarContainer2, !expanded, 0.95f, true);
 
-                callItem.setVisibility(expanded || !callItemVisible ? GONE : INVISIBLE);
-                videoCallItem.setVisibility(expanded || !videoCallItemVisible ? GONE : INVISIBLE);
                 editItem.setVisibility(expanded || !editItemVisible ? GONE : INVISIBLE);
                 otherItem.setVisibility(expanded ? GONE : INVISIBLE);
                 if (qrItem != null) {
@@ -2709,19 +2705,17 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
 
-        videoCallItem = menu.addItem(video_call_item, R.drawable.profile_video);
-        videoCallItem.setContentDescription(LocaleController.getString(R.string.VideoCall));
-        if (chatId != 0) {
-            callItem = menu.addItem(call_item, R.drawable.msg_voicechat2);
-            if (ChatObject.isChannelOrGiga(currentChat)) {
-                callItem.setContentDescription(LocaleController.getString(R.string.VoipChannelVoiceChat));
-            } else {
-                callItem.setContentDescription(LocaleController.getString(R.string.VoipGroupVoiceChat));
-            }
-        } else {
-            callItem = menu.addItem(call_item, R.drawable.ic_call);
-            callItem.setContentDescription(LocaleController.getString(R.string.Call));
-        }
+//        if (chatId != 0) {
+//            callItem = menu.addItem(call_item, R.drawable.msg_voicechat2);
+//            if (ChatObject.isChannelOrGiga(currentChat)) {
+//                callItem.setContentDescription(LocaleController.getString(R.string.VoipChannelVoiceChat));
+//            } else {
+//                callItem.setContentDescription(LocaleController.getString(R.string.VoipGroupVoiceChat));
+//            }
+//        } else {
+//            callItem = menu.addItem(call_item, R.drawable.ic_call);
+//            callItem.setContentDescription(LocaleController.getString(R.string.Call));
+//        }
         if (myProfile) {
             editItem = menu.addItem(edit_profile, R.drawable.group_edit_profile);
             editItem.setContentDescription(LocaleController.getString(R.string.Edit));
@@ -5950,12 +5944,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         ImageView mediaOptionsItem = sharedMediaLayout.getSearchOptionsItem();
         TextView saveItem = sharedMediaLayout.getSaveItem();
         if (!mediaHeaderVisible) {
-            if (callItemVisible) {
-                callItem.setVisibility(View.VISIBLE);
-            }
-            if (videoCallItemVisible) {
-                videoCallItem.setVisibility(View.VISIBLE);
-            }
             if (editItemVisible) {
                 editItem.setVisibility(View.VISIBLE);
             }
@@ -5989,12 +5977,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         ArrayList<Animator> animators = new ArrayList<>();
 
-        animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, visible ? 0.0f : 1.0f));
-        animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, visible ? 0.0f : 1.0f));
         animators.add(ObjectAnimator.ofFloat(otherItem, View.ALPHA, visible ? 0.0f : 1.0f));
         animators.add(ObjectAnimator.ofFloat(editItem, View.ALPHA, visible ? 0.0f : 1.0f));
-        animators.add(ObjectAnimator.ofFloat(callItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
-        animators.add(ObjectAnimator.ofFloat(videoCallItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(otherItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(editItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(mediaSearchItem, View.ALPHA, visible ? 1.0f : 0.0f));
@@ -6023,12 +6007,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             public void onAnimationEnd(Animator animation) {
                 if (headerAnimatorSet != null) {
                     if (mediaHeaderVisible) {
-                        if (callItemVisible) {
-                            callItem.setVisibility(View.GONE);
-                        }
-                        if (videoCallItemVisible) {
-                            videoCallItem.setVisibility(View.GONE);
-                        }
                         if (editItemVisible) {
                             editItem.setVisibility(View.GONE);
                         }
@@ -7570,14 +7548,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     animatingItem.setAlpha(1.0f);
                     animators.add(ObjectAnimator.ofFloat(animatingItem, View.ALPHA, 0.0f));
                 }
-                if (callItemVisible && (chatId != 0 || fromChat)) {
-                    callItem.setAlpha(0.0f);
-                    animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, 1.0f));
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setAlpha(0.0f);
-                    animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, 1.0f));
-                }
                 if (editItemVisible) {
                     editItem.setAlpha(0.0f);
                     animators.add(ObjectAnimator.ofFloat(editItem, View.ALPHA, 1.0f));
@@ -7654,14 +7624,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 if (animatingItem != null) {
                     animatingItem.setAlpha(0.0f);
                     animators.add(ObjectAnimator.ofFloat(animatingItem, View.ALPHA, 1.0f));
-                }
-                if (callItemVisible && (chatId != 0 || fromChat)) {
-                    callItem.setAlpha(1.0f);
-                    animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, 0.0f));
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setAlpha(1.0f);
-                    animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, 0.0f));
                 }
                 if (editItemVisible) {
                     editItem.setAlpha(1.0f);
@@ -9553,32 +9515,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             otherItem.hideSubItem(delete_avatar);
         }
         if (!mediaHeaderVisible) {
-            if (callItemVisible) {
-                if (callItem.getVisibility() != View.VISIBLE) {
-                    callItem.setVisibility(View.VISIBLE);
-                    if (animated) {
-                        callItem.setAlpha(0);
-                        callItem.animate().alpha(1f).setDuration(150).start();
-                    }
-                }
-            } else {
-                if (callItem.getVisibility() != View.GONE) {
-                    callItem.setVisibility(View.GONE);
-                }
-            }
-            if (videoCallItemVisible) {
-                if (videoCallItem.getVisibility() != View.VISIBLE) {
-                    videoCallItem.setVisibility(View.VISIBLE);
-                    if (animated) {
-                        videoCallItem.setAlpha(0);
-                        videoCallItem.animate().alpha(1f).setDuration(150).start();
-                    }
-                }
-            } else {
-                if (videoCallItem.getVisibility() != View.GONE) {
-                    videoCallItem.setVisibility(View.GONE);
-                }
-            }
             if (editItemVisible) {
                 if (editItem.getVisibility() != View.VISIBLE) {
                     editItem.setVisibility(View.VISIBLE);
@@ -9599,16 +9535,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     editItem.setVisibility(View.GONE);
                     editItem.animate().cancel();
                     editItem.setAlpha(1f);
-                }
-                if (callItemVisible) {
-                    callItem.setVisibility(View.GONE);
-                    callItem.animate().cancel();
-                    callItem.setAlpha(1f);
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setVisibility(View.GONE);
-                    videoCallItem.animate().cancel();
-                    videoCallItem.setAlpha(1f);
                 }
             }
         }
@@ -11955,16 +11881,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     editItem.setScaleY(1f - value);
                     editItem.setAlpha(1f - value);
                 }
-                if (callItemVisible) {
-                    callItem.setScaleX(1f - value);
-                    callItem.setScaleY(1f - value);
-                    callItem.setAlpha(1f - value);
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setScaleX(1f - value);
-                    videoCallItem.setScaleY(1f - value);
-                    videoCallItem.setAlpha(1f - value);
-                }
                 setScaleX(value);
                 setScaleY(value);
                 setAlpha(value);
@@ -11980,12 +11896,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (editItemVisible) {
                             editItem.setVisibility(GONE);
                         }
-                        if (callItemVisible) {
-                            callItem.setVisibility(GONE);
-                        }
-                        if (videoCallItemVisible) {
-                            videoCallItem.setVisibility(GONE);
-                        }
                     } else {
                         setVisibility(GONE);
                     }
@@ -11999,12 +11909,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
                     if (editItemVisible) {
                         editItem.setVisibility(VISIBLE);
-                    }
-                    if (callItemVisible) {
-                        callItem.setVisibility(VISIBLE);
-                    }
-                    if (videoCallItemVisible) {
-                        videoCallItem.setVisibility(VISIBLE);
                     }
                     setVisibility(VISIBLE);
                     updateStoriesViewBounds(false);
@@ -12133,9 +12037,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
 
         private ActionBarMenuItem getSecondaryMenuItem() {
-            if (callItemVisible) {
-                return callItem;
-            } else if (editItemVisible) {
+            if (editItemVisible) {
                 return editItem;
             } else if (searchItem != null) {
                 return searchItem;
