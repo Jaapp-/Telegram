@@ -532,9 +532,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private float nameY;
     private float onlineX;
     private float onlineY;
-    private float expandProgress;
+    private float maximizeProgress;
     private float listViewVelocityY;
-    private ValueAnimator expandAnimator;
+    private ValueAnimator avatarMaximizeAnimator;
     private float currentExpandAnimatorValue;
     private float currentExpanAnimatorFracture;
     private float[] expandAnimatorValues = new float[]{0f, 1f};
@@ -1360,7 +1360,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         searchTransitionProgress = 1f;
         searchMode = false;
         hasOwnBackground = true;
-        extraHeight = AndroidUtilities.dp(233f); // Unused
+        extraHeight = AndroidUtilities.dp(233f);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(final int id) {
@@ -4414,17 +4414,17 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
 
-        needLayout(false);
+        needLayout();
 
         undoView = new UndoView(context, null, false, resourcesProvider);
         frameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
 
-        expandAnimator = ValueAnimator.ofFloat(0f, 1f);
-        expandAnimator.addUpdateListener(anim -> {
-            setAvatarExpandProgress(anim.getAnimatedFraction());
+        avatarMaximizeAnimator = ValueAnimator.ofFloat(0f, 1f);
+        avatarMaximizeAnimator.addUpdateListener(anim -> {
+            setAvatarMaximizeAnimationProgress(anim.getAnimatedFraction());
         });
-        expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-        expandAnimator.addListener(new AnimatorListenerAdapter() {
+        avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+        avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
 
@@ -4679,11 +4679,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         if (allowPullingDown && currentExpandAnimatorValue > 0) {
             layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP) - listView.getPaddingTop());
             listView.post(() -> {
-                needLayout(true);
-                if (expandAnimator.isRunning()) {
-                    expandAnimator.cancel();
+                needLayout();
+                if (avatarMaximizeAnimator.isRunning()) {
+                    avatarMaximizeAnimator.cancel();
                 }
-                setAvatarExpandProgress(1f);
+                setAvatarMaximizeAnimationProgress(1f);
             });
         }
     }
@@ -4763,7 +4763,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         return false;
     }
 
-    private void setAvatarExpandProgress(float animatedFracture) {
+    private void setAvatarMaximizeAnimationProgress(float animatedFracture) {
+        Log.i(TAG, "setAvatarExpandProgress: " + animatedFracture);
         final int newTop = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
         final float value = currentExpandAnimatorValue = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture = animatedFracture);
         checkPhotoDescriptionAlpha();
@@ -4792,7 +4793,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
 
-        if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && expandProgress < 0.33f) {
+        if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && maximizeProgress < 0.33f) {
             refreshNameAndOnlineXY();
         }
 
@@ -6150,7 +6151,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             if (playProfileAnimation != 0) {
                 allowProfileAnimation = extraHeight != 0;
             }
-            needLayout(true);
+            needLayout();
         }
     }
 
@@ -6230,7 +6231,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
     }
 
-    private void needLayout(boolean animated) {
+    private void needLayout() {
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
 
         FrameLayout.LayoutParams layoutParams;
@@ -6254,8 +6255,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(EXTRA_HEIGHT_DP) || isPulledDown) {
-                expandProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT_DP)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT_DP))));
-                avatarScale = AndroidUtilities.lerp(1f, 2f, Math.min(1f, expandProgress * 3f));
+                maximizeProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT_DP)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT_DP))));
+                Log.i(TAG, "maximizeProgress: " + maximizeProgress);
+                avatarScale = AndroidUtilities.lerp(1f, 2f, Math.min(1f, maximizeProgress * 3f));
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -6265,7 +6267,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
                 final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
 
-                if (allowPullingDown && (openingAvatar || expandProgress >= 0.33f)) {
+                if (allowPullingDown && (openingAvatar || maximizeProgress >= 0.33f)) {
                     if (!isPulledDown) {
                         if (otherItem != null) {
                             if (!getMessagesController().isChatNoForwards(currentChat)) {
@@ -6290,18 +6292,18 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
                         avatarsViewPager.setCreateThumbFromParent(true);
                         avatarsViewPager.getAdapter().notifyDataSetChanged();
-                        expandAnimator.cancel();
+                        avatarMaximizeAnimator.cancel();
                         float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
                         expandAnimatorValues[0] = value;
                         expandAnimatorValues[1] = 1f;
                         if (storyView != null && !storyView.isEmpty()) {
-                            expandAnimator.setInterpolator(new FastOutSlowInInterpolator());
-                            expandAnimator.setDuration((long) ((1f - value) * 1.3f * 250f / durationFactor));
+                            avatarMaximizeAnimator.setInterpolator(new FastOutSlowInInterpolator());
+                            avatarMaximizeAnimator.setDuration((long) ((1f - value) * 1.3f * 250f / durationFactor));
                         } else {
-                            expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
-                            expandAnimator.setDuration((long) ((1f - value) * 250f / durationFactor));
+                            avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+                            avatarMaximizeAnimator.setDuration((long) ((1f - value) * 250f / durationFactor));
                         }
-                        expandAnimator.addListener(new AnimatorListenerAdapter() {
+                        avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationStart(Animator animation) {
                                 setForegroundImage(false);
@@ -6311,19 +6313,19 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                expandAnimator.removeListener(this);
+                                avatarMaximizeAnimator.removeListener(this);
                                 topView.setBackgroundColor(Color.BLACK);
                                 avatarContainer.setVisibility(View.GONE);
                                 avatarsViewPager.setVisibility(View.VISIBLE);
                             }
                         });
-                        expandAnimator.start();
+                        avatarMaximizeAnimator.start();
                     }
                     ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
                     params.width = listView.getMeasuredWidth();
                     params.height = (int) (h + newTop);
                     avatarsViewPager.requestLayout();
-                    if (!expandAnimator.isRunning()) {
+                    if (!avatarMaximizeAnimator.isRunning()) {
                         float additionalTranslationY = 0;
                         if (openAnimationInProgress && playProfileAnimation == 2) {
                             additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
@@ -6357,18 +6359,18 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         }
                         overlaysView.setOverlaysVisible(false, durationFactor);
                         avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
-                        expandAnimator.cancel();
+                        avatarMaximizeAnimator.cancel();
                         avatarImage.getImageReceiver().setAllowStartAnimation(true);
                         avatarImage.getImageReceiver().startAnimation();
 
                         float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
                         expandAnimatorValues[0] = value;
                         expandAnimatorValues[1] = 0f;
-                        expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+                        avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
                         if (!isInLandscapeMode) {
-                            expandAnimator.setDuration((long) (value * 250f / durationFactor));
+                            avatarMaximizeAnimator.setDuration((long) (value * 250f / durationFactor));
                         } else {
-                            expandAnimator.setDuration(0);
+                            avatarMaximizeAnimator.setDuration(0);
                         }
                         topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
 
@@ -6386,14 +6388,14 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         avatarImage.setForegroundAlpha(1f);
                         avatarContainer.setVisibility(View.VISIBLE);
                         avatarsViewPager.setVisibility(View.GONE);
-                        expandAnimator.start();
+                        avatarMaximizeAnimator.start();
                     }
 
                     avatarContainer.setScaleX(avatarScale);
                     avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
                     avatarContainer.setScaleY(avatarScale);
 
-                    if (expandAnimator == null || !expandAnimator.isRunning()) {
+                    if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
                         refreshNameAndOnlineXY();
                         nameTextView[1].setTranslationX(nameX);
                         nameTextView[1].setTranslationY(nameY);
@@ -6475,7 +6477,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     giftsView.invalidate();
                 }
                 float nameScale = 1.0f + 0.12f * diff;
-                if (expandAnimator == null || !expandAnimator.isRunning()) {
+                if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
                     avatarContainer.setScaleX(avatarScale);
                     avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
                     avatarContainer.setScaleY(avatarScale);
@@ -6499,7 +6501,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     if (nameTextView[a] == null) {
                         continue;
                     }
-                    if (expandAnimator == null || !expandAnimator.isRunning()) {
+                    if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
                         nameTextView[a].setTranslationX(nameX);
                         nameTextView[a].setTranslationY(nameY);
 
@@ -6516,7 +6518,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 updateCollectibleHint();
             }
 
-            if (!openAnimationInProgress && (expandAnimator == null || !expandAnimator.isRunning())) {
+            if (!openAnimationInProgress && (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning())) {
                 needLayoutText(diff);
             }
         }
@@ -6695,7 +6697,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             public boolean onPreDraw() {
                 if (fragmentView != null) {
                     checkListViewScroll();
-                    needLayout(true);
+                    needLayout();
                     fragmentView.getViewTreeObserver().removeOnPreDrawListener(this);
                 }
                 return true;
@@ -6920,7 +6922,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         updateSelectedMediaTabText();
                         if (sharedMediaPreloader == null || sharedMediaPreloader.isMediaWasLoaded()) {
                             resumeDelayedFragmentAnimation();
-                            needLayout(true);
+                            needLayout();
                         }
                     }
                 }
@@ -7177,10 +7179,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             final TLRPC.User user = getMessagesController().getUser(userId);
             if (user != null && user.photo == null) {
                 if (extraHeight >= AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
-                    expandAnimator.cancel();
+                    avatarMaximizeAnimator.cancel();
                     expandAnimatorValues[0] = 1f;
                     expandAnimatorValues[1] = 0f;
-                    setAvatarExpandProgress(1f);
+                    setAvatarMaximizeAnimationProgress(1f);
                     avatarsViewPager.setVisibility(View.GONE);
                     extraHeight = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
                     allowPullingDown = false;
@@ -7404,7 +7406,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         topView.invalidate();
 
-        needLayout(true);
+        needLayout();
         if (fragmentView != null) {
             fragmentView.invalidate();
         }
@@ -8632,7 +8634,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
             if (thumbLocation != null && setAvatarRow != -1 || thumbLocation == null && setAvatarRow == -1) {
                 updateListAnimated(false);
-                needLayout(true);
+                needLayout();
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {
                 prevLoadedImageLocation = imageLocation;
@@ -9134,7 +9136,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
             }
             if (changed) {
-                needLayout(true);
+                needLayout();
             }
 
             TLRPC.FileLocation photoBig = null;
@@ -9706,7 +9708,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         listView.setVisibility(View.VISIBLE);
 
-        needLayout(true);
+        needLayout();
 
         avatarContainer.setVisibility(View.VISIBLE);
         nameTextView[1].setVisibility(View.VISIBLE);
@@ -9746,7 +9748,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             listView.setScaleX(1f - 0.01f * (1f - searchTransitionProgress));
             listView.setScaleY(1f - 0.01f * (1f - searchTransitionProgress));
             listView.setAlpha(searchTransitionProgress);
-            needLayout(true);
+            needLayout();
 
             listView.setAlpha(progressHalf);
 
@@ -9801,7 +9803,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 if (enter) {
                     searchItem.requestFocusOnSearchView();
                 }
-                needLayout(true);
+                needLayout();
                 searchViewTransition = null;
                 fragmentView.invalidate();
 
@@ -9990,7 +9992,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
-                    needLayout(true);
+                    needLayout();
                 }
                 avatarsViewPager.addUploadingImage(uploadingImageLocation = ImageLocation.getForLocal(avatarBig), ImageLocation.getForLocal(avatar));
                 showAvatarProgress(true, false);
@@ -10416,10 +10418,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             if (sharedMediaRow == -1) {
                 if (isInLandscapeMode || AndroidUtilities.isTablet()) {
                     listView.setPadding(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP), 0, 0);
-                    expandAnimator.cancel();
+                    avatarMaximizeAnimator.cancel();
                     expandAnimatorValues[0] = 1f;
                     expandAnimatorValues[1] = 0f;
-                    setAvatarExpandProgress(1f);
+                    setAvatarMaximizeAnimationProgress(1f);
                     extraHeight = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
                 } else {
                     final int actionBarHeight = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
