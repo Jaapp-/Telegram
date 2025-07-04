@@ -408,10 +408,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private LinearLayoutManager layoutManager;
     private ListAdapter listAdapter;
     private SearchAdapter searchAdapter;
-    private SimpleTextView[] nameTextView = new SimpleTextView[2];
+    private final SimpleTextView[] nameTextView = new SimpleTextView[2];
+    private final SimpleTextView[] onlineTextView = new SimpleTextView[4];
     private String nameTextViewRightDrawableContentDescription = null;
     private String nameTextViewRightDrawable2ContentDescription = null;
-    private SimpleTextView[] onlineTextView = new SimpleTextView[4];
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
     private AnimatorSet qrItemAnimation;
     private Drawable lockIconDrawable;
@@ -2001,7 +2001,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
 
                 if (previousTransitionFragment != null) {
-                    nameTextView[0].setRightPadding(nameTextView[0].getMeasuredWidth() - previousTransitionFragment.getAvatarContainer().getTitleTextView().getMeasuredWidth());
+//                    nameTextView[0].setRightPadding(nameTextView[0].getMeasuredWidth() - previousTransitionFragment.getAvatarContainer().getTitleTextView().getMeasuredWidth());
                 }
 
                 if (!fragmentOpened && (expandPhoto || openAnimationInProgress && playProfileAnimation == 2)) {
@@ -2014,9 +2014,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             searchItem.setVisibility(GONE);
                         }
                         nameTextView[1].setTextColor(Color.WHITE);
-                        nameTextView[1].setPivotY(nameTextView[1].getMeasuredHeight());
-                        nameTextView[1].setScaleX(1.67f);
-                        nameTextView[1].setScaleY(1.67f);
+//                        nameTextView[1].setPivotY(nameTextView[1].getMeasuredHeight());
+//                        nameTextView[1].setScaleX(1.67f);
+//                        nameTextView[1].setScaleY(1.67f);
                         if (scamDrawable != null) {
                             scamDrawable.setColor(Color.argb(179, 255, 255, 255));
                         }
@@ -4231,7 +4231,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             } else {
                 nameTextView[a].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
             }
-            nameTextView[a].setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(a == 0 ? 12 : 4));
+//            nameTextView[a].setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(a == 0 ? 12 : 4));
             nameTextView[a].setTextSize(18);
             nameTextView[a].setGravity(Gravity.LEFT);
             nameTextView[a].setTypeface(AndroidUtilities.bold());
@@ -4246,7 +4246,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
             nameTextView[a].setRightDrawableOutside(a == 0);
-            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, -6, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
+            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0,0));
         }
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
@@ -4824,12 +4824,12 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         final float k = AndroidUtilities.dpf2(8f);
 
-        final float nameTextViewXEnd = AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft();
-        final float nameTextViewYEnd = newTop + topScroll - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom();
-        final float nameTextViewCx = k + nameX + (nameTextViewXEnd - nameX) / 2f;
-        final float nameTextViewCy = k + nameY + (nameTextViewYEnd - nameY) / 2f;
-        final float nameTextViewX = (1 - value) * (1 - value) * nameX + 2 * (1 - value) * value * nameTextViewCx + value * value * nameTextViewXEnd;
-        final float nameTextViewY = (1 - value) * (1 - value) * nameY + 2 * (1 - value) * value * nameTextViewCy + value * value * nameTextViewYEnd;
+//        final float nameTextViewXEnd = AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft();
+//        final float nameTextViewYEnd = newTop + topScroll - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom();
+//        final float nameTextViewCx = k + nameX + (nameTextViewXEnd - nameX) / 2f;
+//        final float nameTextViewCy = k + nameY + (nameTextViewYEnd - nameY) / 2f;
+//        final float nameTextViewX = (1 - value) * (1 - value) * nameX + 2 * (1 - value) * value * nameTextViewCx + value * value * nameTextViewXEnd;
+//        final float nameTextViewY = (1 - value) * (1 - value) * nameY + 2 * (1 - value) * value * nameTextViewCy + value * value * nameTextViewYEnd;
 
         final float onlineTextViewXEnd = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
         final float onlineTextViewYEnd = newTop + topScroll - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom();
@@ -4838,8 +4838,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final float onlineTextViewX = (1 - value) * (1 - value) * onlineX + 2 * (1 - value) * value * onlineTextViewCx + value * value * onlineTextViewXEnd;
         final float onlineTextViewY = (1 - value) * (1 - value) * onlineY + 2 * (1 - value) * value * onlineTextViewCy + value * value * onlineTextViewYEnd;
 
-        nameTextView[1].setTranslationX(nameTextViewX);
-        nameTextView[1].setTranslationY(nameTextViewY);
+//        nameTextView[1].setTranslationX(nameTextViewX);
+//        nameTextView[1].setTranslationY(nameTextViewY);
         onlineTextView[1].setTranslationX(onlineTextViewX + customPhotoOffset);
         onlineTextView[1].setTranslationY(onlineTextViewY);
         mediaCounterTextView.setTranslationX(onlineTextViewX);
@@ -4855,9 +4855,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
         onlineTextView[1].setTextColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, online), 0xB3FFFFFF, value));
         if (topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
-            nameTextView[1].setPivotY(AndroidUtilities.lerp(0, nameTextView[1].getMeasuredHeight(), value));
-            nameTextView[1].setScaleX(AndroidUtilities.lerp(1.12f, 1.67f, value));
-            nameTextView[1].setScaleY(AndroidUtilities.lerp(1.12f, 1.67f, value));
+//            nameTextView[1].setPivotY(AndroidUtilities.lerp(0, nameTextView[1].getMeasuredHeight(), value));
+//            nameTextView[1].setScaleX(AndroidUtilities.lerp(1.12f, 1.67f, value));
+//            nameTextView[1].setScaleY(AndroidUtilities.lerp(1.12f, 1.67f, value));
         }
         if (showStatusButton != null) {
             showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
@@ -6332,8 +6332,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
                         }
                         onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
-                        nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
-                        nameTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
+//                        nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
+//                        nameTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
                         onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
                         onlineTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
                         mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
@@ -6398,8 +6398,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
                     if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
                         refreshNameAndOnlineXY();
-                        nameTextView[1].setTranslationX(nameX);
-                        nameTextView[1].setTranslationY(nameY);
+//                        nameTextView[1].setTranslationX(nameX);
+//                        nameTextView[1].setTranslationY(nameY);
                         onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
                         onlineTextView[1].setTranslationY(onlineY);
                         mediaCounterTextView.setTranslationX(onlineX);
@@ -6412,16 +6412,16 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             if (openAnimationInProgress && playProfileAnimation == 2) {
                 float avY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() / 2.0f - 21 * AndroidUtilities.density + actionBar.getTranslationY();
 
-                nameTextView[0].setTranslationX(0);
-                nameTextView[0].setTranslationY((float) Math.floor(avY) + AndroidUtilities.dp(1.3f));
+//                nameTextView[0].setTranslationX(0);
+//                nameTextView[0].setTranslationY((float) Math.floor(avY) + AndroidUtilities.dp(1.3f));
                 onlineTextView[0].setTranslationX(0);
                 onlineTextView[0].setTranslationY((float) Math.floor(avY) + AndroidUtilities.dp(24));
-                nameTextView[0].setScaleX(1.0f);
-                nameTextView[0].setScaleY(1.0f);
+//                nameTextView[0].setScaleX(1.0f);
+//                nameTextView[0].setScaleY(1.0f);
 
-                nameTextView[1].setPivotY(nameTextView[1].getMeasuredHeight());
-                nameTextView[1].setScaleX(1.67f);
-                nameTextView[1].setScaleY(1.67f);
+//                nameTextView[1].setPivotY(nameTextView[1].getMeasuredHeight());
+//                nameTextView[1].setScaleX(1.67f);
+//                nameTextView[1].setScaleY(1.67f);
 
                 avatarScale = AndroidUtilities.lerp(1f, 2f, avatarAnimationProgress);
                 if (storyView != null) {
@@ -6503,8 +6503,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         continue;
                     }
                     if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
-                        nameTextView[a].setTranslationX(nameX);
-                        nameTextView[a].setTranslationY(nameY);
+//                        nameTextView[a].setTranslationX(nameX);
+//                        nameTextView[a].setTranslationY(nameY);
 
                         onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
                         onlineTextView[a].setTranslationY(onlineY);
@@ -6513,8 +6513,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             mediaCounterTextView.setTranslationY(onlineY);
                         }
                     }
-                    nameTextView[a].setScaleX(nameScale);
-                    nameTextView[a].setScaleY(nameScale);
+//                    nameTextView[a].setScaleX(nameScale);
+//                    nameTextView[a].setScaleY(nameScale);
                 }
                 updateCollectibleHint();
                 buttonHideProgress = Math.max(0f, Math.min(1f, 1f - topScroll / (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP))));
@@ -12396,7 +12396,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
 
         @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
             switch (holder.getItemViewType()) {
                 case VIEW_TYPE_HEADER:
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
