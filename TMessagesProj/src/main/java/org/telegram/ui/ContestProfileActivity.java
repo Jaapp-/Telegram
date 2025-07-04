@@ -357,10 +357,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private final static int set_username = 43;
     private final static int bot_privacy = 44;
 
-    private final static float EXTRA_HEIGHT_DP = 190;
+    private final static float DEFAULT_TOP_HEIGHT_DP = 190;
     private final static float HEADER_BUTTON_HEIGHT_DP = 54;
     private final static float HEADER_BUTTON_MARGIN_DP = 12;
     private final static float AVATAR_SIZE_DP = 90;
+    private final static float MAXIMIZED_PADDING_DP = 62;
 
     private final Drawable[] verifiedDrawable = new Drawable[2];
     private final Drawable[] premiumStarDrawable = new Drawable[2];
@@ -517,7 +518,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private boolean needStarImage;
     private boolean allowProfileAnimation = true;
     private boolean disableProfileAnimation = false;
-    private float extraHeight;
+    private float topScroll;
     private float initialAnimationExtraHeight;
     private float avatarAnimationProgress;
     private int searchTransitionOffset;
@@ -828,7 +829,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             updateEmojiStatusDrawableColor();
 
             if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && (videoCallItemVisible || editItemVisible || callItemVisible)) {
-                needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT_DP)));
+                needLayoutText(Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)));
             }
         }
 
@@ -1360,7 +1361,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         searchTransitionProgress = 1f;
         searchMode = false;
         hasOwnBackground = true;
-        extraHeight = AndroidUtilities.dp(233f);
+        topScroll = DEFAULT_TOP_HEIGHT_DP;
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(final int id) {
@@ -1888,7 +1889,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                             doNotSetForeground = true;
                             final View view = layoutManager.findViewByPosition(0);
                             if (view != null) {
-                                listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
+                                listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
                             }
                         }
                     });
@@ -1994,7 +1995,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
 
                     if (emptyView != null) {
-                        ((LayoutParams) emptyView.getLayoutParams()).topMargin = AndroidUtilities.dp(EXTRA_HEIGHT_DP) + AndroidUtilities.statusBarHeight;
+                        ((LayoutParams) emptyView.getLayoutParams()).topMargin = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) + AndroidUtilities.statusBarHeight;
                     }
                 }
 
@@ -2076,11 +2077,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     int paddingTop;
                     int paddingBottom;
                     if (isInLandscapeMode) {
-                        paddingTop = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                        paddingTop = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                         paddingBottom = 0;
                     } else {
                         paddingTop = listView.getMeasuredWidth();
-                        paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + AndroidUtilities.dp(EXTRA_HEIGHT_DP) + actionBarHeight));
+                        paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) + actionBarHeight));
                     }
                     if (banFromGroup != 0) {
                         paddingBottom += AndroidUtilities.dp(48);
@@ -2090,7 +2091,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
                     initialAnimationExtraHeight = paddingTop - actionBarHeight;
                     if (playProfileAnimation == 0) {
-                        extraHeight = initialAnimationExtraHeight;
+                        topScroll = initialAnimationExtraHeight;
                     }
                     layoutManager.scrollToPositionWithOffset(0, -actionBarHeight);
                     listView.setPadding(0, paddingTop, 0, paddingBottom);
@@ -2103,11 +2104,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     int paddingTop;
                     int paddingBottom;
                     if (isInLandscapeMode || AndroidUtilities.isTablet()) {
-                        paddingTop = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                        paddingTop = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                         paddingBottom = 0;
                     } else {
                         paddingTop = listView.getMeasuredWidth();
-                        paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + AndroidUtilities.dp(EXTRA_HEIGHT_DP) + actionBarHeight));
+                        paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) + actionBarHeight));
                     }
                     if (banFromGroup != 0) {
                         paddingBottom += AndroidUtilities.dp(48);
@@ -2149,13 +2150,13 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (savedScrollPosition >= 0) {
                             layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - paddingTop);
                         } else if ((!changed || !allowPullingDown) && view != null) {
-                            if (pos == 0 && !allowPullingDown && top > AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
-                                top = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                            if (pos == 0 && !allowPullingDown && top > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
+                                top = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                             }
                             layoutManager.scrollToPositionWithOffset(pos, top - paddingTop);
                             layout = true;
                         } else {
-                            layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP) - paddingTop);
+                            layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) - paddingTop);
                         }
                     }
                     if (currentPaddingTop != paddingTop || listView.getPaddingBottom() != paddingBottom) {
@@ -2279,7 +2280,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
                 } else {
                     int top = searchListView.getTop();
-                    canvas.drawRect(0, top + extraHeight + searchTransitionOffset, getMeasuredWidth(), top + getMeasuredHeight(), whitePaint);
+                    canvas.drawRect(0, top + topScroll + searchTransitionOffset, getMeasuredWidth(), top + getMeasuredHeight(), whitePaint);
                 }
                 super.dispatchDraw(canvas);
                 if (profileTransitionInProgress && parentLayout.getFragmentStack().size() > 1) {
@@ -2289,16 +2290,16 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         FragmentContextView fragmentContextView = chatActivity.getFragmentContextView();
 
                         if (fragmentContextView != null && fragmentContextView.isCallStyle()) {
-                            float progress = extraHeight / AndroidUtilities.dpf2(fragmentContextView.getStyleHeight());
+                            float progress = topScroll / AndroidUtilities.dpf2(fragmentContextView.getStyleHeight());
                             if (progress > 1f) {
                                 progress = 1f;
                             }
                             canvas.save();
                             canvas.translate(fragmentContextView.getX(), fragmentContextView.getY());
                             fragmentContextView.setDrawOverlay(true);
-                            fragmentContextView.setCollapseTransition(true, extraHeight, progress);
+                            fragmentContextView.setCollapseTransition(true, topScroll, progress);
                             fragmentContextView.draw(canvas);
-                            fragmentContextView.setCollapseTransition(false, extraHeight, progress);
+                            fragmentContextView.setCollapseTransition(false, topScroll, progress);
                             fragmentContextView.setDrawOverlay(false);
                             canvas.restore();
                         }
@@ -2832,9 +2833,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         if (view != null) {
                             if (isPulledDown) {
                                 final int actionBarHeight = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-                                listView.smoothScrollBy(0, view.getTop() - listView.getMeasuredWidth() + actionBarHeight, CubicBezierInterpolator.EASE_OUT_QUINT);
+                                listView.smoothScrollBy(0, view.getTop() - listView.getMeasuredWidth() - AndroidUtilities.dp(MAXIMIZED_PADDING_DP) + actionBarHeight, CubicBezierInterpolator.EASE_OUT_QUINT);
                             } else {
-                                listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
+                                listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
                             }
                         }
                     }
@@ -2933,7 +2934,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
                 final View view = layoutManager.findViewByPosition(0);
                 if (view != null && !openingAvatar) {
-                    final int canScroll = view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                    final int canScroll = view.getTop() - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                     if (!allowPullingDown && canScroll > dy) {
                         dy = canScroll;
                         if (avatarsViewPager.hasImages() && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled() && !isInLandscapeMode && !AndroidUtilities.isTablet()) {
@@ -3927,10 +3928,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             textView.setText(LocaleController.getString(R.string.BanFromTheGroup));
             frameLayout1.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 1, 0, 0));
 
-            listView.setPadding(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP), 0, AndroidUtilities.dp(48));
+            listView.setPadding(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), 0, AndroidUtilities.dp(48));
             listView.setBottomGlowOffset(AndroidUtilities.dp(48));
         } else {
-            listView.setPadding(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP), 0, 0);
+            listView.setPadding(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), 0, 0);
         }
 
         topView = new TopView(context);
@@ -4677,7 +4678,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
     private void collapseAvatarInstant() {
         if (allowPullingDown && currentExpandAnimatorValue > 0) {
-            layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP) - listView.getPaddingTop());
+            layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) - listView.getPaddingTop());
             listView.post(() -> {
                 needLayout();
                 if (avatarMaximizeAnimator.isRunning()) {
@@ -4764,7 +4765,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     }
 
     private void setAvatarMaximizeAnimationProgress(float animatedFracture) {
-        Log.i(TAG, "setAvatarExpandProgress: " + animatedFracture);
         final int newTop = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
         final float value = currentExpandAnimatorValue = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture = animatedFracture);
         checkPhotoDescriptionAlpha();
@@ -4793,7 +4793,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
         }
 
-        if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && maximizeProgress < 0.33f) {
+        if (topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) && maximizeProgress < 0.33f) {
             refreshNameAndOnlineXY();
         }
 
@@ -4824,14 +4824,14 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final float k = AndroidUtilities.dpf2(8f);
 
         final float nameTextViewXEnd = AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft();
-        final float nameTextViewYEnd = newTop + extraHeight - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom();
+        final float nameTextViewYEnd = newTop + topScroll - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom();
         final float nameTextViewCx = k + nameX + (nameTextViewXEnd - nameX) / 2f;
         final float nameTextViewCy = k + nameY + (nameTextViewYEnd - nameY) / 2f;
         final float nameTextViewX = (1 - value) * (1 - value) * nameX + 2 * (1 - value) * value * nameTextViewCx + value * value * nameTextViewXEnd;
         final float nameTextViewY = (1 - value) * (1 - value) * nameY + 2 * (1 - value) * value * nameTextViewCy + value * value * nameTextViewYEnd;
 
         final float onlineTextViewXEnd = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
-        final float onlineTextViewYEnd = newTop + extraHeight - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom();
+        final float onlineTextViewYEnd = newTop + topScroll - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom();
         final float onlineTextViewCx = k + onlineX + (onlineTextViewXEnd - onlineX) / 2f;
         final float onlineTextViewCy = k + onlineY + (onlineTextViewYEnd - onlineY) / 2f;
         final float onlineTextViewX = (1 - value) * (1 - value) * onlineX + 2 * (1 - value) * value * onlineTextViewCx + value * value * onlineTextViewXEnd;
@@ -4853,7 +4853,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             statusColor = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
         }
         onlineTextView[1].setTextColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, online), 0xB3FFFFFF, value));
-        if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
+        if (topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
             nameTextView[1].setPivotY(AndroidUtilities.lerp(0, nameTextView[1].getMeasuredHeight(), value));
             nameTextView[1].setScaleX(AndroidUtilities.lerp(1.12f, 1.67f, value));
             nameTextView[1].setScaleY(AndroidUtilities.lerp(1.12f, 1.67f, value));
@@ -4862,7 +4862,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
         }
 
-        needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT_DP)));
+        needLayoutText(Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)));
 
         nameTextView[1].setTextColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), Color.WHITE, currentExpandAnimatorValue));
         actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), Color.WHITE, value), false);
@@ -4872,7 +4872,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
         params.width = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(AVATAR_SIZE_DP), listView.getMeasuredWidth() / Math.max(1f, avatarScale), value);
-        params.height = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(AVATAR_SIZE_DP), (extraHeight + newTop) / Math.max(1f, avatarScale), value);
+        params.height = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(AVATAR_SIZE_DP), (topScroll + newTop) / Math.max(1f, avatarScale), value);
         avatarContainer.requestLayout();
         avatarContainer.setTranslationX(params.width * (Math.max(1f, avatarScale) - 1f) * -1 / 2);
 
@@ -6145,11 +6145,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
         setMediaHeaderVisible(mediaHeaderVisible);
 
-        if (extraHeight != newOffset && !transitionAnimationInProress) {
-            extraHeight = newOffset; // Based on scroll?
+        if (topScroll != newOffset && !transitionAnimationInProress) {
+            topScroll = newOffset; // Based on scroll?
             topView.invalidate();
             if (playProfileAnimation != 0) {
-                allowProfileAnimation = extraHeight != 0;
+                allowProfileAnimation = topScroll != 0;
             }
             needLayout();
         }
@@ -6232,31 +6232,31 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     }
 
     private void needLayout() {
-        final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+        final int topBarsHeight = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
 
         FrameLayout.LayoutParams layoutParams;
         if (listView != null && !openAnimationInProgress) {
             layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
-            if (layoutParams.topMargin != newTop) {
-                layoutParams.topMargin = newTop;
+            if (layoutParams.topMargin != topBarsHeight) {
+                layoutParams.topMargin = topBarsHeight;
                 listView.setLayoutParams(layoutParams);
             }
         }
 
         if (avatarContainer != null) {
-            final float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT_DP));
+            final float diff = Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP));
+            float maximizedHeight = listView.getMeasuredWidth() + AndroidUtilities.dp(MAXIMIZED_PADDING_DP);
 
-            listView.setTopGlowOffset((int) extraHeight);
+            listView.setTopGlowOffset((int) topScroll);
 
-            listView.setOverScrollMode(extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && extraHeight < listView.getMeasuredWidth() - newTop ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_ALWAYS);
+            listView.setOverScrollMode(topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) && topScroll < maximizedHeight - topBarsHeight ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_ALWAYS);
 
             float avatarYMinDp = -100;
             avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(avatarYMinDp) + AndroidUtilities.dp(14 - avatarYMinDp) * diff;
 
-            float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
-            if (h > AndroidUtilities.dp(EXTRA_HEIGHT_DP) || isPulledDown) {
-                maximizeProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT_DP)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT_DP))));
-                Log.i(TAG, "maximizeProgress: " + maximizeProgress);
+            float h = openAnimationInProgress ? initialAnimationExtraHeight : topScroll;
+            if (h > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) || isPulledDown) {
+                maximizeProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) / (maximizedHeight - topBarsHeight - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP))));
                 avatarScale = AndroidUtilities.lerp(1f, 2f, Math.min(1f, maximizeProgress * 3f));
                 if (storyView != null) {
                     storyView.invalidate();
@@ -6323,7 +6323,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
                     ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
                     params.width = listView.getMeasuredWidth();
-                    params.height = (int) (h + newTop);
+                    params.height = (int) (h + topBarsHeight);
                     avatarsViewPager.requestLayout();
                     if (!avatarMaximizeAnimator.isRunning()) {
                         float additionalTranslationY = 0;
@@ -6332,9 +6332,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         }
                         onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
                         nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
-                        nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
+                        nameTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
                         onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                        onlineTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
+                        onlineTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
                         mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
                         mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
                         updateCollectibleHint();
@@ -6468,7 +6468,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 //                avatarContainer.requestLayout();
 
                 updateCollectibleHint();
-            } else if (extraHeight <= AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
+            } else if (topScroll <= AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
                 avatarScale = AndroidUtilities.lerp(0.1f, 1f, diff);
                 if (storyView != null) {
                     storyView.invalidate();
@@ -6526,12 +6526,12 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         if (isPulledDown || (overlaysView != null && overlaysView.animator != null && overlaysView.animator.isRunning())) {
             final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
             overlaysLp.width = listView.getMeasuredWidth();
-            overlaysLp.height = (int) (extraHeight + newTop);
+            overlaysLp.height = (int) (topScroll + topBarsHeight);
             overlaysView.requestLayout();
         }
 
         float headerY = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-        headerButtonLayout.setTranslationY(headerY + extraHeight - AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
+        headerButtonLayout.setTranslationY(headerY + topScroll - AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
 
         updateEmojiStatusEffectPosition();
     }
@@ -6540,7 +6540,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         if (qrItem == null) {
             return;
         }
-        boolean setQrVisible = isQrNeedVisible() && Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT_DP)) > .5f && searchTransitionProgress > .5f;
+        boolean setQrVisible = isQrNeedVisible() && Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) > .5f && searchTransitionProgress > .5f;
         if (animated) {
             if (setQrVisible != isQrItemVisible) {
                 isQrItemVisible = setQrVisible;
@@ -6630,9 +6630,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private void needLayoutText(float diff) {
         FrameLayout.LayoutParams layoutParams;
         float scale = nameTextView[1].getScaleX();
-        float maxScale = extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) ? 1.67f : 1.12f;
+        float maxScale = topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) ? 1.67f : 1.12f;
 
-        if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && scale != maxScale) {
+        if (topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) && scale != maxScale) {
             return;
         }
 
@@ -6715,7 +6715,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         if (isInLandscapeMode && isPulledDown) {
             final View view = layoutManager.findViewByPosition(0);
             if (view != null) {
-                listView.scrollBy(0, view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT_DP));
+                listView.scrollBy(0, view.getTop() - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP));
             }
         }
         fixLayout();
@@ -7178,15 +7178,15 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         if (userId != 0) {
             final TLRPC.User user = getMessagesController().getUser(userId);
             if (user != null && user.photo == null) {
-                if (extraHeight >= AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
+                if (topScroll >= AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
                     avatarMaximizeAnimator.cancel();
                     expandAnimatorValues[0] = 1f;
                     expandAnimatorValues[1] = 0f;
                     setAvatarMaximizeAnimationProgress(1f);
                     avatarsViewPager.setVisibility(View.GONE);
-                    extraHeight = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                    topScroll = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                     allowPullingDown = false;
-                    layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP) - listView.getPaddingTop());
+                    layoutManager.scrollToPositionWithOffset(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) - listView.getPaddingTop());
                 }
             }
         }
@@ -7391,7 +7391,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             }
             onlineTextView[i].setTextColor(ColorUtils.blendARGB(i == 0 ? subtitleColor : applyPeerColor(subtitleColor, true, isOnline[0]), i == 0 ? color : applyPeerColor(color, true, isOnline[0]), progress));
         }
-        extraHeight = initialAnimationExtraHeight * progress;
+        topScroll = initialAnimationExtraHeight * progress;
         color = AvatarDrawable.getProfileColorForId(userId != 0 ? userId : chatId, resourcesProvider);
         int color2 = AvatarDrawable.getColorForId(userId != 0 ? userId : chatId);
         if (color != color2) {
@@ -7491,7 +7491,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
                     nameTextView[1].setLayoutParams(layoutParams);
 
-                    initialAnimationExtraHeight = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                    initialAnimationExtraHeight = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                 } else {
                     FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) nameTextView[1].getLayoutParams();
                     layoutParams.width = (int) ((AndroidUtilities.displaySize.x - AndroidUtilities.dp(32)) / 1.67f);
@@ -7587,7 +7587,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
                 animatorSet.playTogether(animators);
             } else {
-                initialAnimationExtraHeight = extraHeight;
+                initialAnimationExtraHeight = topScroll;
                 ArrayList<Animator> animators = new ArrayList<>();
                 animators.add(ObjectAnimator.ofFloat(this, "avatarAnimationProgress", 1.0f, 0.0f));
                 for (int a = 0; a < 2; a++) {
@@ -8395,7 +8395,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             bottomPaddingRow = rowCount++;
         }
         final int actionBarHeight = actionBar != null ? ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) : 0;
-        if (listView == null || prevRowsCount > rowCount || listContentHeight != 0 && listContentHeight + actionBarHeight + AndroidUtilities.dp(EXTRA_HEIGHT_DP) < listView.getMeasuredHeight()) {
+        if (listView == null || prevRowsCount > rowCount || listContentHeight != 0 && listContentHeight + actionBarHeight + AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) < listView.getMeasuredHeight()) {
             lastMeasuredContentWidth = 0;
         }
         if (listView != null) {
@@ -9169,7 +9169,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             if ((imageLocation == null || initied) && isPulledDown) {
                 final View view = layoutManager.findViewByPosition(0);
                 if (view != null) {
-                    listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
+                    listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), CubicBezierInterpolator.EASE_OUT_QUINT);
                 }
             }
             String filter;
@@ -9701,7 +9701,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             searchViewTransition.cancel();
         }
         ValueAnimator valueAnimator = ValueAnimator.ofFloat(searchTransitionProgress, enter ? 0f : 1f);
-        float offset = extraHeight;
+        float offset = topScroll;
         searchListView.setTranslationY(offset);
         searchListView.setVisibility(View.VISIBLE);
         searchItem.setVisibility(View.VISIBLE);
@@ -10348,8 +10348,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             if (view != null) {
                 savedScrollPosition = position;
                 savedScrollOffset = view.getTop();
-                if (savedScrollPosition == 0 && !allowPullingDown && savedScrollOffset > AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
-                    savedScrollOffset = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                if (savedScrollPosition == 0 && !allowPullingDown && savedScrollOffset > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
+                    savedScrollOffset = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                 }
 
                 layoutManager.scrollToPositionWithOffset(position, view.getTop() - listView.getPaddingTop());
@@ -10417,12 +10417,12 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
             if (sharedMediaRow == -1) {
                 if (isInLandscapeMode || AndroidUtilities.isTablet()) {
-                    listView.setPadding(0, AndroidUtilities.dp(EXTRA_HEIGHT_DP), 0, 0);
+                    listView.setPadding(0, AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP), 0, 0);
                     avatarMaximizeAnimator.cancel();
                     expandAnimatorValues[0] = 1f;
                     expandAnimatorValues[1] = 0f;
                     setAvatarMaximizeAnimationProgress(1f);
-                    extraHeight = AndroidUtilities.dp(EXTRA_HEIGHT_DP);
+                    topScroll = AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP);
                 } else {
                     final int actionBarHeight = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
                     int ws = View.MeasureSpec.makeMeasureSpec(listView.getMeasuredWidth(), View.MeasureSpec.EXACTLY);
@@ -10434,7 +10434,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         holder.itemView.measure(ws, hs);
                         contentHeight += holder.itemView.getMeasuredHeight();
                     }
-                    int paddingBottom = Math.max(0, fragmentView.getMeasuredHeight() - (contentHeight + AndroidUtilities.dp(EXTRA_HEIGHT_DP) + actionBarHeight));
+                    int paddingBottom = Math.max(0, fragmentView.getMeasuredHeight() - (contentHeight + AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) + actionBarHeight));
                     listView.setPadding(0, listView.getPaddingTop(), 0, paddingBottom);
                 }
             }
@@ -10671,7 +10671,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     public ShowDrawable getShowStatusButton() {
         if (showStatusButton == null) {
             showStatusButton = new ShowDrawable(LocaleController.getString(R.string.StatusHiddenShow));
-            showStatusButton.setAlpha((int) (0xFF * Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT_DP))));
+            showStatusButton.setAlpha((int) (0xFF * Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP))));
             showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
         }
         return showStatusButton;
@@ -11061,7 +11061,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             collectibleHint.setOnClickListener(v -> {
                 Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + slug);
             });
-            if (extraHeight < dp(82)) {
+            if (topScroll < dp(82)) {
                 collectibleHintVisible = false;
                 collectibleHint.setAlpha(0.0f);
             }
@@ -11076,7 +11076,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final float expanded = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
         collectibleHint.setTranslationY(-collectibleHint.getPaddingBottom() + nameTextView[1].getY() - dp(24) + lerp(dp(6), -dp(12), expanded));
         collectibleHint.setBgColor(ColorUtils.blendARGB(collectibleHintBackgroundColor, 0x50000000, expanded));
-        final boolean visible = extraHeight >= dp(82);
+        final boolean visible = topScroll >= dp(82);
         if (collectibleHintVisible == null || collectibleHintVisible != visible) {
             collectibleHint.animate().alpha((collectibleHintVisible = visible) ? 1.0f : 0.0f).setInterpolator(CubicBezierInterpolator.EASE_OUT).setDuration(200).start();
         }
@@ -11337,7 +11337,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         @Override
         protected void onDraw(Canvas canvas) {
             final int height = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-            final float v = extraHeight + height + searchTransitionOffset;
+            final float v = topScroll + height + searchTransitionOffset;
 
             int y1 = (int) (v * (1.0f - mediaHeaderAnimationProgress));
 
@@ -11376,7 +11376,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     if (loadedScale > 0) {
                         canvas.save();
                         canvas.clipRect(0, 0, getMeasuredWidth(), y1);
-                        StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), ((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + dp(144)) - (1f - extraHeight / dp(EXTRA_HEIGHT_DP)) * dp(50), Math.min(1f, extraHeight / dp(EXTRA_HEIGHT_DP)), full);
+                        StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), ((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + dp(144)) - (1f - topScroll / dp(DEFAULT_TOP_HEIGHT_DP)) * dp(50), Math.min(1f, topScroll / dp(DEFAULT_TOP_HEIGHT_DP)), full);
                         canvas.restore();
                     }
                 }
@@ -12206,7 +12206,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                                     }
                                 }
                                 int paddingHeight = (fragmentView == null ? 0 : fragmentView.getMeasuredHeight()) - ActionBar.getCurrentActionBarHeight() - AndroidUtilities.statusBarHeight - totalHeight;
-                                if (paddingHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
+                                if (paddingHeight > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
                                     paddingHeight = 0;
                                 }
                                 if (paddingHeight <= 0) {
