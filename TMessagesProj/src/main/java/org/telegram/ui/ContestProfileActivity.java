@@ -4407,13 +4407,13 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         headerButtonLayout = new LinearLayout(getContext());
         headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
-        params.setMargins(AndroidUtilities.dp(10f/3), 0, AndroidUtilities.dp(10f/3), 0);
+        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
         headerButtonLayout.addView(button1, params);
         headerButtonLayout.addView(button2, params);
         headerButtonLayout.addView(button3, params);
         headerButtonLayout.addView(button4, params);
 
-        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26/3f, 0f, 26/3f, 0f));
+        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
 
         needLayout(false);
 
@@ -4769,8 +4769,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final float value = currentExpandAnimatorValue = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture = animatedFracture);
         checkPhotoDescriptionAlpha();
         avatarContainer.setScaleX(avatarScale);
+        avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
         avatarContainer.setScaleY(avatarScale);
-        avatarContainer.setTranslationX(AndroidUtilities.lerp(avatarX, 0 , value));
+//        avatarContainer.setTranslationX(AndroidUtilities.lerp(avatarX, 0 , value));
         avatarContainer.setTranslationY(AndroidUtilities.lerp((float) Math.ceil(avatarY), 0f, value));
         avatarImage.setRoundRadius((int) AndroidUtilities.lerp(getSmallAvatarRoundRadius(), 0f, value));
         if (storyView != null) {
@@ -4873,8 +4874,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
         params.width = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(AVATAR_SIZE_DP), listView.getMeasuredWidth() / avatarScale, value);
         params.height = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(AVATAR_SIZE_DP), (extraHeight + newTop) / avatarScale, value);
-//        params.leftMargin = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(64f), 0f, value);
         avatarContainer.requestLayout();
+        avatarContainer.setTranslationX(params.width * (avatarScale - 1f) * -1 / 2);
 
         updateCollectibleHint();
     }
@@ -6250,17 +6251,14 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
             listView.setOverScrollMode(extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT_DP) && extraHeight < listView.getMeasuredWidth() - newTop ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_ALWAYS);
 
-//            avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() / 2.0f * (1.0f + diff) - 21 * AndroidUtilities.density + 27 * AndroidUtilities.density * diff + actionBar.getTranslationY();
-            avatarX = -AndroidUtilities.dpf2(47f) * diff;
+            avatarX = -AndroidUtilities.dpf2(AVATAR_SIZE_DP) * diff;
             float avatarYMinDp = -100;
             avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(avatarYMinDp) + AndroidUtilities.dp(14 - avatarYMinDp) * diff;
-//            Log.i(TAG, "needLayout: " + diff +  " " + avatarY);
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(EXTRA_HEIGHT_DP) || isPulledDown) {
                 expandProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT_DP)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT_DP))));
                 avatarScale = AndroidUtilities.lerp((42f + 18f) / 42f, (42f + 42f + 18f) / 42f, Math.min(1f, expandProgress * 3f));
-                Log.i(TAG, "needLayout: avatar scale pulldown " + avatarScale);
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -6395,6 +6393,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     }
 
                     avatarContainer.setScaleX(avatarScale);
+                    avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
                     avatarContainer.setScaleY(avatarScale);
 
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
@@ -6425,7 +6424,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 nameTextView[1].setScaleY(1.67f);
 
                 avatarScale = AndroidUtilities.lerp(1.0f, (42f + 42f + 18f) / 42f, avatarAnimationProgress);
-                Log.i(TAG, "needLayout: avatar scale animation " + avatarScale);
                 if (storyView != null) {
                     storyView.setExpandProgress(1f);
                 }
@@ -6443,6 +6441,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                 starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 avatarContainer.setScaleX(avatarScale);
+                avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
                 avatarContainer.setScaleY(avatarScale);
 
                 overlaysView.setAlphaValue(avatarAnimationProgress, false);
@@ -6464,15 +6463,14 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
                 updateEmojiStatusDrawableColor(avatarAnimationProgress);
 
-                final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+//                final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
 //                params.width = params.height = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(42f), (extraHeight + newTop) / avatarScale, avatarAnimationProgress);
 //                params.leftMargin = (int) AndroidUtilities.lerp(AndroidUtilities.dpf2(64f), 0f, avatarAnimationProgress);
-                avatarContainer.requestLayout();
+//                avatarContainer.requestLayout();
 
                 updateCollectibleHint();
             } else if (extraHeight <= AndroidUtilities.dp(EXTRA_HEIGHT_DP)) {
                 avatarScale = (42 + 18 * diff) / 42.0f;
-                Log.i(TAG, "needLayout: avatar scale expand " + avatarScale);
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -6482,9 +6480,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 float nameScale = 1.0f + 0.12f * diff;
                 if (expandAnimator == null || !expandAnimator.isRunning()) {
                     avatarContainer.setScaleX(avatarScale);
+                    avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
                     avatarContainer.setScaleY(avatarScale);
-                    avatarContainer.setPivotX(avatarScale * AndroidUtilities.dpf2(AVATAR_SIZE_DP) / 2);
-                    avatarContainer.setTranslationX(avatarX);
+//                    avatarContainer.setTranslationX(avatarX);
                     avatarContainer.setTranslationY((float) Math.ceil(avatarY));
                     float extra = AndroidUtilities.dp(42) * avatarScale - AndroidUtilities.dp(42);
                     timeItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(16) + extra);
