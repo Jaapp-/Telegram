@@ -6518,10 +6518,11 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 }
                 updateCollectibleHint();
                 buttonHideProgress = Math.max(0f, Math.min(1f, 1f - topScroll / (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP))));
-                Log.i(TAG, "needLayout: " + buttonHideProgress);
-                for (int i = 0; i < headerButtonLayout.getChildCount(); i++) {
-                    HeaderButtonView button = (HeaderButtonView) headerButtonLayout.getChildAt(i);
-                    button.setHideProgress(buttonHideProgress);
+                if (headerButtonLayout != null) {
+                    for (int i = 0; i < headerButtonLayout.getChildCount(); i++) {
+                        HeaderButtonView button = (HeaderButtonView) headerButtonLayout.getChildAt(i);
+                        button.setHideProgress(buttonHideProgress);
+                    }
                 }
             }
 
@@ -6537,8 +6538,10 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             overlaysView.requestLayout();
         }
 
-        float headerY = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-        headerButtonLayout.setTranslationY(headerY + topScroll - (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP)) * (1f - buttonHideProgress) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
+        if (headerButtonLayout != null) {
+            float headerY = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
+            headerButtonLayout.setTranslationY(headerY + topScroll - (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP)) * (1f - buttonHideProgress) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
+        }
 
         updateEmojiStatusEffectPosition();
     }
