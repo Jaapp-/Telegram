@@ -374,6 +374,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private final ArrayList<Integer> visibleSortedUsers = new ArrayList<>();
     private final AccelerateDecelerateInterpolator floatingInterpolator = new AccelerateDecelerateInterpolator();
     private final SparseIntArray adaptedColors = new SparseIntArray();
+    private final SimpleTextView[] nameTextView = new SimpleTextView[2];
+    private final SimpleTextView[] onlineTextView = new SimpleTextView[4];
     public SharedMediaLayout sharedMediaLayout;
     public ProfileGiftsView giftsView;
     public boolean saved;
@@ -408,8 +410,6 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private LinearLayoutManager layoutManager;
     private ListAdapter listAdapter;
     private SearchAdapter searchAdapter;
-    private final SimpleTextView[] nameTextView = new SimpleTextView[2];
-    private final SimpleTextView[] onlineTextView = new SimpleTextView[4];
     private String nameTextViewRightDrawableContentDescription = null;
     private String nameTextViewRightDrawable2ContentDescription = null;
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
@@ -4246,7 +4246,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
             nameTextView[a].setRightDrawableOutside(a == 0);
-            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0,0));
+            avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 0));
         }
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
@@ -4838,8 +4838,8 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         final float onlineTextViewX = (1 - value) * (1 - value) * onlineX + 2 * (1 - value) * value * onlineTextViewCx + value * value * onlineTextViewXEnd;
         final float onlineTextViewY = (1 - value) * (1 - value) * onlineY + 2 * (1 - value) * value * onlineTextViewCy + value * value * onlineTextViewYEnd;
 
-//        nameTextView[1].setTranslationX(nameTextViewX);
-//        nameTextView[1].setTranslationY(nameTextViewY);
+        nameTextView[1].setTranslationX(AndroidUtilities.lerp((AndroidUtilities.displaySize.x - nameTextView[1].getMeasuredWidth()) / 2f, AndroidUtilities.dpf2(20), value));
+        nameTextView[1].setTranslationY(AndroidUtilities.lerp(avatarY + AndroidUtilities.dpf2(AVATAR_SIZE_DP + 14), listView.getMeasuredWidth() - AndroidUtilities.dpf2(63), value));
         onlineTextView[1].setTranslationX(onlineTextViewX + customPhotoOffset);
         onlineTextView[1].setTranslationY(onlineTextViewY);
         mediaCounterTextView.setTranslationX(onlineTextViewX);
@@ -6334,6 +6334,9 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                         onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
 //                        nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
 //                        nameTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
+
+//                        nameTextView[1].setTranslationY(maximizeProgress * AndroidUtilities.dpf2(10));
+                        nameTextView[1].setTranslationY(AndroidUtilities.lerp(avatarY + AndroidUtilities.dpf2(AVATAR_SIZE_DP + 14), listView.getMeasuredWidth() - AndroidUtilities.dpf2(63), maximizeProgress));
                         onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
                         onlineTextView[1].setTranslationY(topBarsHeight + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
                         mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
