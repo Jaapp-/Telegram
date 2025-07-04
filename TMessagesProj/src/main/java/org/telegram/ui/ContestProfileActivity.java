@@ -847,6 +847,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
     private Boolean collectibleHintVisible;
     private TLRPC.TL_emojiStatusCollectible collectibleStatus;
     private LinearLayout headerButtonLayout;
+    private float buttonHideProgress;
 
     public ContestProfileActivity(Bundle args) {
         this(args, null);
@@ -6244,7 +6245,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
 
         if (avatarContainer != null) {
-            final float diff = Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP));
+            final float minimizeProgress = Math.min(1f, topScroll / AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP));
             float maximizedHeight = listView.getMeasuredWidth() + AndroidUtilities.dp(MAXIMIZED_PADDING_DP);
 
             listView.setTopGlowOffset((int) topScroll);
@@ -6252,7 +6253,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             listView.setOverScrollMode(topScroll > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) && topScroll < maximizedHeight - topBarsHeight ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_ALWAYS);
 
             float avatarYMinDp = -100;
-            avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(avatarYMinDp) + AndroidUtilities.dp(14 - avatarYMinDp) * diff;
+            avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(avatarYMinDp) + AndroidUtilities.dp(14 - avatarYMinDp) * minimizeProgress;
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : topScroll;
             if (h > AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP) || isPulledDown) {
@@ -6469,14 +6470,14 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
                 updateCollectibleHint();
             } else if (topScroll <= AndroidUtilities.dp(DEFAULT_TOP_HEIGHT_DP)) {
-                avatarScale = AndroidUtilities.lerp(0.1f, 1f, diff);
+                avatarScale = AndroidUtilities.lerp(0.1f, 1f, minimizeProgress);
                 if (storyView != null) {
                     storyView.invalidate();
                 }
                 if (giftsView != null) {
                     giftsView.invalidate();
                 }
-                float nameScale = 1.0f + 0.12f * diff;
+                float nameScale = 1.0f + 0.12f * minimizeProgress;
                 if (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning()) {
                     avatarContainer.setScaleX(avatarScale);
                     avatarContainer.setTranslationX(-(avatarScale - 1f) * AndroidUtilities.dp(AVATAR_SIZE_DP) / 2f);
@@ -6490,12 +6491,12 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
-                nameX = -21 * AndroidUtilities.density * diff;
-                nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineX = -21 * AndroidUtilities.density * diff;
-                onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+                nameX = -21 * AndroidUtilities.density * minimizeProgress;
+                nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * minimizeProgress + titleAnimationsYDiff * (1f - avatarAnimationProgress);
+                onlineX = -21 * AndroidUtilities.density * minimizeProgress;
+                onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * minimizeProgress;
                 if (showStatusButton != null) {
-                    showStatusButton.setAlpha((int) (0xFF * diff));
+                    showStatusButton.setAlpha((int) (0xFF * minimizeProgress));
                 }
                 for (int a = 0; a < nameTextView.length; a++) {
                     if (nameTextView[a] == null) {
@@ -6516,10 +6517,16 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                     nameTextView[a].setScaleY(nameScale);
                 }
                 updateCollectibleHint();
+                buttonHideProgress = Math.max(0f, Math.min(1f, 1f - topScroll / (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP))));
+                Log.i(TAG, "needLayout: " + buttonHideProgress);
+                for (int i = 0; i < headerButtonLayout.getChildCount(); i++) {
+                    HeaderButtonView button = (HeaderButtonView) headerButtonLayout.getChildAt(i);
+                    button.setHideProgress(buttonHideProgress);
+                }
             }
 
             if (!openAnimationInProgress && (avatarMaximizeAnimator == null || !avatarMaximizeAnimator.isRunning())) {
-                needLayoutText(diff);
+                needLayoutText(minimizeProgress);
             }
         }
 
@@ -6531,7 +6538,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
         }
 
         float headerY = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-        headerButtonLayout.setTranslationY(headerY + topScroll - AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
+        headerButtonLayout.setTranslationY(headerY + topScroll - (AndroidUtilities.dp(HEADER_BUTTON_HEIGHT_DP)) * (1f - buttonHideProgress) - AndroidUtilities.dp(HEADER_BUTTON_MARGIN_DP));
 
         updateEmojiStatusEffectPosition();
     }
@@ -11205,6 +11212,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
 
         private final ImageView imageView;
         private final TextView textView;
+        private float hideProgress;
 
         public HeaderButtonView(@NonNull Context context) {
             super(context);
@@ -11214,15 +11222,41 @@ public class ContestProfileActivity extends BaseFragment implements Notification
             textView.setTextColor(Color.WHITE);
             textView.setTypeface(AndroidUtilities.bold());
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
-            addView(imageView, LayoutHelper.createFrame(24, 24, Gravity.CENTER_HORIZONTAL));
-            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 27, 0, 0));
-            setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6));
+            addView(imageView, LayoutHelper.createFrame(24, 24, Gravity.CENTER_HORIZONTAL, 0, 6, 0, 0));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 0, 6));
             setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(10), ColorUtils.setAlphaComponent(Color.BLACK, 20), ColorUtils.setAlphaComponent(Color.BLACK, 80)));
         }
 
         public void setTextAndIcon(CharSequence text, int icon) {
             textView.setText(text);
             imageView.setImageDrawable(ContextCompat.getDrawable(getContext(), icon));
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int targetHeight = (int) ((1f - this.hideProgress) * AndroidUtilities.dpf2(HEADER_BUTTON_HEIGHT_DP));
+            int heightSpec = MeasureSpec.makeMeasureSpec(targetHeight, MeasureSpec.EXACTLY);
+            super.onMeasure(widthMeasureSpec, heightSpec);
+        }
+
+        public void setHideProgress(float hideProgress) {
+            this.hideProgress = hideProgress;
+
+            float imageScale = Math.max(0f, 1f - hideProgress * 2);
+            imageView.setPivotX(imageView.getWidth() / 2f);
+            imageView.setPivotY(0);
+            imageView.setScaleX(imageScale);
+            imageView.setScaleY(imageScale);
+
+            float textScale = 1f - hideProgress * 0.5f;
+            textView.setPivotX(textView.getWidth() / 2f);
+            textView.setPivotY(textView.getHeight());
+            textView.setScaleX(textScale);
+            textView.setScaleY(textScale);
+
+            setAlpha(Math.max(0f, 1f - (hideProgress - 0.25f) * 4));
+
+            requestLayout();
         }
     }
 
