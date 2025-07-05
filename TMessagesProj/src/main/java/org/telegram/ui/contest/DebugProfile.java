@@ -166,7 +166,6 @@ public class DebugProfile extends BaseFragment {
         topView = new TopView(context);
         frameLayout.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        frameLayout.addView(actionBar);
 
         HeaderButtonView button1 = new HeaderButtonView(context);
         button1.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
@@ -236,6 +235,8 @@ public class DebugProfile extends BaseFragment {
         headerButtonLayout.addView(button3, params);
         headerButtonLayout.addView(button4, params);
         frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+
+        frameLayout.addView(actionBar);
 
         debugText = new TextView(context);
         debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
