@@ -2,6 +2,7 @@ package org.telegram.ui.contest;
 
 import static org.telegram.messenger.AndroidUtilities.displaySize;
 import static org.telegram.messenger.AndroidUtilities.dp;
+import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.AndroidUtilities.statusBarHeight;
 import static org.telegram.messenger.Utilities.clamp01;
 
@@ -22,6 +23,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextPaint;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -118,6 +120,7 @@ public class DebugProfile extends BaseFragment {
         return true;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public View createView(Context context) {
         Theme.createProfileResources(context);
@@ -140,6 +143,13 @@ public class DebugProfile extends BaseFragment {
                 onScroll();
             }
         });
+        listView.setOnTouchListener((v, event) -> {
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                onScrollStopped();
+            }
+            return false;
+        });
+
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         topScroll = 0;
 
@@ -159,6 +169,8 @@ public class DebugProfile extends BaseFragment {
         avatarDrawable.setProfile(true);
 
         avatarContainer = new FrameLayout(context);
+        avatarContainer.setPivotX(0);
+        avatarContainer.setPivotY(0);
         frameLayout.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
 
         avatarImage = new AvatarImageView(context);
@@ -206,6 +218,61 @@ public class DebugProfile extends BaseFragment {
         return frameLayout;
     }
 
+    private void onScrollStopped() {
+        if (topScroll < minimizedOffset) return;
+        final View view = layoutManager.findViewByPosition(0);
+        int targetOffset;
+        if (topScroll < expandedOffset) {
+            if (expandProgress > 0.33) {
+                targetOffset = expandedOffset;
+            } else {
+                targetOffset = minimizedOffset;
+            }
+        } else {
+            if (maximizeProgress > 0.33) {
+                targetOffset = maximizedOffset;
+            } else {
+                targetOffset = expandedOffset;
+            }
+        }
+        listView.post(() -> {
+            listView.smoothScrollBy(0, (view != null ? view.getTop() : 0) - targetOffset);
+        });
+    }
+
+    void updateAvatar() {
+        if (topScroll < minimizedOffset) {
+            avatarContainer.setVisibility(View.GONE);
+            return;
+        }
+        avatarContainer.setVisibility(View.VISIBLE);
+
+        float offsetX = 0;
+        float offsetY = 0;
+        float scale = 1;
+
+        if (topScroll < expandedOffset) {
+            if (expandProgress < 0.16) {
+                scale = 0.3f;
+            } else if (expandProgress < 0.5) {
+                scale = lerp(0.3f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
+            } else if (expandProgress < 0.7) {
+                scale = 0.8f;
+            } else {
+                scale = lerp(0.8f, 1f, (expandProgress - 0.7f) / (1f - 0.7f));
+            }
+            offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(33), expandProgress);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+        } else {
+            offsetY = dp(33);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP)) / 2f;
+        }
+        avatarContainer.setTranslationX(offsetX);
+        avatarContainer.setTranslationY(offsetY);
+        avatarContainer.setScaleX(scale);
+        avatarContainer.setScaleY(scale);
+    }
+
     @SuppressLint("SetTextI18n")
     private void onScroll() {
         int newOffset = 0;
@@ -235,6 +302,7 @@ public class DebugProfile extends BaseFragment {
         } else {
             debugText.setText("maximized");
         }
+        updateAvatar();
     }
 
     private void checkLayout() {
@@ -256,7 +324,6 @@ public class DebugProfile extends BaseFragment {
         ab.setOccupyStatusBar(true);
         ab.setClipContent(true);
         ab.setAddToContainer(false);
-        ab.setTitle("HELLO");
         ab.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), false);
         ab.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -532,7 +599,7 @@ public class DebugProfile extends BaseFragment {
             animator.setDuration(250);
             animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
             animator.addUpdateListener(anim -> {
-                float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue = anim.getAnimatedFraction());
+                float value = lerp(animatorValues, currentAnimationValue = anim.getAnimatedFraction());
                 setAlphaValue(value, true);
             });
             animator.addListener(new AnimatorListenerAdapter() {
@@ -588,7 +655,7 @@ public class DebugProfile extends BaseFragment {
             if (overlaysVisible != isOverlaysVisible) {
                 isOverlaysVisible = overlaysVisible;
                 animator.cancel();
-                final float value = AndroidUtilities.lerp(animatorValues, currentAnimationValue);
+                final float value = lerp(animatorValues, currentAnimationValue);
                 if (overlaysVisible) {
                     animator.setDuration((long) ((1f - value) * 250f / durationFactor));
                 } else {
@@ -699,7 +766,7 @@ public class DebugProfile extends BaseFragment {
 
                     if (a != selectedPosition) {
                         if (overlayCountVisible == 3) {
-                            barPaint.setAlpha((int) (AndroidUtilities.lerp(baseAlpha, 0xff, CubicBezierInterpolator.EASE_BOTH.getInterpolation(alphas[a])) * alpha));
+                            barPaint.setAlpha((int) (lerp(baseAlpha, 0xff, CubicBezierInterpolator.EASE_BOTH.getInterpolation(alphas[a])) * alpha));
                         }
                     } else {
                         alphas[a] = 0.75f;
@@ -812,7 +879,7 @@ public class DebugProfile extends BaseFragment {
             animator = ValueAnimator.ofFloat(0f, 1f);
             animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
             animator.addUpdateListener(a -> {
-                final float value = AndroidUtilities.lerp(animatorValues, a.getAnimatedFraction());
+                final float value = lerp(animatorValues, a.getAnimatedFraction());
 //                if (searchItem != null && !isPulledDown) {
 //                    searchItem.setScaleX(1f - value);
 //                    searchItem.setScaleY(1f - value);
@@ -929,7 +996,7 @@ public class DebugProfile extends BaseFragment {
             if (indicatorVisible != isIndicatorVisible) {
                 isIndicatorVisible = indicatorVisible;
                 animator.cancel();
-                final float value = AndroidUtilities.lerp(animatorValues, animator.getAnimatedFraction());
+                final float value = lerp(animatorValues, animator.getAnimatedFraction());
                 if (durationFactor <= 0f) {
                     animator.setDuration(0);
                 } else if (indicatorVisible) {
