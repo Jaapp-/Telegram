@@ -25,14 +25,19 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextPaint;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
@@ -42,6 +47,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.ImageLocation;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserObject;
@@ -109,6 +115,8 @@ public class DebugProfile extends BaseFragment {
     private FrameLayout avatarContainer;
     private RadialProgressView avatarProgressView;
     private PagerIndicatorView avatarsViewPagerIndicatorView;
+    private LinearLayout headerButtonLayout;
+    private float buttonHideProgress;
 
     public DebugProfile(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
         super(args);
@@ -166,7 +174,28 @@ public class DebugProfile extends BaseFragment {
         debugText.setTextSize(10);
         frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
-        checkLayout();
+        HeaderButtonView button1 = new HeaderButtonView(context);
+        button1.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
+        button1.setOnClickListener(v -> {
+            Log.i(TAG, "button1 click");
+        });
+        HeaderButtonView button2 = new HeaderButtonView(context);
+        button2.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.mute);
+        HeaderButtonView button3 = new HeaderButtonView(context);
+        button3.setTextAndIcon(LocaleController.getString(R.string.Call), R.drawable.call);
+        HeaderButtonView button4 = new HeaderButtonView(context);
+        button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
+
+        headerButtonLayout = new LinearLayout(getContext());
+        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
+        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
+        headerButtonLayout.addView(button1, params);
+        headerButtonLayout.addView(button2, params);
+        headerButtonLayout.addView(button3, params);
+        headerButtonLayout.addView(button4, params);
+
+        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
 
         avatarDrawable = new AvatarDrawable();
         avatarDrawable.setProfile(true);
@@ -215,6 +244,7 @@ public class DebugProfile extends BaseFragment {
         frameLayout.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
+        checkLayout();
         showAvatarProgress(false, false);
         updateProfileData(true);
 
@@ -298,18 +328,37 @@ public class DebugProfile extends BaseFragment {
         topScroll = newOffset;
         topView.invalidate();
 
+        String debug = "scroll: " + topScroll + "\n";
         if (topScroll < minimizedOffset) {
-            debugText.setText("minimized");
+            debug += "minimized";
         } else if (topScroll < expandedOffset) {
             expandProgress = clamp01((topScroll - minimizedOffset) / (float) (expandedOffset - minimizedOffset));
-            debugText.setText("expanding " + expandProgress);
+            debug += "expanding " + expandProgress;
         } else if (topScroll < maximizedOffset) {
             maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
-            debugText.setText("maximizing " + maximizeProgress);
+            debug += "maximizing " + maximizeProgress;
         } else {
             debugText.setText("maximized");
+            debug += "maximized";
         }
+        debugText.setText(debug);
         updateAvatar();
+        updateHeaderButtons();
+    }
+
+    private void updateHeaderButtons() {
+        buttonHideProgress = 1f - clamp01((float) (topScroll - topBarsHeight) / dp(HEADER_BUTTON_HEIGHT_DP));
+
+        if (headerButtonLayout != null) {
+            for (int i = 0; i < headerButtonLayout.getChildCount(); i++) {
+                HeaderButtonView button = (HeaderButtonView) headerButtonLayout.getChildAt(i);
+                button.setHideProgress(buttonHideProgress);
+            }
+        }
+
+        if (headerButtonLayout != null) {
+            headerButtonLayout.setTranslationY(topScroll - dp(HEADER_BUTTON_HEIGHT_DP + HEADER_BUTTON_MARGIN_DP) + buttonHideProgress * dp(HEADER_BUTTON_HEIGHT_DP));
+        }
     }
 
     private void checkLayout() {
@@ -453,6 +502,58 @@ public class DebugProfile extends BaseFragment {
         }
     }
 
+    static class HeaderButtonView extends FrameLayout {
+
+        private final ImageView imageView;
+        private final TextView textView;
+        private float hideProgress;
+
+        public HeaderButtonView(@NonNull Context context) {
+            super(context);
+            setWillNotDraw(false);
+            imageView = new ImageView(context);
+            textView = new TextView(context);
+            textView.setTextColor(Color.WHITE);
+            textView.setTypeface(AndroidUtilities.bold());
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            addView(imageView, LayoutHelper.createFrame(24, 24, Gravity.CENTER_HORIZONTAL, 0, 6, 0, 0));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 0, 6));
+            setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(10), ColorUtils.setAlphaComponent(Color.BLACK, 20), ColorUtils.setAlphaComponent(Color.BLACK, 80)));
+        }
+
+        public void setTextAndIcon(CharSequence text, int icon) {
+            textView.setText(text);
+            imageView.setImageDrawable(ContextCompat.getDrawable(getContext(), icon));
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int targetHeight = (int) ((1f - this.hideProgress) * AndroidUtilities.dpf2(HEADER_BUTTON_HEIGHT_DP));
+            int heightSpec = MeasureSpec.makeMeasureSpec(targetHeight, MeasureSpec.EXACTLY);
+            super.onMeasure(widthMeasureSpec, heightSpec);
+        }
+
+        public void setHideProgress(float hideProgress) {
+            this.hideProgress = hideProgress;
+
+            float imageScale = Math.max(0f, 1f - hideProgress * 2);
+            imageView.setPivotX(imageView.getWidth() / 2f);
+            imageView.setPivotY(0);
+            imageView.setScaleX(imageScale);
+            imageView.setScaleY(imageScale);
+
+            float textScale = 1f - hideProgress * 0.5f;
+            textView.setPivotX(textView.getWidth() / 2f);
+            textView.setPivotY(textView.getHeight());
+            textView.setScaleX(textScale);
+            textView.setScaleY(textScale);
+
+            setAlpha(Math.max(0f, 1f - (hideProgress - 0.25f) * 4));
+
+            requestLayout();
+        }
+    }
+
     private class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         private final static int VIEW_TYPE_TEXT_DETAIL = 1, VIEW_TYPE_SHADOW = 2, VIEW_TYPE_MEDIA = 3;
         private final Context context;
@@ -565,7 +666,6 @@ public class DebugProfile extends BaseFragment {
             float flipProgress = 0.45f;
             float circleTouchProgress = 0.6f;
             float widenProgress = Math.max(0f, Math.min(1f, (progress - flipProgress) / (circleTouchProgress - flipProgress)));
-            Log.i(TAG, "drawConnectionSide: " + widenProgress);
 
             float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarSize * 2, widenProgress);
 
