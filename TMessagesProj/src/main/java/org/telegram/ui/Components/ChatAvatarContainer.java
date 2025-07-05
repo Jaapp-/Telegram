@@ -63,6 +63,7 @@ import org.telegram.ui.ContestProfileActivity;
 import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.StoriesUtilities;
 import org.telegram.ui.TopicsFragment;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -574,13 +575,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 }
                 args.putBoolean("reportSpam", parentFragment.hasReportSpam());
                 args.putInt("actionBarColor", getThemedColor(Theme.key_actionBarDefault));
-                ContestProfileActivity fragment = new ContestProfileActivity(args, sharedMediaPreloader);
+                DebugProfile fragment = new DebugProfile(args, sharedMediaPreloader);
                 if (!monoforum) {
                     fragment.setUserInfo(parentFragment.getCurrentUserInfo(), parentFragment.profileChannelMessageFetcher, parentFragment.birthdayAssetsFetcher);
                 }
-                if (fromChatAnimation) {
-                    fragment.setPlayProfileAnimation(byAvatar ? 2 : 1);
-                }
+//                if (fromChatAnimation) {
+//                    fragment.setPlayProfileAnimation(byAvatar ? 2 : 1);
+//                }
                 parentFragment.presentFragment(fragment, removeLast);
             }
         } else if (chat != null) {
