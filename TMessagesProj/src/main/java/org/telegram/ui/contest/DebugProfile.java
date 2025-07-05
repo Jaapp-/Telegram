@@ -3,16 +3,19 @@ package org.telegram.ui.contest;
 import static org.telegram.messenger.AndroidUtilities.displaySize;
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.statusBarHeight;
+import static org.telegram.messenger.Utilities.clamp01;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,21 +39,25 @@ public class DebugProfile extends BaseFragment {
     private static final String TAG = "Contest";
     private final SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
     private TLRPC.UserFull userInfo;
-
     private RecyclerListView listView;
     private LinearLayoutManager layoutManager;
-
     private int rowCount;
     private int bioRow;
     private int usernameRow;
     private int mediaSectionRow;
     private Theme.ResourcesProvider resourcesProvider;
     private int mediaRow;
-
     private int topPadding;
     private int topScroll;
     private TopView topView;
     private int actionBarHeight;
+    private TextView debugText;
+    private int topBarsHeight;
+    private int minimizedOffset;
+    private int expandedOffset;
+    private int maximizedOffset;
+    private float expandProgress;
+    private float maximizeProgress;
 
     public DebugProfile(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
         super(args);
@@ -87,11 +94,17 @@ public class DebugProfile extends BaseFragment {
 
         frameLayout.addView(actionBar);
 
+        debugText = new TextView(context);
+        debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
+        debugText.setTextSize(10);
+        frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
+
         checkLayout();
 
         return frameLayout;
     }
 
+    @SuppressLint("SetTextI18n")
     private void onScroll() {
         int newOffset = 0;
         if (listView.getChildCount() > 0) {
@@ -107,16 +120,30 @@ public class DebugProfile extends BaseFragment {
         }
 
         topScroll = newOffset;
-        Log.i(TAG, "onScroll: " + newOffset + " " + ((float) newOffset / topPadding));
         topView.invalidate();
+
+        if (topScroll < minimizedOffset) {
+            debugText.setText("minimized");
+        } else if (topScroll < expandedOffset) {
+            expandProgress = clamp01((topScroll - minimizedOffset) / (float) (expandedOffset - minimizedOffset));
+            debugText.setText("expanding " + expandProgress);
+        } else if (topScroll < maximizedOffset) {
+            maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
+            debugText.setText("maximizing " + maximizeProgress);
+        } else {
+            debugText.setText("maximized");
+        }
     }
 
     private void checkLayout() {
         actionBarHeight = ActionBar.getCurrentActionBarHeight();
-        topPadding = displaySize.x + dp(10);
-        Log.i(TAG, "checkLayout: " + topPadding);
+        topBarsHeight = actionBarHeight + statusBarHeight;
 
-        listView.setPadding(0, topPadding, 0, 0);
+        minimizedOffset = topBarsHeight;
+        expandedOffset = dp(270);
+        maximizedOffset = displaySize.x + dp(62);
+
+        listView.setPadding(0, maximizedOffset, 0, 0);
     }
 
     @Override
@@ -247,7 +274,7 @@ public class DebugProfile extends BaseFragment {
         @Override
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
-            canvas.drawRect(0, 0, getMeasuredWidth(), Math.max(topScroll, statusBarHeight + actionBarHeight), paint);
+            canvas.drawRect(0, 0, getMeasuredWidth(), Math.max(topScroll, topBarsHeight), paint);
         }
     }
 }
