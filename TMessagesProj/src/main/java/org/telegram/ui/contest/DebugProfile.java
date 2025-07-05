@@ -90,7 +90,6 @@ public class DebugProfile extends BaseFragment {
     private int mediaSectionRow;
     private Theme.ResourcesProvider resourcesProvider;
     private int mediaRow;
-    private int topPadding;
     private int topScroll;
     private TopView topView;
     private int actionBarHeight;
@@ -162,17 +161,12 @@ public class DebugProfile extends BaseFragment {
         });
 
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        topScroll = 0;
+        topScroll = expandedOffset;
 
         topView = new TopView(context);
         frameLayout.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         frameLayout.addView(actionBar);
-
-        debugText = new TextView(context);
-        debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
-        debugText.setTextSize(10);
-        frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
         HeaderButtonView button1 = new HeaderButtonView(context);
         button1.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
@@ -186,16 +180,6 @@ public class DebugProfile extends BaseFragment {
         HeaderButtonView button4 = new HeaderButtonView(context);
         button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
 
-        headerButtonLayout = new LinearLayout(getContext());
-        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
-        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
-        headerButtonLayout.addView(button1, params);
-        headerButtonLayout.addView(button2, params);
-        headerButtonLayout.addView(button3, params);
-        headerButtonLayout.addView(button4, params);
-
-        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
 
         avatarDrawable = new AvatarDrawable();
         avatarDrawable.setProfile(true);
@@ -243,6 +227,20 @@ public class DebugProfile extends BaseFragment {
         avatarsViewPagerIndicatorView = new PagerIndicatorView(context);
         frameLayout.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
+        headerButtonLayout = new LinearLayout(getContext());
+        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
+        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
+        headerButtonLayout.addView(button1, params);
+        headerButtonLayout.addView(button2, params);
+        headerButtonLayout.addView(button3, params);
+        headerButtonLayout.addView(button4, params);
+        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+
+        debugText = new TextView(context);
+        debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
+        debugText.setTextSize(10);
+        frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
         checkLayout();
         showAvatarProgress(false, false);
@@ -284,6 +282,7 @@ public class DebugProfile extends BaseFragment {
         float offsetY;
         float scale;
         float alpha = 1;
+        int roundRadius = dp(AVATAR_SIZE_DP / 2);
 
         if (topScroll < expandedOffset) {
             if (expandProgress < 0.16) {
@@ -298,16 +297,23 @@ public class DebugProfile extends BaseFragment {
             offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
             alpha = clamp01((expandProgress - 0.3f) / (0.5f - 0.3f));
-        } else {
+        } else if (maximizeProgress < 0.5) {
             scale = lerp(1f, 1.1f, maximizeProgress);
             offsetY = lerp(dp(38), dp(74), maximizeProgress);
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+        } else {
+            float extraProgress = clamp01((float) ((maximizeProgress - 0.5) * 2));
+            scale = lerp(1.05f, (float) displaySize.x / dp(AVATAR_SIZE_DP), extraProgress);
+            offsetY = lerp(dp(38 + (float) (74 - 38) / 2), 0, extraProgress);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+            roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, extraProgress);
         }
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
         avatarContainer.setScaleX(scale);
         avatarContainer.setScaleY(scale);
         avatarContainer.setAlpha(alpha);
+        avatarImage.setRoundRadius(roundRadius, roundRadius, roundRadius, roundRadius);
     }
 
     @SuppressLint("SetTextI18n")
@@ -331,10 +337,10 @@ public class DebugProfile extends BaseFragment {
         String debug = "scroll: " + topScroll + "\n";
         if (topScroll < minimizedOffset) {
             debug += "minimized";
-        } else if (topScroll < expandedOffset) {
+        } else if (topScroll <= expandedOffset) {
             expandProgress = clamp01((topScroll - minimizedOffset) / (float) (expandedOffset - minimizedOffset));
             debug += "expanding " + expandProgress;
-        } else if (topScroll < maximizedOffset) {
+        } else if (topScroll <= maximizedOffset) {
             maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
             debug += "maximizing " + maximizeProgress;
         } else {
