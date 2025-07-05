@@ -127,6 +127,17 @@ public class DebugProfile extends BaseFragment {
         ab.setOccupyStatusBar(true);
         ab.setClipContent(true);
         ab.setAddToContainer(false);
+        ab.setTitle("HELLO");
+        ab.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), false);
+        ab.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+            @Override
+            public void onItemClick(int id) {
+                if (id == -1) {
+                    finishFragment();
+                }
+            }
+        });
+
         return ab;
     }
 
