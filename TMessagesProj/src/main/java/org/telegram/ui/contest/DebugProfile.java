@@ -246,6 +246,8 @@ public class DebugProfile extends BaseFragment {
         showAvatarProgress(false, false);
         updateProfileData(true);
 
+        layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
+
         return frameLayout;
     }
 
@@ -330,18 +332,20 @@ public class DebugProfile extends BaseFragment {
                 }
             }
         }
-
         topScroll = newOffset;
         topView.invalidate();
 
         String debug = "scroll: " + topScroll + "\n";
         if (topScroll < minimizedOffset) {
             debug += "minimized";
+            expandProgress = 0;
         } else if (topScroll <= expandedOffset) {
             expandProgress = clamp01((topScroll - minimizedOffset) / (float) (expandedOffset - minimizedOffset));
+            maximizeProgress = 0;
             debug += "expanding " + expandProgress;
         } else if (topScroll <= maximizedOffset) {
             maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
+            expandProgress = 1f;
             debug += "maximizing " + maximizeProgress;
         } else {
             debugText.setText("maximized");
