@@ -261,11 +261,12 @@ public class DebugProfile extends BaseFragment {
             } else {
                 scale = lerp(0.8f, 1f, (expandProgress - 0.7f) / (1f - 0.7f));
             }
-            offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(33), expandProgress);
+            offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
         } else {
-            offsetY = dp(33);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP)) / 2f;
+            scale = lerp(1f, 1.1f, maximizeProgress);
+            offsetY = lerp(dp(38), dp(74), maximizeProgress);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
         }
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
