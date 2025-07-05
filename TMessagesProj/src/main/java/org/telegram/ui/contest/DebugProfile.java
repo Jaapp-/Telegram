@@ -2,6 +2,7 @@ package org.telegram.ui.contest;
 
 import static org.telegram.messenger.AndroidUtilities.displaySize;
 import static org.telegram.messenger.AndroidUtilities.dp;
+import static org.telegram.messenger.AndroidUtilities.dpf2;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.AndroidUtilities.statusBarHeight;
 import static org.telegram.messenger.Utilities.clamp01;
@@ -14,6 +15,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -22,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextPaint;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -247,15 +250,16 @@ public class DebugProfile extends BaseFragment {
         }
         avatarContainer.setVisibility(View.VISIBLE);
 
-        float offsetX = 0;
-        float offsetY = 0;
-        float scale = 1;
+        float offsetX;
+        float offsetY;
+        float scale;
+        float alpha = 1;
 
         if (topScroll < expandedOffset) {
             if (expandProgress < 0.16) {
-                scale = 0.3f;
+                scale = 0.1f;
             } else if (expandProgress < 0.5) {
-                scale = lerp(0.3f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
+                scale = lerp(0.1f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
             } else if (expandProgress < 0.7) {
                 scale = 0.8f;
             } else {
@@ -263,6 +267,7 @@ public class DebugProfile extends BaseFragment {
             }
             offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+            alpha = clamp01((expandProgress - 0.3f) / (0.5f - 0.3f));
         } else {
             scale = lerp(1f, 1.1f, maximizeProgress);
             offsetY = lerp(dp(38), dp(74), maximizeProgress);
@@ -272,6 +277,7 @@ public class DebugProfile extends BaseFragment {
         avatarContainer.setTranslationY(offsetY);
         avatarContainer.setScaleX(scale);
         avatarContainer.setScaleY(scale);
+        avatarContainer.setAlpha(alpha);
     }
 
     @SuppressLint("SetTextI18n")
@@ -521,7 +527,11 @@ public class DebugProfile extends BaseFragment {
     }
 
     class TopView extends FrameLayout {
+        private static final float DROPLET_WIDTH_DP = 33f;
+        private static final float DROPLET_HEIGHT_DP = 13f;
         private final Paint paint;
+        private final Path connection = new Path();
+        private final Paint black = new Paint();
 
         public TopView(@NonNull Context context) {
             super(context);
@@ -534,6 +544,76 @@ public class DebugProfile extends BaseFragment {
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
             canvas.drawRect(0, 0, getMeasuredWidth(), Math.max(topScroll, topBarsHeight), paint);
+            if (topScroll >= minimizedOffset && topScroll <= expandedOffset) {
+                float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
+                canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
+                drawConnectionSide(canvas, 1f);
+                drawConnectionSide(canvas, -1f);
+            }
+        }
+
+
+        private void drawConnectionSide(Canvas canvas, float direction) {
+            connection.reset();
+            float avatarTop = avatarContainer.getTranslationY();
+            float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
+            float progress = (1f - expandProgress);
+
+            float centerX = getWidth() / 2f;
+            float dropletHeight = dpf2(DROPLET_HEIGHT_DP) * progress;
+
+            float flipProgress = 0.45f;
+            float circleTouchProgress = 0.6f;
+            float widenProgress = Math.max(0f, Math.min(1f, (progress - flipProgress) / (circleTouchProgress - flipProgress)));
+            Log.i(TAG, "drawConnectionSide: " + widenProgress);
+
+            float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarSize * 2, widenProgress);
+
+            float p0XOffset = (dropletWidth / 2);
+            float circleOffsetX = lerp(avatarSize / 2, avatarSize, widenProgress);
+
+            // Position of midpoint of cubic
+            float p0X = centerX - p0XOffset * direction;
+            float p0Y = 0;
+            connection.moveTo(p0X, p0Y);
+
+            // Angle at midpoint of cubic
+            float d = dropletWidth / 4;
+            float p1X = (1f - widenProgress) * d;
+            float p1Y = 0;
+
+            float p2Y;
+            float p2X;
+            float p3Y;
+            float p3X;
+
+            if (progress < flipProgress) {
+                p3X = dropletWidth / 2;
+                p3Y = dropletHeight;
+                p2X = dropletWidth / 4;
+                p2Y = dropletHeight;
+            } else {
+                // Position of top-left point of circle
+                float circleTopLeftY = (float) Math.sqrt(Math.pow(avatarSize, 2) - Math.pow(circleOffsetX, 2));
+                p3Y = avatarTop + avatarSize - p0Y - circleTopLeftY;
+                p3X = p0XOffset - circleOffsetX;
+
+                // Angle at top-left point of circle
+                float dCircle = 50f;
+                float length = (float) Math.hypot(circleOffsetX, circleTopLeftY);
+                float normalizedX = circleOffsetX / length;
+                float normalizedY = circleTopLeftY / length;
+                p2X = normalizedY * dCircle + p3X;
+                p2Y = -normalizedX * dCircle + p3Y;
+            }
+
+
+            connection.rCubicTo(direction * p1X, p1Y, direction * p2X, p2Y, direction * p3X, p3Y);
+            connection.rLineTo((p0XOffset - p3X) * direction, 0);
+            connection.lineTo(centerX, p0Y);
+            connection.close();
+
+            canvas.drawPath(connection, black);
         }
     }
 
@@ -874,7 +954,7 @@ public class DebugProfile extends BaseFragment {
             textPaint.setColor(Color.WHITE);
             textPaint.setTypeface(Typeface.SANS_SERIF);
             textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setTextSize(AndroidUtilities.dpf2(15f));
+            textPaint.setTextSize(dpf2(15f));
             backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             backgroundPaint.setColor(0x26000000);
             animator = ValueAnimator.ofFloat(0f, 1f);
@@ -1037,9 +1117,9 @@ public class DebugProfile extends BaseFragment {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            final float radius = AndroidUtilities.dpf2(12);
+            final float radius = dpf2(12);
             canvas.drawRoundRect(indicatorRect, radius, radius, backgroundPaint);
-            canvas.drawText(getCurrentTitle(), indicatorRect.centerX(), indicatorRect.top + AndroidUtilities.dpf2(18.5f), textPaint);
+            canvas.drawText(getCurrentTitle(), indicatorRect.centerX(), indicatorRect.top + dpf2(18.5f), textPaint);
         }
 
         private String getCurrentTitle() {
