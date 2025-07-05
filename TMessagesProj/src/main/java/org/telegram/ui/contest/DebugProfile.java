@@ -79,6 +79,7 @@ public class DebugProfile extends BaseFragment {
     private final static float HEADER_BUTTON_HEIGHT_DP = 54;
     private final static float HEADER_BUTTON_MARGIN_DP = 12;
     private final static float AVATAR_SIZE_DP = 90;
+    private final static float AVATAR_EXPAND_THRESHOLD = 0.4f;
 
     private final SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
     private TLRPC.UserFull userInfo;
@@ -116,6 +117,10 @@ public class DebugProfile extends BaseFragment {
     private PagerIndicatorView avatarsViewPagerIndicatorView;
     private LinearLayout headerButtonLayout;
     private float buttonHideProgress;
+    private boolean isPulledDown;
+    private ValueAnimator avatarMaximizeAnimator;
+    private float avatarOffsetY;
+    private float avatarScale;
 
     public DebugProfile(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
         super(args);
@@ -243,6 +248,22 @@ public class DebugProfile extends BaseFragment {
         debugText.setTextSize(10);
         frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
+
+        avatarMaximizeAnimator = ValueAnimator.ofFloat(0f, 1f);
+        avatarMaximizeAnimator.addUpdateListener(anim -> {
+            setAvatarMaximizeAnimationProgress(anim.getAnimatedFraction());
+        });
+        avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+        avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                actionBar.setItemsBackgroundColor(isPulledDown ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
+                avatarImage.clearForeground();
+//                doNotSetForeground = false;
+//                updateStoriesViewBounds(false);
+            }
+        });
+
         checkLayout();
         showAvatarProgress(false, false);
         updateProfileData(true);
@@ -251,6 +272,7 @@ public class DebugProfile extends BaseFragment {
 
         return frameLayout;
     }
+
 
     private void onScrollStopped() {
         if (topScroll < minimizedOffset) return;
@@ -263,7 +285,7 @@ public class DebugProfile extends BaseFragment {
                 targetOffset = minimizedOffset;
             }
         } else {
-            if (maximizeProgress > 0.33) {
+            if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
                 targetOffset = maximizedOffset;
             } else {
                 targetOffset = expandedOffset;
@@ -282,41 +304,59 @@ public class DebugProfile extends BaseFragment {
         avatarContainer.setVisibility(View.VISIBLE);
 
         float offsetX;
-        float offsetY;
-        float scale;
         float alpha = 1;
-        int roundRadius = dp(AVATAR_SIZE_DP / 2);
 
         if (topScroll < expandedOffset) {
             if (expandProgress < 0.16) {
-                scale = 0.1f;
+                avatarScale = 0.1f;
             } else if (expandProgress < 0.5) {
-                scale = lerp(0.1f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
+                avatarScale = lerp(0.1f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
             } else if (expandProgress < 0.7) {
-                scale = 0.8f;
+                avatarScale = 0.8f;
             } else {
-                scale = lerp(0.8f, 1f, (expandProgress - 0.7f) / (1f - 0.7f));
+                avatarScale = lerp(0.8f, 1f, (expandProgress - 0.7f) / (1f - 0.7f));
             }
-            offsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+            avatarOffsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
             alpha = clamp01((expandProgress - 0.3f) / (0.5f - 0.3f));
-        } else if (maximizeProgress < 0.5) {
-            scale = lerp(1f, 1.1f, maximizeProgress);
-            offsetY = lerp(dp(38), dp(74), maximizeProgress);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
         } else {
-            float extraProgress = clamp01((float) ((maximizeProgress - 0.5) * 2));
-            scale = lerp(1.05f, (float) displaySize.x / dp(AVATAR_SIZE_DP), extraProgress);
-            offsetY = lerp(dp(38 + (float) (74 - 38) / 2), 0, extraProgress);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
-            roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, extraProgress);
+            float pulldownProgress = clamp01(maximizeProgress / AVATAR_EXPAND_THRESHOLD);
+            avatarScale = lerp(1f, 1.1f, pulldownProgress);
+            avatarOffsetY = lerp(dp(38), dp(74), pulldownProgress);
+            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
         }
+        if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
+            // Handle by maximize animation
+            return;
+        }
+        avatarContainer.setTranslationX(offsetX);
+        avatarContainer.setTranslationY(avatarOffsetY);
+        avatarContainer.setScaleX(avatarScale);
+        avatarContainer.setScaleY(avatarScale);
+        avatarContainer.setAlpha(alpha);
+    }
+
+    private void setAvatarMaximizeAnimationProgress(float animatedFraction) {
+        float progress = isPulledDown ? animatedFraction : 1f - animatedFraction;
+        updateAvatar();
+
+        float scale = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
+        float offsetY = lerp(avatarOffsetY, 0, progress);
+        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+        int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
         avatarContainer.setScaleX(scale);
         avatarContainer.setScaleY(scale);
-        avatarContainer.setAlpha(alpha);
         avatarImage.setRoundRadius(roundRadius, roundRadius, roundRadius, roundRadius);
+    }
+
+    void startMaximizeAnimator() {
+        listView.smoothScrollBy(0, 0);
+        if (avatarMaximizeAnimator.isRunning()) {
+            avatarMaximizeAnimator.cancel();
+        }
+        avatarMaximizeAnimator.start();
     }
 
     @SuppressLint("SetTextI18n")
@@ -348,6 +388,20 @@ public class DebugProfile extends BaseFragment {
             maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
             expandProgress = 1f;
             debug += "maximizing " + maximizeProgress;
+
+            if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
+                if (!isPulledDown) {
+                    isPulledDown = true;
+                    Log.i(TAG, "onScroll: DOWN");
+                    startMaximizeAnimator();
+                }
+            } else {
+                if (isPulledDown) {
+                    isPulledDown = false;
+                    Log.i(TAG, "onScroll: UP");
+                    startMaximizeAnimator();
+                }
+            }
         } else {
             debugText.setText("maximized");
             debug += "maximized";
@@ -656,7 +710,8 @@ public class DebugProfile extends BaseFragment {
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
             canvas.drawRect(0, 0, getMeasuredWidth(), Math.max(topScroll, topBarsHeight), paint);
-            if (topScroll >= minimizedOffset && topScroll <= expandedOffset) {
+
+            if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarMaximizeAnimator.isRunning()) {
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
                 canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
                 drawConnectionSide(canvas, 1f);
