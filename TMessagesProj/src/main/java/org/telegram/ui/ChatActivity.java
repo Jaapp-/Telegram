@@ -326,7 +326,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private FrameLayout progressView;
     private View progressView2;
     private FrameLayout bottomOverlay;
-    protected ChatActivityEnterView chatActivityEnterView;
+    public ChatActivityEnterView chatActivityEnterView;
     private ChatActivityEnterTopView chatActivityEnterTopView;
     private int chatActivityEnterViewAnimateFromTop;
     private boolean chatActivityEnterViewAnimateBeforeSending;
