@@ -83,6 +83,7 @@ import org.telegram.ui.Components.TimerParticles;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stories.recorder.HintView2;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -602,7 +603,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                     Bundle bundle = new Bundle();
                     bundle.putLong("user_id", user.id);
                     MessagesController.getInstance(UserConfig.selectedAccount).putUser(user, false);
-                    ProfileActivity profileActivity = new ProfileActivity(bundle);
+                    DebugProfile profileActivity = new DebugProfile(bundle);
                     presentFragment(profileActivity);
                 }
             } else if (position == createNewLinkRow) {

@@ -34,6 +34,7 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -76,12 +77,14 @@ import android.widget.Toast;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.collection.LongSparseArray;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -175,6 +178,7 @@ import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.ButtonBounce;
 import org.telegram.ui.Components.ChatActivityInterface;
 import org.telegram.ui.Components.ChatNotificationsPopupWrapper;
 import org.telegram.ui.Components.ColoredImageSpan;
@@ -326,6 +330,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private final ArrayList<TLRPC.ChatParticipant> visibleChatParticipants = new ArrayList<>();
     private final ArrayList<Integer> visibleSortedUsers = new ArrayList<>();
     private final SparseIntArray adaptedColors = new SparseIntArray();
+    private final boolean fragmentOpened = true; // TODO animation
     public SharedMediaLayout sharedMediaLayout;
     public int birthdayRow;
     HashSet<Integer> notificationsExceptionTopics = new HashSet<>();
@@ -376,9 +381,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private ValueAnimator avatarMaximizeAnimator;
     private float avatarOffsetY;
     private float avatarScale;
-    private boolean saved;
+    public boolean saved;
     private boolean openSimilar;
-    private boolean isTopic;
+    public boolean isTopic;
     private long banFromGroup;
     private int reportReactionMessageId;
     private long reportReactionFromDialogId;
@@ -387,7 +392,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private String vcardFirstName;
     private String vcardLastName;
     private boolean reportSpam;
-    private boolean myProfile;
+    public boolean myProfile;
     private boolean openGifts;
     private boolean openCommonChats;
     private long dialogId;
@@ -538,7 +543,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private boolean doNotSetForeground;
     private ImageReceiver fallbackImage;
     private ProfileStoriesView storyView;
-    private ProfileGiftsView giftsView;
+    public ProfileGiftsView giftsView;
     private ActionBarMenuSubItem editColorItem;
     private boolean hasVoiceChatItem;
     private long mergeDialogId;
@@ -553,7 +558,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private String currentBio;
     private RLottieDrawable cellCameraDrawable;
     private TextCell setAvatarCell;
-    private final boolean fragmentOpened = true; // TODO animation
     private boolean hoursExpanded;
     private boolean hoursShownMine;
     private ProfileBirthdayEffect.BirthdayEffectFetcher birthdayFetcher;
@@ -567,7 +571,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private AnimatorSet headerShadowAnimatorSet;
 
     private float mediaHeaderAnimationProgress;
-    private boolean mediaHeaderVisible;
     private final Property<ActionBar, Float> ACTIONBAR_HEADER_PROGRESS = new AnimationProperties.FloatProperty<ActionBar>("avatarAnimationProgress") {
         @Override
         public void setValue(ActionBar object, float value) {
@@ -654,6 +657,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             return mediaHeaderAnimationProgress;
         }
     };
+    private boolean mediaHeaderVisible;
+    private boolean expandPhoto;
+    private boolean needTimerImage;
+    private boolean needStarImage;
 
 
     public DebugProfile(Bundle args) {
@@ -663,6 +670,16 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     public DebugProfile(Bundle args, SharedMediaLayout.SharedMediaPreloader preloader) {
         super(args);
         sharedMediaPreloader = preloader;
+    }
+
+    public static DebugProfile of(long dialogId) {
+        Bundle bundle = new Bundle();
+        if (dialogId >= 0) {
+            bundle.putLong("user_id", dialogId);
+        } else {
+            bundle.putLong("chat_id", -dialogId);
+        }
+        return new DebugProfile(bundle);
     }
 
     public static void sendLogs(Activity activity, boolean last) {
@@ -3709,7 +3726,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     @Override
     public void scrollToSharedMedia() {
-
+        scrollToSharedMedia(false);
+    }
+    public void scrollToSharedMedia(boolean animated) {
+        if (sharedMediaRow >= 0) {
+            if (animated) {
+                LinearSmoothScrollerCustom linearSmoothScroller = new LinearSmoothScrollerCustom(getContext(), LinearSmoothScrollerCustom.POSITION_TOP, .6f);
+                linearSmoothScroller.setTargetPosition(sharedMediaRow);
+                linearSmoothScroller.setOffset(-listView.getPaddingTop());
+                layoutManager.startSmoothScroll(linearSmoothScroller);
+            } else {
+                layoutManager.scrollToPositionWithOffset(sharedMediaRow, -listView.getPaddingTop());
+            }
+        }
     }
 
     public boolean onMemberClick(TLRPC.ChatParticipant participant, boolean isLong, boolean resultOnly, View view) {
@@ -6007,6 +6036,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
     }
 
+    public UndoView getUndoView() {
+        return undoView;
+    }
+
+
+    public boolean isChat() {
+        return chatId != 0;
+    }
+
+    public long getTopicId() {
+        return topicId;
+    }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -6870,6 +6912,50 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
             showDialog(new GiftSheet(getContext(), currentAccount, userId, null, null));
         }
+    }
+
+    public void setChatInfo(TLRPC.ChatFull value) {
+        chatInfo = value;
+        if (chatInfo != null && chatInfo.migrated_from_chat_id != 0 && mergeDialogId == 0) {
+            mergeDialogId = -chatInfo.migrated_from_chat_id;
+            getMediaDataController().getMediaCounts(mergeDialogId, topicId, classGuid);
+        }
+        if (sharedMediaLayout != null) {
+            sharedMediaLayout.setChatInfo(chatInfo);
+        }
+        if (avatarsViewPager != null && !isTopic) {
+            avatarsViewPager.setChatInfo(chatInfo);
+        }
+        if (storyView != null && chatInfo != null) {
+            storyView.setStories(chatInfo.stories);
+        }
+        if (giftsView != null) {
+            giftsView.update();
+        }
+        if (avatarImage != null) {
+            avatarImage.setHasStories(needInsetForStories());
+        }
+        fetchUsersFromChannelInfo();
+        if (chatId != 0) {
+            otherItem.setSubItemShown(gift_premium, !BuildVars.IS_BILLING_UNAVAILABLE && !getMessagesController().premiumPurchaseBlocked() && chatInfo != null && chatInfo.stargifts_available);
+        }
+    }
+
+    public void setPlayProfileAnimation(int type) {
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        if (!AndroidUtilities.isTablet()) {
+            needTimerImage = type != 0;
+            needStarImage = type != 0;
+            if (preferences.getBoolean("view_animations", true)) {
+                playProfileAnimation = type;
+            } else if (type == 2) {
+                expandPhoto = true;
+            }
+        }
+    }
+
+    public void prepareBlurBitmap() {
+        // TODO
     }
 
     static class HeaderButtonView extends FrameLayout {
@@ -8825,6 +8911,120 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (position >= 0) {
                 sparseIntArray.put(position, id);
             }
+        }
+    }
+
+    public static class ShowDrawable extends Drawable implements SimpleTextView.PressableDrawable {
+
+        public final AnimatedTextView.AnimatedTextDrawable textDrawable;
+        public final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        public ShowDrawable(String string) {
+            textDrawable = new AnimatedTextView.AnimatedTextDrawable();
+            textDrawable.setCallback(new Callback() {
+                @Override
+                public void invalidateDrawable(@NonNull Drawable who) {
+                    if (view != null) {
+                        view.invalidate();
+                    }
+                }
+                @Override
+                public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {}
+                @Override
+                public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {}
+            });
+            textDrawable.setText(string);
+            textDrawable.setTextSize(dp(11));
+            textDrawable.setGravity(Gravity.CENTER);
+            backgroundPaint.setColor(0x1f000000);
+        }
+
+        private int textColor;
+        public void setBackgroundColor(int backgroundColor) {
+            if (backgroundPaint.getColor() != backgroundColor) {
+                backgroundPaint.setColor(backgroundColor);
+                invalidateSelf();
+            }
+        }
+        public void setTextColor(int textColor) {
+            if (this.textColor != textColor) {
+                this.textColor = textColor;
+                invalidateSelf();
+            }
+        }
+
+        @Override
+        public void draw(@NonNull Canvas canvas) {
+            final float alpha = this.alpha * this.alpha2;
+            if (alpha <= 0) return;
+            AndroidUtilities.rectTmp.set(getBounds());
+            canvas.save();
+            final float s = bounce.getScale(0.1f);
+            canvas.scale(s, s, AndroidUtilities.rectTmp.centerX(), AndroidUtilities.rectTmp.centerY());
+            final int wasAlpha = backgroundPaint.getAlpha();
+            backgroundPaint.setAlpha((int) (wasAlpha * alpha));
+            canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(20), dp(20), backgroundPaint);
+            backgroundPaint.setAlpha(wasAlpha);
+            textDrawable.setTextColor(textColor);
+            textDrawable.setAlpha((int) (0xFF * alpha));
+            textDrawable.setBounds((int) AndroidUtilities.rectTmp.left, (int) AndroidUtilities.rectTmp.top, (int) AndroidUtilities.rectTmp.right, (int) AndroidUtilities.rectTmp.bottom);
+            textDrawable.draw(canvas);
+            canvas.restore();
+        }
+
+        private float alpha = 1f, alpha2 = 1f;
+        @Override
+        public void setAlpha(int alpha) {
+            this.alpha = alpha / 255f;
+            invalidateSelf();
+        }
+
+        public void setAlpha2(float alpha) {
+            this.alpha2 = alpha;
+            invalidateSelf();
+        }
+
+        @Override
+        public void setColorFilter(@Nullable ColorFilter colorFilter) {
+
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return (int) (textDrawable.getAnimateToWidth() + dp(11));
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return dp(17.33f);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSPARENT;
+        }
+
+        private boolean pressed;
+        private final ButtonBounce bounce = new ButtonBounce(null) {
+            @Override
+            public void invalidate() {
+                invalidateSelf();
+            }
+        };
+
+        @Override
+        public void setPressed(boolean pressed) {
+            bounce.setPressed(pressed);
+            this.pressed = pressed;
+        }
+
+        @Override
+        public boolean isPressed() {
+            return pressed;
+        }
+
+        private View view;
+        public void setView(View view) {
+            this.view = view;
         }
     }
 }

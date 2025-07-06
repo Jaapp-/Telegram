@@ -107,6 +107,7 @@ import org.telegram.ui.Components.StorageUsageView;
 import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Storage.CacheModel;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -1486,7 +1487,7 @@ public class CacheControlActivity extends BaseFragment implements NotificationCe
                 } else {
                     args.putLong("chat_id", -entities.dialogId);
                 }
-                presentFragment(new ProfileActivity(args, null));
+                presentFragment(new DebugProfile(args, null));
             }
 
             @Override

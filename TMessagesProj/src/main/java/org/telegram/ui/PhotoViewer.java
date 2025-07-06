@@ -300,6 +300,7 @@ import org.telegram.ui.Stories.recorder.CaptionContainerView;
 import org.telegram.ui.Stories.recorder.HintView2;
 import org.telegram.ui.Stories.recorder.KeyboardNotifier;
 import org.telegram.ui.Stories.recorder.StoryEntry;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13971,7 +13972,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             MessageObject openingObject = imagesArr.get(index);
             if (!openingObject.scheduled && !openingObject.isQuickReply() && !openingObject.isSponsored() && (parentChatActivity == null || !parentChatActivity.isThreadChat())) {
                 opennedFromMedia = parentChatActivity == null;
-                if (parentFragment instanceof ProfileActivity) {
+                if (parentFragment instanceof DebugProfile) {
                     openedFromProfile = true;
                 }
                 if (object != null) {

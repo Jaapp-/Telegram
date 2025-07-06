@@ -78,10 +78,10 @@ import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.Gifts.GiftSheet;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PrivacyControlActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1048,7 +1048,7 @@ public class UserSelectorBottomSheet extends BottomSheetWithRecyclerListView imp
                     Bundle args = new Bundle();
                     args.putLong("user_id", user.id);
 //                    fragment.showAsSheet(new ProfileActivity(args), bottomSheetParams);
-                    fragment.presentFragment(new ProfileActivity(args));
+                    fragment.presentFragment(new DebugProfile(args));
                 })
                 .show();
         };

@@ -94,7 +94,6 @@ import org.telegram.ui.EditWidgetActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.LoginActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.SecretMediaViewer;
 import org.telegram.ui.Stars.BotStarsController;
 import org.telegram.ui.Stars.StarsController;
@@ -104,6 +103,7 @@ import org.telegram.ui.TopicsFragment;
 import org.telegram.ui.bots.BotWebViewAttachedSheet;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.WebViewRequestProps;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21000,7 +21000,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 args.putLong("user_id", user.id);
             }
             if (type == 0) {
-                fragment.presentFragment(new ProfileActivity(args));
+                fragment.presentFragment(new DebugProfile(args));
             } else if (type == 2) {
                 if (ChatObject.isForum(chat)) {
                     fragment.presentFragment(TopicsFragment.getTopicsOrChat(fragment, args), !doNotCloseLast, true);

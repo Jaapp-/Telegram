@@ -71,12 +71,12 @@ import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.LaunchActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.StarGiftSheet;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.PreviewView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -729,7 +729,7 @@ public class SendGiftSheet extends BottomSheetWithRecyclerListView implements No
                     if (lastChatActivity.getDialogId() != dialogId) {
                         fragment.removeSelfFromStack();
                     }
-                } else if (fragment instanceof ProfileActivity) {
+                } else if (fragment instanceof DebugProfile) {
                     if (fromGooglePlay && layout.getLastFragment() == fragment) {
                         fragment.finishFragment();
                     } else {

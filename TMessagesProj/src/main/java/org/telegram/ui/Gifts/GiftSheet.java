@@ -106,7 +106,6 @@ import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.ExplainStarsSheet;
 import org.telegram.ui.Stars.StarGiftPatterns;
 import org.telegram.ui.Stars.StarGiftSheet;
@@ -114,6 +113,7 @@ import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stars.StarsReactionsSheet;
 import org.telegram.ui.Stories.recorder.HintView2;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -233,7 +233,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
             BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
             if (lastFragment == null) return;
             dismiss();
-            lastFragment.presentFragment(ProfileActivity.of(dialogId));
+            lastFragment.presentFragment(DebugProfile.of(dialogId));
         });
         topView.addView(balanceView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP, 0, -3, -10, 0));
 
@@ -348,7 +348,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
                         final Bundle args = new Bundle();
                         args.putLong("user_id", dialogId);
                         args.putBoolean("open_gifts", true);
-                        lastFragment.presentFragment(new ProfileActivity(args));
+                        lastFragment.presentFragment(new DebugProfile(args));
                     }), true));
                 } else {
                     subtitle.append(AndroidUtilities.replaceArrows(AndroidUtilities.makeClickable(getString(R.string.Gift2StarsInfoLink), () -> {
@@ -555,7 +555,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
                     if (lastChatActivity.getDialogId() != dialogId) {
                         fragment.removeSelfFromStack();
                     }
-                } else if (fragment instanceof ProfileActivity) {
+                } else if (fragment instanceof DebugProfile) {
                     if (fromGooglePlay && layout.getLastFragment() == fragment) {
                         fragment.finishFragment();
                     } else {

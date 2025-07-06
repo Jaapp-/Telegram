@@ -84,6 +84,7 @@ import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Stories.StoriesListPlaceProvider;
 import org.telegram.ui.Stories.StoriesUtilities;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 
@@ -364,7 +365,7 @@ public class MessageStatisticActivity extends BaseFragment implements Notificati
                 actions.add(0);
                 builder.setItems(items.toArray(new CharSequence[actions.size()]), AndroidUtilities.toIntArray(icons), (dialogInterface, i) -> {
                     if (message.isStory()) {
-                        presentFragment(isDialog ? ProfileActivity.of(did) : ChatActivity.of(did));
+                        presentFragment(isDialog ? DebugProfile.of(did) : ChatActivity.of(did));
                     } else {
                         Bundle args = new Bundle();
                         if (isDialog) {

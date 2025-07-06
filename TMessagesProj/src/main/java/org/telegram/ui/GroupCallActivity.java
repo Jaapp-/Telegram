@@ -191,6 +191,7 @@ import org.telegram.ui.Components.voip.VoIPTextureView;
 import org.telegram.ui.Components.voip.VoIPToggleButton;
 import org.telegram.ui.Stories.DarkThemeResourceProvider;
 import org.telegram.ui.Stories.recorder.DominantColors;
+import org.telegram.ui.contest.DebugProfile;
 import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.File;
@@ -3673,7 +3674,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 if (cell.hasAvatarSet()) {
                     args.putBoolean("expandPhoto", true);
                 }
-                parentActivity.presentFragment(new ProfileActivity(args));
+                parentActivity.presentFragment(new DebugProfile(args));
                 dismiss();
             } else if (position == listAdapter.addMemberRow) {
                 if (ChatObject.isChannel(currentChat) && currentChat != null && !currentChat.megagroup && ChatObject.isPublic(currentChat)) {

@@ -67,6 +67,7 @@ import org.telegram.ui.Components.Premium.boosts.cells.statistics.GiveawayCell;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.ScrollSlidingTextTabStrip;
 import org.telegram.ui.Stars.StarsIntroActivity;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -576,7 +577,7 @@ public class BoostsActivity extends GradientHeaderActivity implements Notificati
             BaseFragment secondFragment = fragmentStack.size() >= 2 ? fragmentStack.get(fragmentStack.size() - 2) : null;
             if (isGiveaway) {
                 BaseFragment thirdFragment = fragmentStack.size() >= 3 ? fragmentStack.get(fragmentStack.size() - 3) : null;
-                if (secondFragment instanceof ProfileActivity) {
+                if (secondFragment instanceof DebugProfile) {
                     getParentLayout().removeFragmentFromStack(secondFragment);
                 }
                 finishFragment();
@@ -588,7 +589,7 @@ public class BoostsActivity extends GradientHeaderActivity implements Notificati
                 }
             } else {
                 finishFragment();
-                if (secondFragment instanceof ProfileActivity || secondFragment instanceof ChatActivity) {
+                if (secondFragment instanceof DebugProfile || secondFragment instanceof ChatActivity) {
                     BoostDialogs.showBulletin(secondFragment, chat, false);
                 }
             }
@@ -838,7 +839,7 @@ public class BoostsActivity extends GradientHeaderActivity implements Notificati
                     layout.textView.setMaxLines(2);
                     Bulletin.make(this, layout, Bulletin.DURATION_LONG).show();
                 } else if (!boost.gift && !boost.giveaway) {
-                    presentFragment(ProfileActivity.of(cell.getDialogId()));
+                    presentFragment(DebugProfile.of(cell.getDialogId()));
                 }
             }
             if (view instanceof TextCell) {

@@ -11,15 +11,11 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -28,10 +24,7 @@ import androidx.annotation.NonNull;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
-import org.telegram.messenger.Emoji;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
@@ -46,82 +39,39 @@ import org.telegram.ui.Components.AvatarsDrawable;
 import org.telegram.ui.Components.ButtonBounce;
 import org.telegram.ui.Components.ColoredImageSpan;
 import org.telegram.ui.Components.Text;
-import org.telegram.ui.ContestProfileActivity;
 import org.telegram.ui.LaunchActivity;
-import org.telegram.ui.ProfileActivity;
+import org.telegram.ui.contest.DebugProfile;
 
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
 
 public class UserInfoCell extends View implements NotificationCenter.NotificationCenterDelegate {
 
     private final int currentAccount;
     private final Theme.ResourcesProvider resourcesProvider;
-    private long dialogId;
-
-    private Text title;
-    private Text subtitle;
-    private Text footer;
     private final ArrayList<Row> rows = new ArrayList<>();
-    private Row groupsRow;
-    private float rowsWidth;
-    private float rowsKeysWidth;
-    private float rowsValuesWidth;
-
     private final RectF fullBounds = new RectF();
     private final ButtonBounce fullBounce = new ButtonBounce(this);
-
     private final RectF groupsBounds = new RectF();
     private final Drawable groupsRipple;
     private final ButtonBounce groupsBounce = new ButtonBounce(this);
     private final AvatarsDrawable groupsAvatars = new AvatarsDrawable(this, false);
     private final Drawable groupsArrow;
+    private long dialogId;
+    private Text title;
+    private Text subtitle;
+    private Text footer;
+    private Row groupsRow;
+    private float rowsWidth;
+    private float rowsKeysWidth;
+    private float rowsValuesWidth;
     private MessagesController.CommonChatsList commonChats;
 
     private float height;
     private float width;
-
-    private class Row {
-        public Text key;
-        public Text value;
-        public boolean avatars;
-
-        public final RectF bounds = new RectF();
-
-        public Row(CharSequence key, CharSequence value, boolean avatars) {
-            this.key = new Text(key, 12);
-            this.value = new Text(value, 12, AndroidUtilities.bold());
-            this.avatars = avatars;
-        }
-    }
-    private Row addRow(CharSequence key, CharSequence value, boolean withAvatars) {
-        if (!rows.isEmpty()) {
-            height += dp(7);
-        }
-        final Row row = new Row(key, value, withAvatars);
-        rows.add(row);
-        height += dp(14);
-
-        rowsKeysWidth = Math.max(rowsKeysWidth, row.key.getCurrentWidth());
-        rowsValuesWidth = Math.max(rowsValuesWidth, row.value.getCurrentWidth() + (withAvatars ? dp(38) : 0));
-        return row;
-    }
-
-    public static String displayDate(String date) {
-        final String[] parts = date.split("\\.");
-        if (parts.length != 2) return date;
-        final int month = Integer.parseInt(parts[0]);
-        final int year = Integer.parseInt(parts[1]);
-
-        final Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month - 1, 1, 0, 0, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        return LocaleController.formatYearMont(calendar.getTimeInMillis() / 1000L, true);
-    }
+    private float viewTop;
+    private int backgroundHeight;
+    private boolean animating;
 
     public UserInfoCell(Context context, int currentAccount, Theme.ResourcesProvider resourcesProvider) {
         super(context);
@@ -142,9 +92,39 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
         groupsArrow.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
     }
 
+    public static String displayDate(String date) {
+        final String[] parts = date.split("\\.");
+        if (parts.length != 2) return date;
+        final int month = Integer.parseInt(parts[0]);
+        final int year = Integer.parseInt(parts[1]);
+
+        final Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month - 1, 1, 0, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        return LocaleController.formatYearMont(calendar.getTimeInMillis() / 1000L, true);
+    }
+
+    public static boolean isEmpty(TLRPC.PeerSettings settings) {
+        return settings == null || settings.phone_country == null && settings.registration_month == null;
+    }
+
+    private Row addRow(CharSequence key, CharSequence value, boolean withAvatars) {
+        if (!rows.isEmpty()) {
+            height += dp(7);
+        }
+        final Row row = new Row(key, value, withAvatars);
+        rows.add(row);
+        height += dp(14);
+
+        rowsKeysWidth = Math.max(rowsKeysWidth, row.key.getCurrentWidth());
+        rowsValuesWidth = Math.max(rowsValuesWidth, row.value.getCurrentWidth() + (withAvatars ? dp(38) : 0));
+        return row;
+    }
+
     @Override
     protected boolean verifyDrawable(@NonNull Drawable who) {
-        return who == groupsRipple ||  super.verifyDrawable(who);
+        return who == groupsRipple || super.verifyDrawable(who);
     }
 
     public void set(long dialogId, TLRPC.PeerSettings settings) {
@@ -284,10 +264,6 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
         setMeasuredDimension(width, Math.max(0, (int) height + dp(16)));
     }
 
-    public static boolean isEmpty(TLRPC.PeerSettings settings) {
-        return settings == null || settings.phone_country == null && settings.registration_month == null;
-    }
-
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
@@ -313,13 +289,13 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
         canvas.translate(0, dp(14));
         Y += dp(14);
         title
-            .ellipsize(width - dp(32))
-            .draw(canvas, cx - title.getWidth() / 2.0f, title.getHeight() / 2.0f, Color.WHITE, 1.0f);
+                .ellipsize(width - dp(32))
+                .draw(canvas, cx - title.getWidth() / 2.0f, title.getHeight() / 2.0f, Color.WHITE, 1.0f);
         canvas.translate(0, title.getHeight() + dp(3));
         Y += title.getHeight() + dp(3);
         subtitle
-            .ellipsize(width - dp(32))
-            .draw(canvas, cx - subtitle.getWidth() / 2.0f, subtitle.getHeight() / 2.0f, Color.WHITE, 0.7f);
+                .ellipsize(width - dp(32))
+                .draw(canvas, cx - subtitle.getWidth() / 2.0f, subtitle.getHeight() / 2.0f, Color.WHITE, 0.7f);
         canvas.translate(0, subtitle.getHeight() + dp(11));
         Y += subtitle.getHeight() + dp(11);
 
@@ -333,13 +309,13 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
             final float keyX = cx - width / 2.0f + dp(16) + rowsKeysWidth - row.key.getCurrentWidth();
             final float valueX = cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f);
             row.key
-                .ellipsize(valueX - keyX - dp(7.66f))
-                .draw(canvas, keyX, row.key.getHeight() / 2.0f, Color.WHITE, 0.7f);
+                    .ellipsize(valueX - keyX - dp(7.66f))
+                    .draw(canvas, keyX, row.key.getHeight() / 2.0f, Color.WHITE, 0.7f);
             row.bounds.set(
-                cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f),
-                Y,
-                cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f) + row.value.getCurrentWidth() + (row.avatars ? dp(5) + groupsArrow.getIntrinsicWidth() * 0.8f + groupsAvatars.getMaxX() : 0),
-                Y + row.value.getHeight()
+                    cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f),
+                    Y,
+                    cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f) + row.value.getCurrentWidth() + (row.avatars ? dp(5) + groupsArrow.getIntrinsicWidth() * 0.8f + groupsAvatars.getMaxX() : 0),
+                    Y + row.value.getHeight()
             );
             if (groupsRow == row) {
                 groupsBounds.set(row.bounds);
@@ -352,8 +328,8 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
                 }
             }
             row.value
-                .ellipsize(cx + width / 2.0f - dp(8) - valueX)
-                .draw(canvas, valueX, row.value.getHeight() / 2.0f, Color.WHITE, 1.0f);
+                    .ellipsize(cx + width / 2.0f - dp(8) - valueX)
+                    .draw(canvas, valueX, row.value.getHeight() / 2.0f, Color.WHITE, 1.0f);
             if (row.avatars) {
                 canvas.save();
                 canvas.translate(cx - width / 2.0f + dp(16) + rowsKeysWidth + dp(7.66f) + row.value.getCurrentWidth() + dp(4), dp(1));
@@ -375,16 +351,13 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
                 footer.draw(canvas, cx - footer.getWidth() / 2.0f, 0, Color.WHITE, 0.7f);
             } else {
                 footer
-                    .ellipsize(width - dp(32))
-                    .draw(canvas, cx - footer.getWidth() / 2.0f, footer.getHeight() / 2.0f, Color.WHITE, 0.7f);
+                        .ellipsize(width - dp(32))
+                        .draw(canvas, cx - footer.getWidth() / 2.0f, footer.getHeight() / 2.0f, Color.WHITE, 0.7f);
             }
         }
 
         canvas.restore();
     }
-
-    private float viewTop;
-    private int backgroundHeight;
 
     public void setVisiblePart(float visibleTop, int parentH) {
         if (Math.abs(viewTop - visibleTop) > 0.01f || parentH != backgroundHeight) {
@@ -417,7 +390,7 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             fullBounce.setPressed(fullHit);
             groupsBounce.setPressed(groupsHit);
-            groupsRipple.setState(groupsHit ? new int[] { android.R.attr.state_pressed, android.R.attr.state_enabled } : new int[] {});
+            groupsRipple.setState(groupsHit ? new int[]{android.R.attr.state_pressed, android.R.attr.state_enabled} : new int[]{});
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             if (fullBounce.isPressed()) {
                 final BaseFragment fragment = LaunchActivity.getSafeLastFragment();
@@ -434,22 +407,20 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
                         args.putLong("chat_id", -dialogId);
                     }
                     args.putBoolean("open_common", true);
-                    fragment.presentFragment(new ContestProfileActivity(args));
+                    fragment.presentFragment(new DebugProfile(args));
                 }
                 invalidate();
             }
             groupsBounce.setPressed(false);
             fullBounce.setPressed(false);
-            groupsRipple.setState(new int[] {});
+            groupsRipple.setState(new int[]{});
         } else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
             groupsBounce.setPressed(false);
             fullBounce.setPressed(false);
-            groupsRipple.setState(new int[] {});
+            groupsRipple.setState(new int[]{});
         }
         return groupsBounce.isPressed() || fullBounce.isPressed();
     }
-
-    private boolean animating;
 
     public boolean animating() {
         return animating;
@@ -457,5 +428,18 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
 
     public void setAnimating(boolean animating) {
         this.animating = animating;
+    }
+
+    private class Row {
+        public final RectF bounds = new RectF();
+        public Text key;
+        public Text value;
+        public boolean avatars;
+
+        public Row(CharSequence key, CharSequence value, boolean avatars) {
+            this.key = new Text(key, 12);
+            this.value = new Text(value, 12, AndroidUtilities.bold());
+            this.avatars = avatars;
+        }
     }
 }

@@ -65,11 +65,11 @@ import org.telegram.ui.Cells.UserCell;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.LinkEditActivity;
 import org.telegram.ui.ManageLinksActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.HintView2;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -375,7 +375,7 @@ public class InviteLinkBottomSheet extends BottomSheet {
                         AndroidUtilities.runOnUIThread(() -> {
                             Bundle bundle = new Bundle();
                             bundle.putLong("user_id", user.id);
-                            ProfileActivity profileActivity = new ProfileActivity(bundle);
+                            DebugProfile profileActivity = new DebugProfile(bundle);
                             fragment.presentFragment(profileActivity);
                             isNeedReopen = true;
                         }, 100);
@@ -1382,7 +1382,7 @@ public class InviteLinkBottomSheet extends BottomSheet {
                 sheet[0].dismiss();
                 BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
                 if (lastFragment != null) {
-                    lastFragment.presentFragment(ProfileActivity.of(importer.user_id));
+                    lastFragment.presentFragment(DebugProfile.of(importer.user_id));
                 }
             }
 

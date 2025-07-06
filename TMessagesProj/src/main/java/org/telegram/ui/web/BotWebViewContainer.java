@@ -137,7 +137,6 @@ import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.recorder.StoryEntry;
 import org.telegram.ui.Stories.recorder.StoryRecorder;
 import org.telegram.ui.WrappedResourceProvider;
@@ -152,6 +151,7 @@ import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.ChatAttachAlertBotWebViewLayout;
 import org.telegram.ui.bots.SetupEmojiStatusSheet;
 import org.telegram.ui.bots.WebViewRequestProps;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -2155,7 +2155,7 @@ public abstract class BotWebViewContainer extends FrameLayout implements Notific
                 BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
                 if (lastFragment == null || lastFragment.getParentLayout() == null) return;
                 final INavigationLayout parentLayout = lastFragment.getParentLayout();
-                lastFragment.presentFragment(ProfileActivity.of(botUser.id));
+                lastFragment.presentFragment(DebugProfile.of(botUser.id));
                 AndroidUtilities.scrollToFragmentRow(parentLayout, "botPermissionBiometry");
                 if (delegate != null) {
                     delegate.onCloseToTabs();
@@ -2500,7 +2500,7 @@ public abstract class BotWebViewContainer extends FrameLayout implements Notific
                 BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
                 if (lastFragment == null || lastFragment.getParentLayout() == null) return;
                 final INavigationLayout parentLayout = lastFragment.getParentLayout();
-                lastFragment.presentFragment(ProfileActivity.of(botUser.id));
+                lastFragment.presentFragment(DebugProfile.of(botUser.id));
                 AndroidUtilities.scrollToFragmentRow(parentLayout, "botPermissionLocation");
                 if (delegate != null) {
                     delegate.onCloseToTabs();

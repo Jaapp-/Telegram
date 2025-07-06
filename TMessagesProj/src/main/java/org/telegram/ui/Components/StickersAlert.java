@@ -99,8 +99,8 @@ import org.telegram.ui.ContentPreviewViewer;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PhotoViewer;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.recorder.StoryEntry;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -1355,8 +1355,8 @@ public class StickersAlert extends BottomSheet implements NotificationCenter.Not
                         UndoView undoView;
                         if (parentFragment instanceof ChatActivity) {
                             undoView = ((ChatActivity) parentFragment).getUndoView();
-                        } else if (parentFragment instanceof ProfileActivity) {
-                            undoView = ((ProfileActivity) parentFragment).getUndoView();
+                        } else if (parentFragment instanceof DebugProfile) {
+                            undoView = ((DebugProfile) parentFragment).getUndoView();
                         } else {
                             undoView = null;
                         }

@@ -72,12 +72,12 @@ import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 import org.telegram.ui.Components.ViewPagerFixed;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.StoriesController;
 import org.telegram.ui.Stories.StoriesListPlaceProvider;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.StoryEntry;
 import org.telegram.ui.Stories.recorder.StoryRecorder;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -898,7 +898,7 @@ public class BotPreviewsEditContainer extends FrameLayout implements Notificatio
                             obj.getId(),
                             list,
                             StoriesListPlaceProvider.of(listView)
-                                .addBottomClip(fragment instanceof ProfileActivity && ((ProfileActivity) fragment).myProfile ? dp(68) : 0)
+                                .addBottomClip(fragment instanceof DebugProfile && ((DebugProfile) fragment).myProfile ? dp(68) : 0)
                         );
                     }
                 }

@@ -51,8 +51,8 @@ import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 import org.telegram.ui.GradientHeaderActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -214,7 +214,7 @@ public class AffiliateProgramFragment extends GradientHeaderActivity implements 
             int index = -1;
             for (int i = fragments.size() - 1; i > 0; --i) {
                 BaseFragment f = fragments.get(i);
-                if (f instanceof ProfileActivity && ((ProfileActivity) f).getDialogId() == bot_id) {
+                if (f instanceof DebugProfile && ((DebugProfile) f).getDialogId() == bot_id) {
                     profileActivity = f;
                     index = i;
                     break;

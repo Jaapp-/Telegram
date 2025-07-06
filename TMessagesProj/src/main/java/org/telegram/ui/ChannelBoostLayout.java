@@ -58,6 +58,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.ScrollSlidingTextTabStrip;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -374,7 +375,7 @@ public class ChannelBoostLayout extends FrameLayout {
                     layout.textView.setMaxLines(2);
                     Bulletin.make(fragment, layout, Bulletin.DURATION_LONG).show();
                 } else if (!boost.gift && !boost.giveaway) {
-                    fragment.presentFragment(ProfileActivity.of(cell.getDialogId()));
+                    fragment.presentFragment(DebugProfile.of(cell.getDialogId()));
                 }
             }
             if (view instanceof TextCell) {

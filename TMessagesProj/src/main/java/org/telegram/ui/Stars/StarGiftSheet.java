@@ -123,7 +123,6 @@ import org.telegram.ui.Gifts.GiftSheet;
 import org.telegram.ui.Gifts.ProfileGiftsContainer;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.StatisticActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.HintView2;
@@ -133,6 +132,7 @@ import org.telegram.ui.TwoStepVerificationActivity;
 import org.telegram.ui.TwoStepVerificationSetupActivity;
 import org.telegram.ui.bots.AffiliateProgramFragment;
 import org.telegram.ui.bots.BotWebViewSheet;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -2991,7 +2991,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
                 args.putLong("chat_id", -did);
             }
             args.putBoolean("open_gifts", true);
-            lastFragment.presentFragment(new ProfileActivity(args));
+            lastFragment.presentFragment(new DebugProfile(args));
         }
     }
 
@@ -3192,7 +3192,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
                         .createEmojiBulletin(
                             sticker,
                             LocaleController.getString(unsave ? R.string.Gift2MadePrivateTitle : R.string.Gift2MadePublicTitle),
-                            AndroidUtilities.replaceSingleTag(LocaleController.getString(unsave ? R.string.Gift2MadePrivate : R.string.Gift2MadePublic), lastFragment instanceof ProfileActivity ? null : () -> {
+                            AndroidUtilities.replaceSingleTag(LocaleController.getString(unsave ? R.string.Gift2MadePrivate : R.string.Gift2MadePublic), lastFragment instanceof DebugProfile ? null : () -> {
                                 final Bundle args = new Bundle();
                                 if (did >= 0) {
                                     args.putLong("user_id", did);
@@ -3201,7 +3201,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
                                 }
                                 args.putBoolean("my_profile", true);
                                 args.putBoolean("open_gifts", true);
-                                final ProfileActivity profileActivity = new ProfileActivity(args);
+                                final DebugProfile profileActivity = new DebugProfile(args);
                                 lastFragment.presentFragment(profileActivity);
                             })
                         )

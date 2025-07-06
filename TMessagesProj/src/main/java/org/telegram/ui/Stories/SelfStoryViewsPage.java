@@ -79,9 +79,9 @@ import org.telegram.ui.Components.SearchField;
 import org.telegram.ui.Components.StickerEmptyView;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.RecyclerListViewScroller;
 import org.telegram.ui.Stories.recorder.StoryPrivacyBottomSheet;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -241,11 +241,11 @@ public class SelfStoryViewsPage extends FrameLayout implements NotificationCente
             }
             Item item = listAdapter.items.get(position);
             if (item.view instanceof TL_stories.TL_storyView) {
-                storyViewer.presentFragment(ProfileActivity.of(item.view.user_id));
+                storyViewer.presentFragment(DebugProfile.of(item.view.user_id));
             } else if (item.view instanceof TL_stories.TL_storyViewPublicRepost) {
                 storyViewer.fragment.createOverlayStoryViewer().open(getContext(), ((TL_stories.TL_storyViewPublicRepost) item.view).story, StoriesListPlaceProvider.of(recyclerListView));
             } else if (item.reaction instanceof TL_stories.TL_storyReaction) {
-                storyViewer.presentFragment(ProfileActivity.of(DialogObject.getPeerDialogId(item.reaction.peer_id)));
+                storyViewer.presentFragment(DebugProfile.of(DialogObject.getPeerDialogId(item.reaction.peer_id)));
             } else if (item.reaction instanceof TL_stories.TL_storyReactionPublicRepost) {
                 storyViewer.fragment.createOverlayStoryViewer().open(getContext(), ((TL_stories.TL_storyReactionPublicRepost) item.reaction).story, StoriesListPlaceProvider.of(recyclerListView));
             } else if (item.reaction instanceof TL_stories.TL_storyReactionPublicForward || item.view instanceof TL_stories.TL_storyViewPublicForward) {

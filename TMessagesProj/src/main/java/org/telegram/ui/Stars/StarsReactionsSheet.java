@@ -91,8 +91,8 @@ import org.telegram.ui.Components.Reactions.ReactionsLayoutInBubble;
 import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.Components.Text;
 import org.telegram.ui.LaunchActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -412,7 +412,7 @@ public class StarsReactionsSheet extends BottomSheet implements NotificationCent
                     if (senderDialogId == UserConfig.getInstance(currentAccount).getClientUserId()) {
                         args.putBoolean("my_profile", true);
                     }
-                    chatActivity.presentFragment(new ProfileActivity(args) {
+                    chatActivity.presentFragment(new DebugProfile(args) {
                         @Override
                         public void onFragmentDestroy() {
                             super.onFragmentDestroy();

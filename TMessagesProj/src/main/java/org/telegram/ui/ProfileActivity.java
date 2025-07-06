@@ -288,6 +288,7 @@ import org.telegram.ui.bots.BotLocation;
 import org.telegram.ui.bots.BotWebViewAttachedSheet;
 import org.telegram.ui.bots.ChannelAffiliateProgramsFragment;
 import org.telegram.ui.bots.SetupEmojiStatusSheet;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -5636,7 +5637,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         i--;
                     }
                 } else if (fragment instanceof ProfileActivity) {
-                    if (fragment != this && ((ProfileActivity) fragment).getDialogId() == getDialogId() && ((ProfileActivity) fragment).isTopic) {
+                    if (fragment != this && ((DebugProfile) fragment).getDialogId() == getDialogId() && ((DebugProfile) fragment).isTopic) {
                         getParentLayout().removeFragmentFromStack(fragment);
                         i--;
                     }

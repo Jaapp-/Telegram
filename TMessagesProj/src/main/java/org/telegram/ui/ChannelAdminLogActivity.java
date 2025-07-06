@@ -146,6 +146,7 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -674,9 +675,9 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
         }).filter(s -> s != null).limit(4).toArray());
         SpannableStringBuilder ssb = new SpannableStringBuilder(replaceWithLink(LocaleController.formatPluralString(expandable ? "EventLogDeletedMultipleMessagesToExpand" : "EventLogDeletedMultipleMessages", messages.size(), names), "un1", user));
         if (expandable && messages.size() > 1) {
-            ProfileActivity.ShowDrawable drawable = findDrawable(messageObject.messageText);
+            DebugProfile.ShowDrawable drawable = findDrawable(messageObject.messageText);
             if (drawable == null) {
-                drawable = new ProfileActivity.ShowDrawable(getString(expanded ? R.string.EventLogDeletedMultipleMessagesHide : R.string.EventLogDeletedMultipleMessagesShow));
+                drawable = new DebugProfile.ShowDrawable(getString(expanded ? R.string.EventLogDeletedMultipleMessagesHide : R.string.EventLogDeletedMultipleMessagesShow));
                 drawable.textDrawable.setTypeface(AndroidUtilities.bold());
                 drawable.textDrawable.setTextSize(dp(10));
                 drawable.setTextColor(Color.WHITE);
@@ -698,12 +699,12 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
         return messageObject;
     }
 
-    public static ProfileActivity.ShowDrawable findDrawable(CharSequence messageText) {
+    public static DebugProfile.ShowDrawable findDrawable(CharSequence messageText) {
         if (messageText instanceof Spannable) {
             ColoredImageSpan[] spans = ((Spannable) messageText).getSpans(0, messageText.length(), ColoredImageSpan.class);
             for (int i = 0; i < spans.length; ++i) {
-                if (spans[i] != null && spans[i].drawable instanceof ProfileActivity.ShowDrawable) {
-                    return (ProfileActivity.ShowDrawable) spans[i].drawable;
+                if (spans[i] != null && spans[i].drawable instanceof DebugProfile.ShowDrawable) {
+                    return (DebugProfile.ShowDrawable) spans[i].drawable;
                 }
             }
         }
@@ -2997,7 +2998,7 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
                         Bundle args = new Bundle();
                         args.putLong("user_id", user.id);
                         addCanBanUser(args, user.id);
-                        ProfileActivity fragment = new ProfileActivity(args);
+                        DebugProfile fragment = new DebugProfile(args);
                         fragment.setPlayProfileAnimation(0);
                         presentFragment(fragment);
                     }
@@ -3296,7 +3297,7 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
                             Bundle args = new Bundle();
                             args.putLong("user_id", uid);
                             addCanBanUser(args, uid);
-                            ProfileActivity fragment = new ProfileActivity(args);
+                            DebugProfile fragment = new DebugProfile(args);
                             fragment.setPlayProfileAnimation(0);
                             presentFragment(fragment);
                         }

@@ -173,7 +173,6 @@ import org.telegram.ui.MessageSendPreview;
 import org.telegram.ui.MultiContactsSelectorBottomSheet;
 import org.telegram.ui.PhotoViewer;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.StickersActivity;
 import org.telegram.ui.Stories.recorder.CaptionContainerView;
@@ -185,6 +184,7 @@ import org.telegram.ui.bots.BotWebViewAttachedSheet;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.ChatActivityBotWebViewButton;
 import org.telegram.ui.bots.WebViewRequestProps;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10239,7 +10239,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             if (MessagesController.getInstance(currentAccount).getUser(button.user_id) != null) {
                 Bundle args = new Bundle();
                 args.putLong("user_id", button.user_id);
-                ProfileActivity fragment = new ProfileActivity(args);
+                DebugProfile fragment = new DebugProfile(args);
                 parentFragment.presentFragment(fragment);
             }
         } else if (button instanceof TLRPC.TL_keyboardButtonRequestPeer) {

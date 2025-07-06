@@ -103,12 +103,12 @@ import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.GroupColorActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.StatisticActivity;
 import org.telegram.ui.Stories.ChannelBoostUtilities;
 import org.telegram.ui.Stories.DarkThemeResourceProvider;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.StoryRecorder;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1149,7 +1149,7 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
                 }
                 dismiss();
                 if (isGiveaway) {
-                    if (profileFragment instanceof ProfileActivity) {
+                    if (profileFragment instanceof DebugProfile) {
                         getBaseFragment().getParentLayout().removeFragmentFromStack(profileFragment);
                     }
                     lastFragment.finishFragment();

@@ -59,8 +59,6 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Business.BusinessLinksController;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.Forum.ForumUtilities;
-import org.telegram.ui.ContestProfileActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stories.StoriesUtilities;
 import org.telegram.ui.TopicsFragment;
 import org.telegram.ui.contest.DebugProfile;
@@ -538,7 +536,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         if (parentFragment.isComments) {
             if (chat == null) return;
-            parentFragment.presentFragment(ProfileActivity.of(-chat.id), removeLast);
+            parentFragment.presentFragment(DebugProfile.of(-chat.id), removeLast);
             return;
         }
 
@@ -592,7 +590,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             } else if (parentFragment.isTopic) {
                 args.putLong("topic_id", parentFragment.getThreadMessage().getId());
             }
-            ContestProfileActivity fragment = new ContestProfileActivity(args, sharedMediaPreloader);
+            DebugProfile fragment = new DebugProfile(args, sharedMediaPreloader);
             if (!monoforum) {
                 fragment.setChatInfo(parentFragment.getCurrentChatInfo());
             }

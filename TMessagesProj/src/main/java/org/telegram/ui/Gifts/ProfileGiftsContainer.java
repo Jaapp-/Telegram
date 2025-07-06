@@ -60,10 +60,10 @@ import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PeerColorActivity;
-import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Stars.StarGiftSheet;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
+import org.telegram.ui.contest.DebugProfile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -189,8 +189,8 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
                 list.reorderPinned(fromPosition - 1, toPosition - 1);
                 listView.adapter.notifyItemMoved(fromPosition, toPosition);
                 listView.adapter.updateWithoutNotify();
-                if (fragment instanceof ProfileActivity && ((ProfileActivity) fragment).giftsView != null) {
-                    ((ProfileActivity) fragment).giftsView.update();
+                if (fragment instanceof DebugProfile && ((DebugProfile) fragment).giftsView != null) {
+                    ((DebugProfile) fragment).giftsView.update();
                 }
                 return true;
             }
@@ -349,8 +349,8 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
             listView.adapter.updateWithoutNotify();
         }
         if (reordering) {
-            if (fragment instanceof ProfileActivity) {
-                ((ProfileActivity) fragment).scrollToSharedMedia(true);
+            if (fragment instanceof DebugProfile) {
+                ((DebugProfile) fragment).scrollToSharedMedia(true);
             }
         }
     }
