@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -333,6 +334,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private final boolean fragmentOpened = true; // TODO animation
     public SharedMediaLayout sharedMediaLayout;
     public int birthdayRow;
+    public boolean saved;
+    public boolean isTopic;
+    public boolean myProfile;
+    public ProfileGiftsView giftsView;
     HashSet<Integer> notificationsExceptionTopics = new HashSet<>();
     private SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
     private TLRPC.UserFull userInfo;
@@ -381,9 +386,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private ValueAnimator avatarMaximizeAnimator;
     private float avatarOffsetY;
     private float avatarScale;
-    public boolean saved;
     private boolean openSimilar;
-    public boolean isTopic;
     private long banFromGroup;
     private int reportReactionMessageId;
     private long reportReactionFromDialogId;
@@ -392,7 +395,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private String vcardFirstName;
     private String vcardLastName;
     private boolean reportSpam;
-    public boolean myProfile;
     private boolean openGifts;
     private boolean openCommonChats;
     private long dialogId;
@@ -543,7 +545,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private boolean doNotSetForeground;
     private ImageReceiver fallbackImage;
     private ProfileStoriesView storyView;
-    public ProfileGiftsView giftsView;
     private ActionBarMenuSubItem editColorItem;
     private boolean hasVoiceChatItem;
     private long mergeDialogId;
@@ -661,6 +662,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private boolean expandPhoto;
     private boolean needTimerImage;
     private boolean needStarImage;
+    private int overlayCountVisible;
+    private OverlaysView overlaysView;
 
 
     public DebugProfile(Bundle args) {
@@ -2947,7 +2950,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarContainer.addView(avatarProgressView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
-        OverlaysView overlaysView = new OverlaysView(context);
+        overlaysView = new OverlaysView(context);
         avatarsViewPager = new ProfileGalleryView(context, userId != 0 ? userId : -chatId, actionBar, listView, avatarImage, getClassGuid(), overlaysView);
 
 
@@ -3718,6 +3721,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     public void scrollToSharedMedia() {
         scrollToSharedMedia(false);
     }
+
     public void scrollToSharedMedia(boolean animated) {
         if (sharedMediaRow >= 0) {
             if (animated) {
@@ -4169,14 +4173,17 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
                 if (!isPulledDown) {
                     isPulledDown = true;
-                    Log.i(TAG, "onScroll: DOWN");
                     startMaximizeAnimator();
+                    // TODO duration
+                    avatarsViewPagerIndicatorView.refreshVisibility(300);
+                    overlaysView.setOverlaysVisible(true, 300);
                 }
             } else {
                 if (isPulledDown) {
                     isPulledDown = false;
-                    Log.i(TAG, "onScroll: UP");
                     startMaximizeAnimator();
+                    avatarsViewPagerIndicatorView.refreshVisibility(300);
+                    overlaysView.setOverlaysVisible(false, 300);
                 }
             }
         } else {
@@ -7000,6 +7007,125 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
     }
 
+    public static class ShowDrawable extends Drawable implements SimpleTextView.PressableDrawable {
+
+        public final AnimatedTextView.AnimatedTextDrawable textDrawable;
+        public final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final ButtonBounce bounce = new ButtonBounce(null) {
+            @Override
+            public void invalidate() {
+                invalidateSelf();
+            }
+        };
+        private int textColor;
+        private float alpha = 1f, alpha2 = 1f;
+        private boolean pressed;
+        private View view;
+
+        public ShowDrawable(String string) {
+            textDrawable = new AnimatedTextView.AnimatedTextDrawable();
+            textDrawable.setCallback(new Callback() {
+                @Override
+                public void invalidateDrawable(@NonNull Drawable who) {
+                    if (view != null) {
+                        view.invalidate();
+                    }
+                }
+
+                @Override
+                public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {
+                }
+
+                @Override
+                public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {
+                }
+            });
+            textDrawable.setText(string);
+            textDrawable.setTextSize(dp(11));
+            textDrawable.setGravity(Gravity.CENTER);
+            backgroundPaint.setColor(0x1f000000);
+        }
+
+        public void setBackgroundColor(int backgroundColor) {
+            if (backgroundPaint.getColor() != backgroundColor) {
+                backgroundPaint.setColor(backgroundColor);
+                invalidateSelf();
+            }
+        }
+
+        public void setTextColor(int textColor) {
+            if (this.textColor != textColor) {
+                this.textColor = textColor;
+                invalidateSelf();
+            }
+        }
+
+        @Override
+        public void draw(@NonNull Canvas canvas) {
+            final float alpha = this.alpha * this.alpha2;
+            if (alpha <= 0) return;
+            AndroidUtilities.rectTmp.set(getBounds());
+            canvas.save();
+            final float s = bounce.getScale(0.1f);
+            canvas.scale(s, s, AndroidUtilities.rectTmp.centerX(), AndroidUtilities.rectTmp.centerY());
+            final int wasAlpha = backgroundPaint.getAlpha();
+            backgroundPaint.setAlpha((int) (wasAlpha * alpha));
+            canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(20), dp(20), backgroundPaint);
+            backgroundPaint.setAlpha(wasAlpha);
+            textDrawable.setTextColor(textColor);
+            textDrawable.setAlpha((int) (0xFF * alpha));
+            textDrawable.setBounds((int) AndroidUtilities.rectTmp.left, (int) AndroidUtilities.rectTmp.top, (int) AndroidUtilities.rectTmp.right, (int) AndroidUtilities.rectTmp.bottom);
+            textDrawable.draw(canvas);
+            canvas.restore();
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            this.alpha = alpha / 255f;
+            invalidateSelf();
+        }
+
+        public void setAlpha2(float alpha) {
+            this.alpha2 = alpha;
+            invalidateSelf();
+        }
+
+        @Override
+        public void setColorFilter(@Nullable ColorFilter colorFilter) {
+
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return (int) (textDrawable.getAnimateToWidth() + dp(11));
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return dp(17.33f);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSPARENT;
+        }
+
+        @Override
+        public boolean isPressed() {
+            return pressed;
+        }
+
+        @Override
+        public void setPressed(boolean pressed) {
+            bounce.setPressed(pressed);
+            this.pressed = pressed;
+        }
+
+        public void setView(View view) {
+            this.view = view;
+        }
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
         private final static int VIEW_TYPE_HEADER = 1, VIEW_TYPE_TEXT_DETAIL = 2, VIEW_TYPE_ABOUT_LINK = 3, VIEW_TYPE_TEXT = 4, VIEW_TYPE_DIVIDER = 5, VIEW_TYPE_NOTIFICATIONS_CHECK = 6, VIEW_TYPE_SHADOW = 7, VIEW_TYPE_USER = 8, VIEW_TYPE_EMPTY = 11, VIEW_TYPE_BOTTOM_PADDING = 12, VIEW_TYPE_SHARED_MEDIA = 13, VIEW_TYPE_VERSION = 14, VIEW_TYPE_SUGGESTION = 15, VIEW_TYPE_ADDTOGROUP_INFO = 17, VIEW_TYPE_PREMIUM_TEXT_CELL = 18, VIEW_TYPE_TEXT_DETAIL_MULTILINE = 19, VIEW_TYPE_NOTIFICATIONS_CHECK_SIMPLE = 20, VIEW_TYPE_LOCATION = 21, VIEW_TYPE_HOURS = 22, VIEW_TYPE_CHANNEL = 23, VIEW_TYPE_STARS_TEXT_CELL = 24, VIEW_TYPE_BOT_APP = 25, VIEW_TYPE_SHADOW_TEXT = 26, VIEW_TYPE_COLORFUL_TEXT = 27;
         private final HashMap<TLRPC.TL_username, ClickableSpan> usernameSpans = new HashMap<TLRPC.TL_username, ClickableSpan>();
@@ -8577,11 +8703,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //                    searchItem.setScaleY(1f - value);
 //                    searchItem.setAlpha(1f - value);
 //                }
-//                if (editItemVisible) {
-//                    editItem.setScaleX(1f - value);
-//                    editItem.setScaleY(1f - value);
-//                    editItem.setAlpha(1f - value);
-//                }
+                if (editItemVisible) {
+                    editItem.setScaleX(1f - value);
+                    editItem.setScaleY(1f - value);
+                    editItem.setAlpha(1f - value);
+                }
                 setScaleX(value);
                 setScaleY(value);
                 setAlpha(value);
@@ -8590,17 +8716,17 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             animator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-//                    if (isIndicatorVisible) {
+                    if (isIndicatorVisible) {
 //                        if (searchItem != null) {
 //                            searchItem.setClickable(false);
 //                        }
-//                        if (editItemVisible) {
-//                            editItem.setVisibility(GONE);
-//                        }
-//                    } else {
-//                        setVisibility(GONE);
-//                    }
-//                    updateStoriesViewBounds(false);
+                        if (editItemVisible) {
+                            editItem.setVisibility(GONE);
+                        }
+                    } else {
+                        setVisibility(GONE);
+                    }
+                    updateStoriesViewBounds(false);
                 }
 
                 @Override
@@ -8608,11 +8734,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //                    if (searchItem != null && !expanded) {
 //                        searchItem.setClickable(true);
 //                    }
-//                    if (editItemVisible) {
-//                        editItem.setVisibility(VISIBLE);
-//                    }
-//                    setVisibility(VISIBLE);
-//                    updateStoriesViewBounds(false);
+                    if (editItemVisible) {
+                        editItem.setVisibility(VISIBLE);
+                    }
+                    setVisibility(VISIBLE);
+                    updateStoriesViewBounds(false);
                 }
             });
             avatarsViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -8635,45 +8761,45 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 public void onPageScrollStateChanged(int state) {
                 }
             });
-//            adapter.registerDataSetObserver(new DataSetObserver() {
-//                @Override
-//                public void onChanged() {
-//                    int count = avatarsViewPager.getRealCount();
-//                    if (overlayCountVisible == 0 && count > 1 && count <= 20 && overlaysView.isOverlaysVisible()) {
-//                        overlayCountVisible = 1;
-//                    }
-//                    invalidateIndicatorRect(false);
-//                    refreshVisibility(1f);
-//                    updateAvatarItems();
-//                }
-//            });
+            adapter.registerDataSetObserver(new DataSetObserver() {
+                @Override
+                public void onChanged() {
+                    int count = avatarsViewPager.getRealCount();
+                    if (overlayCountVisible == 0 && count > 1 && count <= 20 && overlaysView.isOverlaysVisible()) {
+                        overlayCountVisible = 1;
+                    }
+                    invalidateIndicatorRect(false);
+                    refreshVisibility(1f);
+                    updateAvatarItems();
+                }
+            });
         }
 
         private void updateAvatarItemsInternal() {
-//            if (otherItem == null || avatarsViewPager == null) {
-//                return;
-//            }
-//            if (isPulledDown) {
-//                int position = avatarsViewPager.getRealPosition();
-//                if (position == 0) {
-//                    otherItem.hideSubItem(set_as_main);
-//                    otherItem.showSubItem(add_photo);
-//                } else {
-//                    otherItem.showSubItem(set_as_main);
-//                    otherItem.hideSubItem(add_photo);
-//                }
-//            }
+            if (otherItem == null || avatarsViewPager == null) {
+                return;
+            }
+            if (isPulledDown) {
+                int position = avatarsViewPager.getRealPosition();
+                if (position == 0) {
+                    otherItem.hideSubItem(set_as_main);
+                    otherItem.showSubItem(add_photo);
+                } else {
+                    otherItem.showSubItem(set_as_main);
+                    otherItem.hideSubItem(add_photo);
+                }
+            }
         }
 
         private void updateAvatarItems() {
-//            if (imageUpdater == null) {
-//                return;
-//            }
-//            if (otherItem.isSubMenuShowing()) {
-//                AndroidUtilities.runOnUIThread(this::updateAvatarItemsInternal, 500);
-//            } else {
-//                updateAvatarItemsInternal();
-//            }
+            if (imageUpdater == null) {
+                return;
+            }
+            if (otherItem.isSubMenuShowing()) {
+                AndroidUtilities.runOnUIThread(this::updateAvatarItemsInternal, 500);
+            } else {
+                updateAvatarItemsInternal();
+            }
         }
 
         public boolean isIndicatorVisible() {
@@ -8703,7 +8829,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
 
         public void refreshVisibility(float durationFactor) {
-//            setIndicatorVisible(isPulledDown && avatarsViewPager.getRealCount() > 20, durationFactor);
+            setIndicatorVisible(isPulledDown && avatarsViewPager.getRealCount() > 20, durationFactor);
         }
 
         @Override
@@ -8712,18 +8838,20 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
 
         private void invalidateIndicatorRect(boolean pageChanged) {
-//            if (pageChanged) {
-//                overlaysView.saveCurrentPageProgress();
-//            }
-//            overlaysView.invalidate();
-//            final float textWidth = textPaint.measureText(getCurrentTitle());
+            if (pageChanged) {
+                overlaysView.saveCurrentPageProgress();
+            }
+            overlaysView.invalidate();
+            final float textWidth = textPaint.measureText(getCurrentTitle());
+            // TODO
 //            indicatorRect.right = getMeasuredWidth() - AndroidUtilities.dp(54f) - (qrItem != null ? AndroidUtilities.dp(48) : 0);
-//            indicatorRect.left = indicatorRect.right - (textWidth + AndroidUtilities.dpf2(16f));
-//            indicatorRect.top = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(15f);
-//            indicatorRect.bottom = indicatorRect.top + AndroidUtilities.dp(26);
-//            setPivotX(indicatorRect.centerX());
-//            setPivotY(indicatorRect.centerY());
-//            invalidate();
+            indicatorRect.right = getMeasuredWidth() - AndroidUtilities.dp(54f);
+            indicatorRect.left = indicatorRect.right - (textWidth + AndroidUtilities.dpf2(16f));
+            indicatorRect.top = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + AndroidUtilities.dp(15f);
+            indicatorRect.bottom = indicatorRect.top + AndroidUtilities.dp(26);
+            setPivotX(indicatorRect.centerX());
+            setPivotY(indicatorRect.centerY());
+            invalidate();
         }
 
         @Override
@@ -8738,16 +8866,15 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
 
         private ActionBarMenuItem getSecondaryMenuItem() {
-//            if (editItemVisible) {
-//                return editItem;
+            if (editItemVisible) {
+                return editItem;
 //            } else if (searchItem != null) {
 //                return searchItem;
-//            } else {
-            return null;
-//            }
+            } else {
+                return null;
+            }
         }
     }
-
 
     private class DiffCallback extends DiffUtil.Callback {
 
@@ -8901,120 +9028,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (position >= 0) {
                 sparseIntArray.put(position, id);
             }
-        }
-    }
-
-    public static class ShowDrawable extends Drawable implements SimpleTextView.PressableDrawable {
-
-        public final AnimatedTextView.AnimatedTextDrawable textDrawable;
-        public final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        public ShowDrawable(String string) {
-            textDrawable = new AnimatedTextView.AnimatedTextDrawable();
-            textDrawable.setCallback(new Callback() {
-                @Override
-                public void invalidateDrawable(@NonNull Drawable who) {
-                    if (view != null) {
-                        view.invalidate();
-                    }
-                }
-                @Override
-                public void scheduleDrawable(@NonNull Drawable who, @NonNull Runnable what, long when) {}
-                @Override
-                public void unscheduleDrawable(@NonNull Drawable who, @NonNull Runnable what) {}
-            });
-            textDrawable.setText(string);
-            textDrawable.setTextSize(dp(11));
-            textDrawable.setGravity(Gravity.CENTER);
-            backgroundPaint.setColor(0x1f000000);
-        }
-
-        private int textColor;
-        public void setBackgroundColor(int backgroundColor) {
-            if (backgroundPaint.getColor() != backgroundColor) {
-                backgroundPaint.setColor(backgroundColor);
-                invalidateSelf();
-            }
-        }
-        public void setTextColor(int textColor) {
-            if (this.textColor != textColor) {
-                this.textColor = textColor;
-                invalidateSelf();
-            }
-        }
-
-        @Override
-        public void draw(@NonNull Canvas canvas) {
-            final float alpha = this.alpha * this.alpha2;
-            if (alpha <= 0) return;
-            AndroidUtilities.rectTmp.set(getBounds());
-            canvas.save();
-            final float s = bounce.getScale(0.1f);
-            canvas.scale(s, s, AndroidUtilities.rectTmp.centerX(), AndroidUtilities.rectTmp.centerY());
-            final int wasAlpha = backgroundPaint.getAlpha();
-            backgroundPaint.setAlpha((int) (wasAlpha * alpha));
-            canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(20), dp(20), backgroundPaint);
-            backgroundPaint.setAlpha(wasAlpha);
-            textDrawable.setTextColor(textColor);
-            textDrawable.setAlpha((int) (0xFF * alpha));
-            textDrawable.setBounds((int) AndroidUtilities.rectTmp.left, (int) AndroidUtilities.rectTmp.top, (int) AndroidUtilities.rectTmp.right, (int) AndroidUtilities.rectTmp.bottom);
-            textDrawable.draw(canvas);
-            canvas.restore();
-        }
-
-        private float alpha = 1f, alpha2 = 1f;
-        @Override
-        public void setAlpha(int alpha) {
-            this.alpha = alpha / 255f;
-            invalidateSelf();
-        }
-
-        public void setAlpha2(float alpha) {
-            this.alpha2 = alpha;
-            invalidateSelf();
-        }
-
-        @Override
-        public void setColorFilter(@Nullable ColorFilter colorFilter) {
-
-        }
-
-        @Override
-        public int getIntrinsicWidth() {
-            return (int) (textDrawable.getAnimateToWidth() + dp(11));
-        }
-
-        @Override
-        public int getIntrinsicHeight() {
-            return dp(17.33f);
-        }
-
-        @Override
-        public int getOpacity() {
-            return PixelFormat.TRANSPARENT;
-        }
-
-        private boolean pressed;
-        private final ButtonBounce bounce = new ButtonBounce(null) {
-            @Override
-            public void invalidate() {
-                invalidateSelf();
-            }
-        };
-
-        @Override
-        public void setPressed(boolean pressed) {
-            bounce.setPressed(pressed);
-            this.pressed = pressed;
-        }
-
-        @Override
-        public boolean isPressed() {
-            return pressed;
-        }
-
-        private View view;
-        public void setView(View view) {
-            this.view = view;
         }
     }
 }
