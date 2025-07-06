@@ -256,9 +256,17 @@ public class DebugProfile extends BaseFragment {
         avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
         avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
+            public void onAnimationStart(Animator animation) {
+                if (!isPulledDown) {
+                    avatarsViewPager.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
             public void onAnimationEnd(Animator animation) {
                 actionBar.setItemsBackgroundColor(isPulledDown ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
                 avatarImage.clearForeground();
+                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
 //                doNotSetForeground = false;
 //                updateStoriesViewBounds(false);
             }
@@ -340,15 +348,24 @@ public class DebugProfile extends BaseFragment {
         float progress = isPulledDown ? animatedFraction : 1f - animatedFraction;
         updateAvatar();
 
-        float scale = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
+        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
+        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
         float offsetY = lerp(avatarOffsetY, 0, progress);
-        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scale) / 2f;
+        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scaleX) / 2f;
         int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
-        avatarContainer.setScaleX(scale);
-        avatarContainer.setScaleY(scale);
+        avatarContainer.setScaleX(scaleX);
+        avatarContainer.setScaleY(scaleY);
         avatarImage.setRoundRadius(roundRadius, roundRadius, roundRadius, roundRadius);
+
+
+        if (isPulledDown) {
+            ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
+            params.width = listView.getMeasuredWidth();
+            params.height = (int) (progress * maximizedOffset);
+            avatarsViewPager.requestLayout();
+        }
     }
 
     void startMaximizeAnimator() {
