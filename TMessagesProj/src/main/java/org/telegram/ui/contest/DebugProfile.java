@@ -1434,6 +1434,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateRowsIds();
 
         FrameLayout frameLayout = new FrameLayout(context);
+        fragmentView = frameLayout;
 
         layoutManager = new LinearLayoutManager(context);
         listView = new RecyclerListView(context);
