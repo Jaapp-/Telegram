@@ -4152,6 +4152,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     @SuppressLint("SetTextI18n")
     private void onScroll() {
+
+        if (sharedMediaLayoutAttached) {
+            sharedMediaLayout.setVisibleHeight(listView.getMeasuredHeight() - sharedMediaLayout.getTop());
+            ViewGroup.LayoutParams params
+                    = sharedMediaLayout.getLayoutParams();
+            params.height = listView.getMeasuredHeight() - topBarsHeight;
+         }
+
         int newOffset = 0;
         if (listView.getChildCount() > 0) {
             View child = listView.getChildAt(0);
@@ -8088,7 +8096,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     ((ProfileChannelCell) holder.itemView).set(getMessagesController().getChat(userInfo.personal_channel_id), profileChannelMessageFetcher != null ? profileChannelMessageFetcher.messageObject : null);
                     break;
                 case VIEW_TYPE_BOT_APP:
-
                     break;
             }
         }
