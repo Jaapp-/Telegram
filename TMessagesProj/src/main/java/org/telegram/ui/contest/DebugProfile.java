@@ -8270,7 +8270,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     class TopView extends FrameLayout {
-        public static final float D_CIRCLE = 50f;
+        public static final float D_CIRCLE_DP = 16f;
         private static final float DROPLET_WIDTH_DP = 33f;
         private static final float DROPLET_HEIGHT_DP = 13f;
         private final Paint paint;
@@ -8342,9 +8342,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
                 float perpendicularAngle = (float) (angleRadians + 0.5f * PI);
 
-                p2X = (float) (cos(perpendicularAngle) * D_CIRCLE + p3X);
-                p2Y = (float) (sin(perpendicularAngle) * D_CIRCLE + p3Y);
-
+                p2X = (float) (cos(perpendicularAngle) * dpf2(D_CIRCLE_DP) + p3X);
+                p2Y = (float) (sin(perpendicularAngle) * dpf2(D_CIRCLE_DP) + p3Y);
             }
 
             for (int i = 0; i < 2; i++) {
