@@ -175,6 +175,7 @@ import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.AnimatedEmojiDrawable;
 import org.telegram.ui.Components.AnimatedEmojiSpan;
 import org.telegram.ui.Components.AnimatedFileDrawable;
+import org.telegram.ui.Components.AnimatedFloat;
 import org.telegram.ui.Components.AnimatedTextView;
 import org.telegram.ui.Components.AnimationProperties;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
@@ -241,6 +242,7 @@ import org.telegram.ui.SessionsActivity;
 import org.telegram.ui.Stars.BotStarsActivity;
 import org.telegram.ui.Stars.BotStarsController;
 import org.telegram.ui.Stars.ProfileGiftsView;
+import org.telegram.ui.Stars.StarGiftPatterns;
 import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.StatisticActivity;
@@ -4158,7 +4160,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             ViewGroup.LayoutParams params
                     = sharedMediaLayout.getLayoutParams();
             params.height = listView.getMeasuredHeight() - topBarsHeight;
-         }
+        }
 
         int newOffset = 0;
         if (listView.getChildCount() > 0) {
@@ -8280,9 +8282,16 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         public static final float D_CIRCLE_DP = 16f;
         private static final float DROPLET_WIDTH_DP = 33f;
         private static final float DROPLET_HEIGHT_DP = 13f;
+        public final AnimatedFloat emojiLoadedT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
+        public final AnimatedFloat emojiFullT = new AnimatedFloat(this, 0, 440, CubicBezierInterpolator.EASE_OUT_QUINT);
         private final Paint paint;
         private final Path connection = new Path();
         private final Paint black = new Paint();
+        private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emoji = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(this, false, dp(20), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_STATIC);
+        private int emojiColor;
+        private boolean emojiLoaded;
+        private boolean hasEmoji;
+        private boolean emojiIsCollectible;
 
         public TopView(@NonNull Context context) {
             super(context);
@@ -8294,7 +8303,22 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         @Override
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
-            canvas.drawRect(0, 0, getMeasuredWidth(), Math.max(topScroll, topBarsHeight), paint);
+
+            int height = Math.max(topScroll, topBarsHeight);
+            canvas.drawRect(0, 0, getMeasuredWidth(), height, paint);
+
+            if (hasEmoji) {
+                final float loadedScale = emojiLoadedT.set(isEmojiLoaded());
+                final float full = emojiFullT.set(emojiIsCollectible);
+                if (loadedScale > 0) {
+                    canvas.save();
+                    canvas.clipRect(0, 0, getMeasuredWidth(), height);
+                    float emojiHeight = topScroll;
+                    float alpha = Math.min(1f, expandProgress);
+                    StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), emojiHeight, alpha, full);
+                    canvas.restore();
+                }
+            }
 
             if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarMaximizeAnimator.isRunning()) {
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
@@ -8366,8 +8390,40 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
         }
 
-        public void setBackgroundEmojiId(long profileEmojiId, boolean b, boolean b1) {
-            // TODO
+        public void setBackgroundEmojiId(long emojiId, boolean isCollectible, boolean animated) {
+            emoji.set(emojiId, animated);
+            emoji.setColor(emojiColor);
+            emojiIsCollectible = isCollectible;
+            if (!animated) {
+                emojiFullT.force(isCollectible);
+            }
+            hasEmoji = hasEmoji || emojiId != 0 && emojiId != -1;
+            invalidate();
+        }
+
+        private boolean isEmojiLoaded() {
+            if (emojiLoaded) {
+                return true;
+            }
+            if (emoji != null && emoji.getDrawable() instanceof AnimatedEmojiDrawable) {
+                AnimatedEmojiDrawable drawable = (AnimatedEmojiDrawable) emoji.getDrawable();
+                if (drawable.getImageReceiver() != null && drawable.getImageReceiver().hasImageLoaded()) {
+                    return emojiLoaded = true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            emoji.attach();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            emoji.detach();
         }
     }
 
