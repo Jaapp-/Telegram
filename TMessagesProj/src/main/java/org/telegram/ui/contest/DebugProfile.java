@@ -8319,8 +8319,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             super.onDraw(canvas);
 
             int height = Math.max(topScroll, topBarsHeight);
-//            canvas.drawRect(0, 0, getMeasuredWidth(), height, paint);
-
 
             paint.setColor(currentColor);
             final int color1 = color1Animated.set(this.color1);
@@ -8345,9 +8343,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (loadedScale > 0) {
                     canvas.save();
                     canvas.clipRect(0, 0, getMeasuredWidth(), height);
-                    float emojiHeight = topScroll;
+                    canvas.translate(getMeasuredWidth() /2f, dp(90));
+                    float emojiHeight = topScroll - dp(144);
                     float alpha = Math.min(1f, expandProgress);
-                    StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), emojiHeight, alpha, full);
+                    StarGiftPatterns.drawPatternAnimated(canvas, StarGiftPatterns.TYPE_DEFAULT, emoji, getMeasuredWidth(), emojiHeight, alpha, 1f, 1f- expandProgress);
                     canvas.restore();
                 }
             }
