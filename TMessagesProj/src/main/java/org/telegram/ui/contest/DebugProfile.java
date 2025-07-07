@@ -12,6 +12,9 @@ import static org.telegram.messenger.LocaleController.getString;
 import static org.telegram.messenger.Utilities.clamp01;
 import static org.telegram.ui.Stars.StarsIntroActivity.formatStarsAmountShort;
 import static org.telegram.ui.bots.AffiliateProgramFragment.percents;
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -4078,17 +4081,24 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         float offsetX;
         float alpha = 1;
 
+        float breakpoint1 = 0.2f;
+        float breakpoint2 = 0.55f;
+        float breakpoint3 = 0.7f;
+
+        float scale1 = 0.3f;
+        float scale2 = 0.8f;
+
         if (topScroll < expandedOffset) {
-            if (expandProgress < 0.16) {
-                avatarScale = 0.1f;
-            } else if (expandProgress < 0.5) {
-                avatarScale = lerp(0.1f, 0.8f, (expandProgress - 0.16f) / (0.5f - 0.16f));
-            } else if (expandProgress < 0.7) {
-                avatarScale = 0.8f;
+            if (expandProgress < breakpoint1) {
+                avatarScale = scale1;
+            } else if (expandProgress < breakpoint2) {
+                avatarScale = lerp(scale1, scale2, (expandProgress - breakpoint1) / (breakpoint2 - breakpoint1));
+            } else if (expandProgress < breakpoint3) {
+                avatarScale = scale2;
             } else {
-                avatarScale = lerp(0.8f, 1f, (expandProgress - 0.7f) / (1f - 0.7f));
+                avatarScale = lerp(scale2, 1f, (expandProgress - breakpoint3) / (1f - breakpoint3));
             }
-            avatarOffsetY = lerp(-0.3f * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
+            avatarOffsetY = lerp(-scale1 * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
             alpha = clamp01((expandProgress - 0.3f) / (0.5f - 0.3f));
         } else {
@@ -8260,6 +8270,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     class TopView extends FrameLayout {
+        public static final float D_CIRCLE = 50f;
         private static final float DROPLET_WIDTH_DP = 33f;
         private static final float DROPLET_HEIGHT_DP = 13f;
         private final Paint paint;
@@ -8281,16 +8292,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarMaximizeAnimator.isRunning()) {
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
                 canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
-                drawConnectionSide(canvas, 1f);
-                drawConnectionSide(canvas, -1f);
+                drawDroplet(canvas);
             }
         }
 
 
-        private void drawConnectionSide(Canvas canvas, float direction) {
-            connection.reset();
+        private void drawDroplet(Canvas canvas) {
             float avatarTop = avatarContainer.getTranslationY();
-            float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
+            float avatarRadius = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
             float progress = (1f - expandProgress);
 
             float centerX = getWidth() / 2f;
@@ -8298,17 +8307,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
             float flipProgress = 0.45f;
             float circleTouchProgress = 0.6f;
-            float widenProgress = Math.max(0f, Math.min(1f, (progress - flipProgress) / (circleTouchProgress - flipProgress)));
+            float widenProgress = clamp01((progress - flipProgress) / (circleTouchProgress - flipProgress));
 
-            float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarSize * 2, widenProgress);
-
-            float p0XOffset = (dropletWidth / 2);
-            float circleOffsetX = lerp(avatarSize / 2, avatarSize, widenProgress);
+            float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarRadius * 4f, widenProgress);
 
             // Position of midpoint of cubic
-            float p0X = centerX - p0XOffset * direction;
+            float p0X = -(dropletWidth / 2);
             float p0Y = 0;
-            connection.moveTo(p0X, p0Y);
 
             // Angle at midpoint of cubic
             float d = dropletWidth / 4;
@@ -8326,27 +8331,33 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 p2X = dropletWidth / 4;
                 p2Y = dropletHeight;
             } else {
-                // Position of top-left point of circle
-                float circleTopLeftY = (float) Math.sqrt(Math.pow(avatarSize, 2) - Math.pow(circleOffsetX, 2));
-                p3Y = avatarTop + avatarSize - p0Y - circleTopLeftY;
-                p3X = p0XOffset - circleOffsetX;
+                float initialAngle = (float) (2f * PI / 16f);
+                float endAngle = (float) PI;
+                float rotateProgress = clamp01((progress - flipProgress) / (1f - flipProgress));
+                float angleFromTop = lerp(initialAngle, endAngle, rotateProgress);
+                float angleRadians = (float) (-0.5f * PI) - angleFromTop;
 
-                // Angle at top-left point of circle
-                float dCircle = 50f;
-                float length = (float) Math.hypot(circleOffsetX, circleTopLeftY);
-                float normalizedX = circleOffsetX / length;
-                float normalizedY = circleTopLeftY / length;
-                p2X = normalizedY * dCircle + p3X;
-                p2Y = -normalizedX * dCircle + p3Y;
+                p3X = avatarRadius * (float) cos(angleRadians) - p0X;
+                p3Y = (avatarTop + avatarRadius) + avatarRadius * (float) sin(angleRadians) - p0Y;
+
+                float perpendicularAngle = (float) (angleRadians + 0.5f * PI);
+
+                p2X = (float) (cos(perpendicularAngle) * D_CIRCLE + p3X);
+                p2Y = (float) (sin(perpendicularAngle) * D_CIRCLE + p3Y);
+
             }
 
+            for (int i = 0; i < 2; i++) {
+                float direction = i == 0 ? -1 : 1;
+                connection.reset();
+                connection.moveTo(centerX + p0X * direction, p0Y);
+                connection.rCubicTo(p1X * direction, p1Y, p2X * direction, p2Y, p3X * direction, p3Y);
+                connection.lineTo(centerX, p0Y + p3Y);
+                connection.lineTo(centerX, p0Y);
+                connection.close();
 
-            connection.rCubicTo(direction * p1X, p1Y, direction * p2X, p2Y, direction * p3X, p3Y);
-            connection.rLineTo((p0XOffset - p3X) * direction, 0);
-            connection.lineTo(centerX, p0Y);
-            connection.close();
-
-            canvas.drawPath(connection, black);
+                canvas.drawPath(connection, black);
+            }
         }
 
         public void setBackgroundEmojiId(long profileEmojiId, boolean b, boolean b1) {
