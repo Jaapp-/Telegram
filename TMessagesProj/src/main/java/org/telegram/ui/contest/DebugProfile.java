@@ -8309,7 +8309,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             float circleTouchProgress = 0.6f;
             float widenProgress = clamp01((progress - flipProgress) / (circleTouchProgress - flipProgress));
 
-            float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarRadius * 4f, widenProgress);
+            float dropletWidth = lerp(dpf2(DROPLET_WIDTH_DP), avatarRadius * 2.8f, widenProgress);
 
             // Position of midpoint of cubic
             float p0X = -(dropletWidth / 2);
