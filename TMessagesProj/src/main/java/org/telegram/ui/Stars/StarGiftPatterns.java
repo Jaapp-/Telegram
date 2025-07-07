@@ -214,10 +214,11 @@ public class StarGiftPatterns {
             final float y = patternLocations[type][i + 1];
             final float size = patternLocations[type][i + 2];
             final float thisAlpha = patternLocations[type][i + 3];
-            float thisProgress =  Math.max(0f, progress - (Math.abs(x) * 278.3f % 10) / 10f);
+            // TODO hardcoded progress variance
+            float thisProgress = Math.max(0f, progress - (Math.abs(x+ 2.3f) * 278.3f % 10) / 40f);
             thisProgress *= thisProgress;
             thisProgress *= thisProgress;
-            thisProgress *= 30;
+            thisProgress = Math.min(1f, thisProgress * 30);
 
 
             float cx = x, cy = y, sz = size;
@@ -244,7 +245,7 @@ public class StarGiftPatterns {
 
             pattern.setBounds((int) (dp(cx) - dp(sz) / 2.0f), (int) (dp(cy) - dp(sz) / 2.0f), (int) (dp(cx) + dp(sz) / 2.0f), (int) (dp(cy) + dp(sz) / 2.0f));
 
-            pattern.setAlpha((int) (0xFF * alpha * thisAlpha));
+            pattern.setAlpha((int) (0xFF * (1f - thisProgress) * thisAlpha));
             pattern.draw(canvas);
         }
     }
