@@ -2607,19 +2607,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         FileLog.e(e);
                     }
                 } else if (id == call_item || id == video_call_item) {
-                    if (userId != 0) {
-                        TLRPC.User user = getMessagesController().getUser(userId);
-                        if (user != null) {
-                            VoIPHelper.startCall(user, id == video_call_item, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
-                        }
-                    } else if (chatId != 0) {
-                        ChatObject.Call call = getMessagesController().getGroupCall(chatId, false);
-                        if (call == null) {
-                            VoIPHelper.showGroupCallAlert(DebugProfile.this, currentChat, null, false, getAccountInstance());
-                        } else {
-                            VoIPHelper.startCall(currentChat, null, null, false, getParentActivity(), DebugProfile.this, getAccountInstance());
-                        }
-                    }
+                    startCall(id == video_call_item);
                 } else if (id == search_members) {
                     Bundle args = new Bundle();
                     args.putLong("chat_id", chatId);
@@ -2913,19 +2901,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         frameLayout.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
-        HeaderButtonView button1 = new HeaderButtonView(context);
-        button1.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
-        button1.setOnClickListener(v -> {
-            Log.i(TAG, "button1 click");
-        });
-        HeaderButtonView button2 = new HeaderButtonView(context);
-        button2.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.mute);
-        HeaderButtonView button3 = new HeaderButtonView(context);
-        button3.setTextAndIcon(LocaleController.getString(R.string.Call), R.drawable.call);
-        HeaderButtonView button4 = new HeaderButtonView(context);
-        button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
-
-
         avatarDrawable = new AvatarDrawable();
         avatarDrawable.setProfile(true);
 
@@ -2972,15 +2947,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarsViewPagerIndicatorView = new PagerIndicatorView(context);
         frameLayout.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        headerButtonLayout = new LinearLayout(getContext());
-        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
-        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
-        headerButtonLayout.addView(button1, params);
-        headerButtonLayout.addView(button2, params);
-        headerButtonLayout.addView(button3, params);
-        headerButtonLayout.addView(button4, params);
-        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+
+        initHeaderButtons(context, frameLayout);
 
         frameLayout.addView(actionBar);
 
@@ -3406,6 +3374,59 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
 
         return frameLayout;
+    }
+
+    private void initHeaderButtons(Context context, FrameLayout frameLayout) {
+        HeaderButtonView messageButton = new HeaderButtonView(context);
+        messageButton.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
+        messageButton.setOnClickListener(v -> {
+            onWriteButtonClick();
+        });
+
+        HeaderButtonView muteButton = new HeaderButtonView(context);
+        muteButton.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.mute);
+        muteButton.setOnClickListener(v -> {
+            Log.i(TAG, "initHeaderButtons: MUTE");
+        });
+
+
+        HeaderButtonView button3 = new HeaderButtonView(context);
+        button3.setTextAndIcon(LocaleController.getString(R.string.Call), R.drawable.call);
+        button3.setOnClickListener(v -> {
+            startCall(false);
+        });
+
+        HeaderButtonView button4 = new HeaderButtonView(context);
+        button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
+        button4.setOnClickListener(v -> {
+            startCall(true);
+        });
+
+        headerButtonLayout = new LinearLayout(getContext());
+        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
+        params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
+        headerButtonLayout.addView(messageButton, params);
+        headerButtonLayout.addView(muteButton, params);
+        headerButtonLayout.addView(button3, params);
+        headerButtonLayout.addView(button4, params);
+        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+    }
+
+    private void startCall(boolean isVideo) {
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user != null) {
+                VoIPHelper.startCall(user, isVideo, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+            }
+        } else if (chatId != 0) {
+            ChatObject.Call call = getMessagesController().getGroupCall(chatId, false);
+            if (call == null) {
+                VoIPHelper.showGroupCallAlert(DebugProfile.this, currentChat, null, false, getAccountInstance());
+            } else {
+                VoIPHelper.startCall(currentChat, null, null, false, getParentActivity(), DebugProfile.this, getAccountInstance());
+            }
+        }
     }
 
     private void updateStoriesViewBounds(boolean animated) {
@@ -8343,10 +8364,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (loadedScale > 0) {
                     canvas.save();
                     canvas.clipRect(0, 0, getMeasuredWidth(), height);
-                    canvas.translate(getMeasuredWidth() /2f, dp(90));
+                    canvas.translate(getMeasuredWidth() / 2f, dp(90));
                     float emojiHeight = topScroll - dp(144);
                     float alpha = Math.min(1f, expandProgress);
-                    StarGiftPatterns.drawPatternAnimated(canvas, StarGiftPatterns.TYPE_DEFAULT, emoji, getMeasuredWidth(), emojiHeight, alpha, 1f, 1f- expandProgress);
+                    StarGiftPatterns.drawPatternAnimated(canvas, StarGiftPatterns.TYPE_DEFAULT, emoji, getMeasuredWidth(), emojiHeight, alpha, 1f, 1f - expandProgress);
                     canvas.restore();
                 }
             }
