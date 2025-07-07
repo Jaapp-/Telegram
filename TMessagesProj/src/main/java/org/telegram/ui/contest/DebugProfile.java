@@ -36,6 +36,7 @@ import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
@@ -44,6 +45,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -172,6 +174,7 @@ import org.telegram.ui.ChatEditActivity;
 import org.telegram.ui.ChatRightsEditActivity;
 import org.telegram.ui.ChatUsersActivity;
 import org.telegram.ui.Components.AlertsCreator;
+import org.telegram.ui.Components.AnimatedColor;
 import org.telegram.ui.Components.AnimatedEmojiDrawable;
 import org.telegram.ui.Components.AnimatedEmojiSpan;
 import org.telegram.ui.Components.AnimatedFileDrawable;
@@ -669,6 +672,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private boolean needStarImage;
     private int overlayCountVisible;
     private OverlaysView overlaysView;
+    private int actionBarBackgroundColor;
 
 
     public DebugProfile(Bundle args) {
@@ -2904,6 +2908,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         topScroll = expandedOffset;
 
         topView = new TopView(context);
+        topView.setBackgroundColorId(peerColor, false);
+        topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
         frameLayout.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
@@ -5462,8 +5468,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private void updatedPeerColor() {
         adaptedColors.clear();
         if (topView != null) {
-            // TODO
-//            topView.setBackgroundColorId(peerColor, true);
+            topView.setBackgroundColorId(peerColor, true);
         }
         // TODO
 //        if (onlineTextView[1] != null) {
@@ -8288,10 +8293,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         private final Path connection = new Path();
         private final Paint black = new Paint();
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emoji = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(this, false, dp(20), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_STATIC);
+        private final AnimatedFloat hasColorAnimated = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final AnimatedColor color1Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final AnimatedColor color2Animated = new AnimatedColor(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        public int color1, color2;
         private int emojiColor;
         private boolean emojiLoaded;
         private boolean hasEmoji;
         private boolean emojiIsCollectible;
+        private boolean hasColorById;
+        private int backgroundGradientColor1, backgroundGradientColor2, backgroundGradientHeight;
+        private LinearGradient backgroundGradient;
+        private int currentColor;
 
         public TopView(@NonNull Context context) {
             super(context);
@@ -8305,7 +8319,25 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             super.onDraw(canvas);
 
             int height = Math.max(topScroll, topBarsHeight);
-            canvas.drawRect(0, 0, getMeasuredWidth(), height, paint);
+//            canvas.drawRect(0, 0, getMeasuredWidth(), height, paint);
+
+
+            paint.setColor(currentColor);
+            final int color1 = color1Animated.set(this.color1);
+            final int color2 = color2Animated.set(this.color2);
+            final int gradientHeight = AndroidUtilities.statusBarHeight + AndroidUtilities.dp(144);
+            if (backgroundGradient == null || backgroundGradientColor1 != color1 || backgroundGradientColor2 != color2 || backgroundGradientHeight != gradientHeight) {
+                backgroundGradient = new LinearGradient(0, 0, 0, backgroundGradientHeight = gradientHeight, new int[]{backgroundGradientColor2 = color2, backgroundGradientColor1 = color1}, new float[]{0, 1}, Shader.TileMode.CLAMP);
+                backgroundPaint.setShader(backgroundGradient);
+            }
+            final float progressToGradient = hasColorAnimated.set(hasColorById);
+            if (progressToGradient < 1) {
+                canvas.drawRect(0, 0, getMeasuredWidth(), height, paint);
+            }
+            if (progressToGradient > 0) {
+                backgroundPaint.setAlpha((int) (0xFF * progressToGradient));
+                canvas.drawRect(0, 0, getMeasuredWidth(), height, backgroundPaint);
+            }
 
             if (hasEmoji) {
                 final float loadedScale = emojiLoadedT.set(isEmojiLoaded());
@@ -8424,6 +8456,47 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
             emoji.detach();
+        }
+
+        @Override
+        public void setBackgroundColor(int color) {
+            if (color != currentColor) {
+                currentColor = color;
+                paint.setColor(color);
+                invalidate();
+                if (!hasColorById) {
+                    actionBarBackgroundColor = currentColor;
+                }
+            }
+        }
+
+        public void setBackgroundColorId(MessagesController.PeerColor peerColor, boolean animated) {
+            if (peerColor != null) {
+                hasColorById = true;
+                color1 = peerColor.getBgColor1(Theme.isCurrentThemeDark());
+                color2 = peerColor.getBgColor2(Theme.isCurrentThemeDark());
+                actionBarBackgroundColor = ColorUtils.blendARGB(color1, color2, 0.25f);
+                if (peerColor.patternColor != 0) {
+                    emojiColor = peerColor.patternColor;
+                } else {
+                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(color1);
+                }
+            } else {
+                actionBarBackgroundColor = currentColor;
+                hasColorById = false;
+                if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) > .8f) {
+                    emojiColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
+                } else if (AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_actionBarDefault)) < .2f) {
+                    emojiColor = Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultTitle), .5f);
+                } else {
+                    emojiColor = PeerColorActivity.adaptProfileEmojiColor(getThemedColor(Theme.key_actionBarDefault));
+                }
+            }
+            if (!animated) {
+                color1Animated.set(color1, true);
+                color2Animated.set(color2, true);
+            }
+            invalidate();
         }
     }
 
