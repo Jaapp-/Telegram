@@ -4248,7 +4248,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         boolean searchVisible = imageUpdater == null && actionBar.isSearchFieldVisible();
         if (sharedMediaRow != -1 && !searchVisible) {
             RecyclerListView.Holder holder = (RecyclerListView.Holder) listView.findViewHolderForAdapterPosition(sharedMediaRow);
-            mediaHeaderVisible = holder != null && holder.itemView.getTop() <= 0;
+            mediaHeaderVisible = holder != null && holder.itemView.getTop() <= topBarsHeight;
         } else {
             mediaHeaderVisible = searchVisible;
         }
