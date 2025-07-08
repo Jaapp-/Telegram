@@ -191,6 +191,7 @@ import org.telegram.ui.Components.AnimatedFileDrawable;
 import org.telegram.ui.Components.AnimatedFloat;
 import org.telegram.ui.Components.AnimatedTextView;
 import org.telegram.ui.Components.AnimationProperties;
+import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
@@ -720,6 +721,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private SelectAnimatedEmojiDialog.SelectAnimatedEmojiDialogWindow selectAnimatedEmojiDialog;
     private Long emojiStatusGiftId;
     private boolean preloadedChannelEmojiStatuses;
+    private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
 
 
     public DebugProfile(Bundle args) {
@@ -3079,6 +3081,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         initText(context);
 
+
         if (myProfile) {
             bottomButtonsContainer = new FrameLayout(context);
 
@@ -3572,6 +3575,21 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             animatedStatusView.setPivotY(AndroidUtilities.dp(30));
             contentView.addView(animatedStatusView);
         }
+
+        mediaCounterTextView = new AudioPlayerAlert.ClippingTextViewSwitcher(context) {
+            @Override
+            protected TextView createTextView() {
+                TextView textView = new TextView(context);
+                textView.setTextColor(getThemedColor(Theme.key_player_actionBarSubtitle));
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, AndroidUtilities.dp(14));
+                textView.setSingleLine(true);
+                textView.setEllipsize(TextUtils.TruncateAt.END);
+                textView.setGravity(Gravity.LEFT);
+                return textView;
+            }
+        };
+        mediaCounterTextView.setAlpha(0.0f);
+        contentView.addView(mediaCounterTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
     }
 
     private void checkPhotoDescriptionAlpha() {
@@ -4277,80 +4295,79 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     public void updateSelectedMediaTabText() {
-        // TODO
-//        if (sharedMediaLayout == null || mediaCounterTextView == null) {
-//            return;
-//        }
-//        int id = sharedMediaLayout.getClosestTab();
-//        int[] mediaCount = sharedMediaPreloader.getLastMediaCount();
-//        if (id == SharedMediaLayout.TAB_PHOTOVIDEO) {
-//            if (mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY] <= 0 && mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY] <= 0) {
-//                if (mediaCount[MediaDataController.MEDIA_PHOTOVIDEO] <= 0) {
-//                    mediaCounterTextView.setText(LocaleController.getString(R.string.SharedMedia));
-//                } else {
-//                    mediaCounterTextView.setText(LocaleController.formatPluralString("Media", mediaCount[MediaDataController.MEDIA_PHOTOVIDEO]));
-//                }
-//            } else if (sharedMediaLayout.getPhotosVideosTypeFilter() == SharedMediaLayout.FILTER_PHOTOS_ONLY || mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("Photos", mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY]));
-//            } else if (sharedMediaLayout.getPhotosVideosTypeFilter() == SharedMediaLayout.FILTER_VIDEOS_ONLY || mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("Videos", mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY]));
-//            } else {
-//                String str = String.format("%s, %s", LocaleController.formatPluralString("Photos", mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY]), LocaleController.formatPluralString("Videos", mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY]));
-//                mediaCounterTextView.setText(str);
-//            }
-//        } else if (id == SharedMediaLayout.TAB_FILES) {
-//            if (mediaCount[MediaDataController.MEDIA_FILE] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.getString(R.string.Files));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("Files", mediaCount[MediaDataController.MEDIA_FILE]));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_VOICE) {
-//            if (mediaCount[MediaDataController.MEDIA_AUDIO] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.getString(R.string.Voice));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("Voice", mediaCount[MediaDataController.MEDIA_AUDIO]));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_LINKS) {
-//            if (mediaCount[MediaDataController.MEDIA_URL] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.getString(R.string.SharedLinks));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("Links", mediaCount[MediaDataController.MEDIA_URL]));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_AUDIO) {
-//            if (mediaCount[MediaDataController.MEDIA_MUSIC] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.getString(R.string.Music));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("MusicFiles", mediaCount[MediaDataController.MEDIA_MUSIC]));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_GIF) {
-//            if (mediaCount[MediaDataController.MEDIA_GIF] <= 0) {
-//                mediaCounterTextView.setText(LocaleController.getString(R.string.AccDescrGIFs));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("GIFs", mediaCount[MediaDataController.MEDIA_GIF]));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_COMMON_GROUPS) {
-//            mediaCounterTextView.setText(LocaleController.formatPluralString("CommonGroups", userInfo.common_chats_count));
-//        } else if (id == SharedMediaLayout.TAB_GROUPUSERS) {
-//            mediaCounterTextView.setText(onlineTextView[1].getText());
-//        } else if (id == SharedMediaLayout.TAB_STORIES) {
-//            if (isBot) {
-//                mediaCounterTextView.setText(sharedMediaLayout.getBotPreviewsSubtitle(false));
-//            } else {
-//                mediaCounterTextView.setText(LocaleController.formatPluralString("ProfileStoriesCount", sharedMediaLayout.getStoriesCount(id)));
-//            }
-//        } else if (id == SharedMediaLayout.TAB_BOT_PREVIEWS) {
-//            mediaCounterTextView.setText(sharedMediaLayout.getBotPreviewsSubtitle(true));
-//        } else if (id == SharedMediaLayout.TAB_ARCHIVED_STORIES) {
-//            mediaCounterTextView.setText(LocaleController.formatPluralString("ProfileStoriesArchiveCount", sharedMediaLayout.getStoriesCount(id)));
-//        } else if (id == SharedMediaLayout.TAB_RECOMMENDED_CHANNELS) {
-//            final MessagesController.ChannelRecommendations rec = MessagesController.getInstance(currentAccount).getChannelRecommendations(getDialogId());
-//            mediaCounterTextView.setText(LocaleController.formatPluralString(isBot ? "Bots" : "Channels", rec == null ? 0 : rec.chats.size() + rec.more));
-//        } else if (id == SharedMediaLayout.TAB_SAVED_MESSAGES) {
-//            int messagesCount = getMessagesController().getSavedMessagesController().getMessagesCount(getDialogId());
-//            mediaCounterTextView.setText(LocaleController.formatPluralString("SavedMessagesCount", Math.max(1, messagesCount)));
-//        } else if (id == SharedMediaLayout.TAB_GIFTS) {
-//            mediaCounterTextView.setText(LocaleController.formatPluralStringComma("ProfileGiftsCount", sharedMediaLayout.giftsContainer == null ? 0 : sharedMediaLayout.giftsContainer.getGiftsCount()));
-//        }
+        if (sharedMediaLayout == null || mediaCounterTextView == null) {
+            return;
+        }
+        int id = sharedMediaLayout.getClosestTab();
+        int[] mediaCount = sharedMediaPreloader.getLastMediaCount();
+        if (id == SharedMediaLayout.TAB_PHOTOVIDEO) {
+            if (mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY] <= 0 && mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY] <= 0) {
+                if (mediaCount[MediaDataController.MEDIA_PHOTOVIDEO] <= 0) {
+                    mediaCounterTextView.setText(LocaleController.getString(R.string.SharedMedia));
+                } else {
+                    mediaCounterTextView.setText(LocaleController.formatPluralString("Media", mediaCount[MediaDataController.MEDIA_PHOTOVIDEO]));
+                }
+            } else if (sharedMediaLayout.getPhotosVideosTypeFilter() == SharedMediaLayout.FILTER_PHOTOS_ONLY || mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY] <= 0) {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("Photos", mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY]));
+            } else if (sharedMediaLayout.getPhotosVideosTypeFilter() == SharedMediaLayout.FILTER_VIDEOS_ONLY || mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY] <= 0) {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("Videos", mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY]));
+            } else {
+                String str = String.format("%s, %s", LocaleController.formatPluralString("Photos", mediaCount[MediaDataController.MEDIA_PHOTOS_ONLY]), LocaleController.formatPluralString("Videos", mediaCount[MediaDataController.MEDIA_VIDEOS_ONLY]));
+                mediaCounterTextView.setText(str);
+            }
+        } else if (id == SharedMediaLayout.TAB_FILES) {
+            if (mediaCount[MediaDataController.MEDIA_FILE] <= 0) {
+                mediaCounterTextView.setText(LocaleController.getString(R.string.Files));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("Files", mediaCount[MediaDataController.MEDIA_FILE]));
+            }
+        } else if (id == SharedMediaLayout.TAB_VOICE) {
+            if (mediaCount[MediaDataController.MEDIA_AUDIO] <= 0) {
+                mediaCounterTextView.setText(LocaleController.getString(R.string.Voice));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("Voice", mediaCount[MediaDataController.MEDIA_AUDIO]));
+            }
+        } else if (id == SharedMediaLayout.TAB_LINKS) {
+            if (mediaCount[MediaDataController.MEDIA_URL] <= 0) {
+                mediaCounterTextView.setText(LocaleController.getString(R.string.SharedLinks));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("Links", mediaCount[MediaDataController.MEDIA_URL]));
+            }
+        } else if (id == SharedMediaLayout.TAB_AUDIO) {
+            if (mediaCount[MediaDataController.MEDIA_MUSIC] <= 0) {
+                mediaCounterTextView.setText(LocaleController.getString(R.string.Music));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("MusicFiles", mediaCount[MediaDataController.MEDIA_MUSIC]));
+            }
+        } else if (id == SharedMediaLayout.TAB_GIF) {
+            if (mediaCount[MediaDataController.MEDIA_GIF] <= 0) {
+                mediaCounterTextView.setText(LocaleController.getString(R.string.AccDescrGIFs));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("GIFs", mediaCount[MediaDataController.MEDIA_GIF]));
+            }
+        } else if (id == SharedMediaLayout.TAB_COMMON_GROUPS) {
+            mediaCounterTextView.setText(LocaleController.formatPluralString("CommonGroups", userInfo.common_chats_count));
+        } else if (id == SharedMediaLayout.TAB_GROUPUSERS) {
+            mediaCounterTextView.setText(onlineTextView[1].getText());
+        } else if (id == SharedMediaLayout.TAB_STORIES) {
+            if (isBot) {
+                mediaCounterTextView.setText(sharedMediaLayout.getBotPreviewsSubtitle(false));
+            } else {
+                mediaCounterTextView.setText(LocaleController.formatPluralString("ProfileStoriesCount", sharedMediaLayout.getStoriesCount(id)));
+            }
+        } else if (id == SharedMediaLayout.TAB_BOT_PREVIEWS) {
+            mediaCounterTextView.setText(sharedMediaLayout.getBotPreviewsSubtitle(true));
+        } else if (id == SharedMediaLayout.TAB_ARCHIVED_STORIES) {
+            mediaCounterTextView.setText(LocaleController.formatPluralString("ProfileStoriesArchiveCount", sharedMediaLayout.getStoriesCount(id)));
+        } else if (id == SharedMediaLayout.TAB_RECOMMENDED_CHANNELS) {
+            final MessagesController.ChannelRecommendations rec = MessagesController.getInstance(currentAccount).getChannelRecommendations(getDialogId());
+            mediaCounterTextView.setText(LocaleController.formatPluralString(isBot ? "Bots" : "Channels", rec == null ? 0 : rec.chats.size() + rec.more));
+        } else if (id == SharedMediaLayout.TAB_SAVED_MESSAGES) {
+            int messagesCount = getMessagesController().getSavedMessagesController().getMessagesCount(getDialogId());
+            mediaCounterTextView.setText(LocaleController.formatPluralString("SavedMessagesCount", Math.max(1, messagesCount)));
+        } else if (id == SharedMediaLayout.TAB_GIFTS) {
+            mediaCounterTextView.setText(LocaleController.formatPluralStringComma("ProfileGiftsCount", sharedMediaLayout.giftsContainer == null ? 0 : sharedMediaLayout.giftsContainer.getGiftsCount()));
+        }
     }
 
     private int dontApplyPeerColor(int color) {
@@ -4548,20 +4565,26 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private void updateText() {
+        final float titleX = 72;
+        final float titleY = 32;
+        final float subtitleY = 55;
+
         if (topScroll <= minimizedOffset) {
-            nameTextView[1].setTranslationX(dp(70));
-            nameTextView[1].setTranslationY(dp(34));
-            onlineTextView[1].setTranslationX(dp(70));
-            onlineTextView[1].setTranslationY(dp(58));
+            nameTextView[1].setTranslationX(dp(titleX));
+            nameTextView[1].setTranslationY(dp(titleY));
+            onlineTextView[1].setTranslationX(dp(titleX));
+            onlineTextView[1].setTranslationY(dp(subtitleY));
+            mediaCounterTextView.setTranslationX(dp(titleX));
+            mediaCounterTextView.setTranslationY(dp(subtitleY));
         } else if (topScroll <= expandedOffset) {
-            nameTextView[1].setTranslationX(lerp(dp(70), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, expandProgress));
-            nameTextView[1].setTranslationY(lerp(dp(34), dp(140), expandProgress));
-            onlineTextView[1].setTranslationX(lerp(dp(70), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, expandProgress));
-            onlineTextView[1].setTranslationY(lerp(dp(58), dp(158), expandProgress));
+            nameTextView[1].setTranslationX(lerp(dp(titleX), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, expandProgress));
+            nameTextView[1].setTranslationY(lerp(dp(titleY), dp(140), expandProgress));
+            onlineTextView[1].setTranslationX(lerp(dp(titleX), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, expandProgress));
+            onlineTextView[1].setTranslationY(lerp(dp(subtitleY), dp(158), expandProgress));
         } else {
-            nameTextView[1].setTranslationX(lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(70), maximizeProgress));
+            nameTextView[1].setTranslationX(lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(titleX), maximizeProgress));
             nameTextView[1].setTranslationY(lerp(dp(140), dp(300), maximizeProgress));
-            onlineTextView[1].setTranslationX(lerp(displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, dp(70), maximizeProgress));
+            onlineTextView[1].setTranslationX(lerp(displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, dp(titleX), maximizeProgress));
             onlineTextView[1].setTranslationY(lerp(dp(158), dp(318), maximizeProgress));
         }
     }
@@ -7128,12 +7151,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         ImageView mediaOptionsItem = sharedMediaLayout.getSearchOptionsItem();
         TextView saveItem = sharedMediaLayout.getSaveItem();
         if (!mediaHeaderVisible) {
-//            if (callItemVisible) {
-//                callItem.setVisibility(View.VISIBLE);
-//            }
-//            if (videoCallItemVisible) {
-//                videoCallItem.setVisibility(View.VISIBLE);
-//            }
             if (editItemVisible) {
                 editItem.setVisibility(View.VISIBLE);
             }
@@ -7180,11 +7197,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         animators.add(ObjectAnimator.ofFloat(sharedMediaLayout.photoVideoOptionsItem, View.ALPHA, visible ? 1.0f : 0.0f));
         animators.add(ObjectAnimator.ofFloat(sharedMediaLayout.photoVideoOptionsItem, View.TRANSLATION_Y, visible ? 0.0f : AndroidUtilities.dp(10)));
         animators.add(ObjectAnimator.ofFloat(actionBar, ACTIONBAR_HEADER_PROGRESS, visible ? 1.0f : 0.0f));
-        // TODO
-//        animators.add(ObjectAnimator.ofFloat(onlineTextView[1], View.ALPHA, visible ? 0.0f : 1.0f));
-//        if (myProfile)
-//            animators.add(ObjectAnimator.ofFloat(onlineTextView[3], View.ALPHA, visible ? 0.0f : 1.0f));
-//        animators.add(ObjectAnimator.ofFloat(mediaCounterTextView, View.ALPHA, visible ? 1.0f : 0.0f));
+        animators.add(ObjectAnimator.ofFloat(onlineTextView[1], View.ALPHA, visible ? 0.0f : 1.0f));
+        if (myProfile)
+            animators.add(ObjectAnimator.ofFloat(onlineTextView[3], View.ALPHA, visible ? 0.0f : 1.0f));
+        animators.add(ObjectAnimator.ofFloat(mediaCounterTextView, View.ALPHA, visible ? 1.0f : 0.0f));
         if (visible) {
             animators.add(ObjectAnimator.ofFloat(this, HEADER_SHADOW, 0.0f));
         }
@@ -7202,12 +7218,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             public void onAnimationEnd(Animator animation) {
                 if (headerAnimatorSet != null) {
                     if (mediaHeaderVisible) {
-//                        if (callItemVisible) {
-//                            callItem.setVisibility(View.GONE);
-//                        }
-//                        if (videoCallItemVisible) {
-//                            videoCallItem.setVisibility(View.GONE);
-//                        }
                         if (editItemVisible) {
                             editItem.setVisibility(View.GONE);
                         }
