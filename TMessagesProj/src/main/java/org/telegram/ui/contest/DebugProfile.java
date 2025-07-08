@@ -209,6 +209,7 @@ import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.ShareAlert;
 import org.telegram.ui.Components.SharedMediaLayout;
+import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.TimerDrawable;
 import org.telegram.ui.Components.TranslateAlert2;
 import org.telegram.ui.Components.TypefaceSpan;
@@ -355,8 +356,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private int topScroll;
     private TopView topView;
     private final Property<DebugProfile, Float> HEADER_SHADOW = new AnimationProperties.FloatProperty<DebugProfile>("headerShadow") {
-
-        private float headerShadowAlpha;
 
         @Override
         public void setValue(DebugProfile object, float value) {
@@ -673,6 +672,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private int overlayCountVisible;
     private OverlaysView overlaysView;
     private int actionBarBackgroundColor;
+    protected float headerShadowAlpha = 1.0f;
+    private SizeNotifierFrameLayout contentView;
 
 
     public DebugProfile(Bundle args) {
@@ -2866,8 +2867,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         updateRowsIds();
 
-        FrameLayout frameLayout = new FrameLayout(context);
-        fragmentView = frameLayout;
+        contentView = new SizeNotifierFrameLayout(context);
+        fragmentView = contentView;
 
         layoutManager = new LinearLayoutManager(context);
         listView = new RecyclerListView(context);
@@ -2892,13 +2893,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         listView.setOnItemClickListener(this::onItemClick);
 
 
-        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         topScroll = expandedOffset;
 
         topView = new TopView(context);
         topView.setBackgroundColorId(peerColor, false);
         topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
-        frameLayout.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
         avatarDrawable = new AvatarDrawable();
@@ -2907,7 +2908,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarContainer = new FrameLayout(context);
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
-        frameLayout.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
+        contentView.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
 
         avatarImage = new AvatarImageView(context);
         avatarImage.setRoundRadius(dp(AVATAR_SIZE_DP / 2));
@@ -2940,32 +2941,32 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarsViewPager = new ProfileGalleryView(context, userId != 0 ? userId : -chatId, actionBar, listView, avatarImage, getClassGuid(), overlaysView);
 
 
-        frameLayout.addView(avatarsViewPager);
-        frameLayout.addView(overlaysView);
+        contentView.addView(avatarsViewPager);
+        contentView.addView(overlaysView);
         avatarImage.setAvatarsViewPager(avatarsViewPager);
 
         avatarsViewPagerIndicatorView = new PagerIndicatorView(context);
-        frameLayout.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
-        initHeaderButtons(context, frameLayout);
+        initHeaderButtons(context, contentView);
 
-        frameLayout.addView(actionBar);
+        contentView.addView(actionBar);
 
 
         // TODO
-        fallbackImage = new ImageReceiver(frameLayout);
+        fallbackImage = new ImageReceiver(contentView);
         fallbackImage.setRoundRadius(AndroidUtilities.dp(11));
 
         undoView = new UndoView(context, null, false, resourcesProvider);
-        frameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
+        contentView.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
 
 //        createFloatingActionButton(getContext());
 
         debugText = new TextView(context);
         debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
         debugText.setTextSize(10);
-        frameLayout.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
+        contentView.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
 
         avatarMaximizeAnimator = ValueAnimator.ofFloat(0f, 1f);
@@ -3178,15 +3179,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             @Override
             protected void drawBackgroundWithBlur(Canvas canvas, float y, Rect rectTmp2, Paint backgroundPaint) {
                 // TODO
-//                contentView.drawBlurRect(canvas, listView.getY() + getY() + y, rectTmp2, backgroundPaint, true);
+                contentView.drawBlurRect(canvas, listView.getY() + getY() + y, rectTmp2, backgroundPaint, true);
             }
 
             @Override
             protected void invalidateBlur() {
-                // TODO
-//                if (contentView != null) {
-//                    contentView.invalidateBlur();
-//                }
+                if (contentView != null) {
+                    contentView.invalidateBlur();
+                }
             }
 
             @Override
@@ -3362,9 +3362,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (avatarImage != null) {
             avatarImage.setHasStories(needInsetForStories());
         }
-        frameLayout.addView(storyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(storyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
-        frameLayout.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
         checkLayout();
@@ -3373,7 +3373,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
 
-        return frameLayout;
+        return contentView;
     }
 
     private void initHeaderButtons(Context context, FrameLayout frameLayout) {
@@ -8327,6 +8327,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         private int backgroundGradientColor1, backgroundGradientColor2, backgroundGradientHeight;
         private LinearGradient backgroundGradient;
         private int currentColor;
+        private Rect blurBounds = new Rect();
 
         public TopView(@NonNull Context context) {
             super(context);
@@ -8339,7 +8340,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
 
-            int height = Math.max(topScroll, topBarsHeight);
+            int maxHeight = Math.max(topScroll, topBarsHeight);
+            int height = (int) (maxHeight * (1.0f - mediaHeaderAnimationProgress));
 
             paint.setColor(currentColor);
             final int color1 = color1Animated.set(this.color1);
@@ -8376,6 +8378,17 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
                 canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
                 drawDroplet(canvas);
+            }
+
+            if (maxHeight != height) {
+                int color = getThemedColor(Theme.key_windowBackgroundWhite);
+                paint.setColor(color);
+                blurBounds.set(0, maxHeight, getMeasuredWidth(), (int) height);
+                contentView.drawBlurRect(canvas, getY(), blurBounds, paint, true);
+            }
+
+            if (parentLayout != null) {
+                parentLayout.drawHeaderShadow(canvas, (int) (headerShadowAlpha * 255), maxHeight);
             }
         }
 
