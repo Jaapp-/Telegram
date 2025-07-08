@@ -737,6 +737,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private Paint actionBarBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private View blurredView;
     private Paint whitePaint = new Paint();
+    private boolean allowPullingDown;
 
 
     public DebugProfile(Bundle args) {
@@ -3155,7 +3156,40 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         fragmentView.setWillNotDraw(false);
         contentView.needBlur = true;
 
-        layoutManager = new LinearLayoutManager(context);
+        layoutManager = new LinearLayoutManager(context) {
+
+//            @Override
+//            public boolean supportsPredictiveItemAnimations() {
+//                return imageUpdater != null;
+//            }
+
+            @Override
+            public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+                final View view = layoutManager.findViewByPosition(0);
+                // TODO
+//                if (view != null && !openingAvatar) {
+                if (view != null) {
+                    final int canScroll = view.getTop() - expandedOffset;
+                    Log.i(TAG, "scrollVerticallyBy: " + view.getTop() +  " " + canScroll);
+                    if (!allowPullingDown && canScroll > dy) {
+                        dy = canScroll;
+                        if (avatarsViewPager.hasImages() && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled() && !isInLandscapeMode && !AndroidUtilities.isTablet()) {
+                            allowPullingDown = avatarBig == null;
+                        }
+                    } else if (allowPullingDown) {
+                        if (dy >= canScroll) {
+                            dy = canScroll;
+                            allowPullingDown = false;
+                        } else if (listView.getScrollState() == RecyclerListView.SCROLL_STATE_DRAGGING) {
+                            if (!isPulledDown) {
+                                dy /= 2;
+                            }
+                        }
+                    }
+                }
+                return super.scrollVerticallyBy(dy, recycler, state);
+            }
+        };
         listView = new RecyclerListView(context);
         listView.setLayoutManager(layoutManager);
         listAdapter = new ListAdapter(context);
