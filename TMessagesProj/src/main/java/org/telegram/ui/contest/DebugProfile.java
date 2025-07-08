@@ -253,6 +253,7 @@ import org.telegram.ui.MemberRequestsActivity;
 import org.telegram.ui.NotificationsSettingsActivity;
 import org.telegram.ui.PeerColorActivity;
 import org.telegram.ui.PhotoViewer;
+import org.telegram.ui.PinchToZoomHelper;
 import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.PrivacyControlActivity;
 import org.telegram.ui.PrivacySettingsActivity;
@@ -722,6 +723,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private Long emojiStatusGiftId;
     private boolean preloadedChannelEmojiStatuses;
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
+    private PinchToZoomHelper pinchToZoomHelper;
+
+    private View scrimView = null;
+    private Paint scrimPaint = new Paint(Paint.ANTI_ALIAS_FLAG) {
+        @Override
+        public void setAlpha(int a) {
+            super.setAlpha(a);
+            fragmentView.invalidate();
+        }
+    };
+    private Paint actionBarBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private View blurredView;
+    private Paint whitePaint = new Paint();
 
 
     public DebugProfile(Bundle args) {
@@ -2916,6 +2930,194 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateRowsIds();
 
         contentView = new NestedFrameLayout(context) {
+
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent ev) {
+                if (pinchToZoomHelper.isInOverlayMode()) {
+                    return pinchToZoomHelper.onTouchEvent(ev);
+                }
+                if (sharedMediaLayout != null && sharedMediaLayout.isInFastScroll() && sharedMediaLayout.isPinnedToTop()) {
+                    return sharedMediaLayout.dispatchFastScrollEvent(ev);
+                }
+                if (sharedMediaLayout != null && sharedMediaLayout.checkPinchToZoom(ev)) {
+                    return true;
+                }
+                return super.dispatchTouchEvent(ev);
+            }
+
+            private boolean ignoreLayout;
+            private Paint grayPaint = new Paint();
+
+            @Override
+            public boolean hasOverlappingRendering() {
+                return false;
+            }
+
+            private boolean wasPortrait;
+
+//            @Override
+//            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+//                super.onLayout(changed, left, top, right, bottom);
+//                savedScrollPosition = -1;
+//                firstLayout = false;
+//                invalidateScroll = false;
+//                checkListViewScroll();
+//            }
+
+            @Override
+            public void requestLayout() {
+                if (ignoreLayout) {
+                    return;
+                }
+                super.requestLayout();
+            }
+
+            private final ArrayList<View> sortedChildren = new ArrayList<>();
+            private final Comparator<View> viewComparator = (view, view2) -> (int) (view.getY() - view2.getY());
+
+
+            @Override
+            protected void dispatchDraw(Canvas canvas) {
+                whitePaint.setColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                if (listView.getVisibility() == VISIBLE) {
+                    grayPaint.setColor(getThemedColor(Theme.key_windowBackgroundGray));
+                    // TODO
+//                    if (transitionAnimationInProress) {
+//                        whitePaint.setAlpha((int) (255 * listView.getAlpha()));
+//                    }
+//                    if (transitionAnimationInProress) {
+//                        grayPaint.setAlpha((int) (255 * listView.getAlpha()));
+//                    }
+
+                    int count = listView.getChildCount();
+                    sortedChildren.clear();
+                    boolean hasRemovingItems = false;
+                    for (int i = 0; i < count; i++) {
+                        View child = listView.getChildAt(i);
+                        if (listView.getChildAdapterPosition(child) != RecyclerView.NO_POSITION) {
+                            sortedChildren.add(listView.getChildAt(i));
+                        } else {
+                            hasRemovingItems = true;
+                        }
+                    }
+                    Collections.sort(sortedChildren, viewComparator);
+                    boolean hasBackground = false;
+                    float lastY = listView.getY();
+                    count = sortedChildren.size();
+                    if (!openAnimationInProgress && count > 0 && !hasRemovingItems) {
+                        lastY += sortedChildren.get(0).getY();
+                    }
+                    float alpha = 1f;
+                    for (int i = 0; i < count; i++) {
+                        View child = sortedChildren.get(i);
+                        boolean currentHasBackground = child.getBackground() != null;
+                        int currentY = (int) (listView.getY() + child.getY());
+                        if (hasBackground == currentHasBackground) {
+                            if (child.getAlpha() == 1f) {
+                                alpha = 1f;
+                            }
+                            continue;
+                        }
+                        if (hasBackground) {
+                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
+                        } else {
+                            if (alpha != 1f) {
+                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
+                                whitePaint.setAlpha((int) (255 * alpha));
+                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
+                                whitePaint.setAlpha(255);
+                            } else {
+                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
+                            }
+                        }
+                        hasBackground = currentHasBackground;
+                        lastY = currentY;
+                        alpha = child.getAlpha();
+                    }
+
+                    if (hasBackground) {
+                        canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
+                    } else {
+                        if (alpha != 1f) {
+                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
+                            whitePaint.setAlpha((int) (255 * alpha));
+                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
+                            whitePaint.setAlpha(255);
+                        } else {
+                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
+                        }
+                    }
+                } else {
+                    // TODO
+//                    int top = searchListView.getTop();
+//                    canvas.drawRect(0, top + extraHeight + searchTransitionOffset, getMeasuredWidth(), top + getMeasuredHeight(), whitePaint);
+                }
+                super.dispatchDraw(canvas);
+                // TODO
+//                if (profileTransitionInProgress && parentLayout.getFragmentStack().size() > 1) {
+//                    BaseFragment fragment = parentLayout.getFragmentStack().get(parentLayout.getFragmentStack().size() - 2);
+//                    if (fragment instanceof ChatActivity) {
+//                        ChatActivity chatActivity = (ChatActivity) fragment;
+//                        FragmentContextView fragmentContextView = chatActivity.getFragmentContextView();
+//
+//                        if (fragmentContextView != null && fragmentContextView.isCallStyle()) {
+//                            float progress = extraHeight / AndroidUtilities.dpf2(fragmentContextView.getStyleHeight());
+//                            if (progress > 1f) {
+//                                progress = 1f;
+//                            }
+//                            canvas.save();
+//                            canvas.translate(fragmentContextView.getX(), fragmentContextView.getY());
+//                            fragmentContextView.setDrawOverlay(true);
+//                            fragmentContextView.setCollapseTransition(true, extraHeight, progress);
+//                            fragmentContextView.draw(canvas);
+//                            fragmentContextView.setCollapseTransition(false, extraHeight, progress);
+//                            fragmentContextView.setDrawOverlay(false);
+//                            canvas.restore();
+//                        }
+//                    }
+//                }
+
+                if (scrimPaint.getAlpha() > 0) {
+                    canvas.drawRect(0, 0, getWidth(), getHeight(), scrimPaint);
+                }
+                if (scrimView != null) {
+                    int c = canvas.save();
+                    canvas.translate(scrimView.getLeft(), scrimView.getTop());
+                    if (scrimView == actionBar.getBackButton()) {
+                        int r = Math.max(scrimView.getMeasuredWidth(), scrimView.getMeasuredHeight()) / 2;
+                        int wasAlpha = actionBarBackgroundPaint.getAlpha();
+                        actionBarBackgroundPaint.setAlpha((int) (wasAlpha * (scrimPaint.getAlpha() / 255f) / 0.3f));
+                        canvas.drawCircle(r, r, r * 0.7f, actionBarBackgroundPaint);
+                        actionBarBackgroundPaint.setAlpha(wasAlpha);
+                    }
+                    scrimView.draw(canvas);
+                    canvas.restoreToCount(c);
+                }
+                if (blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
+                    if (blurredView.getAlpha() != 1f) {
+                        if (blurredView.getAlpha() != 0) {
+                            canvas.saveLayerAlpha(blurredView.getLeft(), blurredView.getTop(), blurredView.getRight(), blurredView.getBottom(), (int) (255 * blurredView.getAlpha()), Canvas.ALL_SAVE_FLAG);
+                            canvas.translate(blurredView.getLeft(), blurredView.getTop());
+                            blurredView.draw(canvas);
+                            canvas.restore();
+                        }
+                    } else {
+                        blurredView.draw(canvas);
+                    }
+                }
+            }
+
+            @Override
+            protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+                if (pinchToZoomHelper.isInOverlayMode() && (child == actionBar)) {
+                    return true;
+                }
+                if (child == blurredView) {
+                    return true;
+                }
+                return super.drawChild(canvas, child, drawingTime);
+            }
+
             @Override
             protected void onAttachedToWindow() {
                 super.onAttachedToWindow();
@@ -2947,7 +3149,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     }
                 }
             }
-
         };
         fragmentView = contentView;
 
@@ -3456,6 +3657,94 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
+        ViewGroup decorView;
+        if (Build.VERSION.SDK_INT >= 21) {
+            decorView = (ViewGroup) getParentActivity().getWindow().getDecorView();
+        } else {
+            decorView = contentView;
+        }
+        pinchToZoomHelper = new PinchToZoomHelper(decorView, contentView) {
+
+            Paint statusBarPaint;
+
+            @Override
+            protected void invalidateViews() {
+                super.invalidateViews();
+                fragmentView.invalidate();
+                for (int i = 0; i < avatarsViewPager.getChildCount(); i++) {
+                    avatarsViewPager.getChildAt(i).invalidate();
+                }
+            }
+
+            @Override
+            protected void drawOverlays(Canvas canvas, float alpha, float parentOffsetX, float parentOffsetY, float clipTop, float clipBottom) {
+                if (alpha > 0) {
+                    AndroidUtilities.rectTmp.set(0, 0, avatarsViewPager.getMeasuredWidth(), avatarsViewPager.getMeasuredHeight() + AndroidUtilities.dp(30));
+                    canvas.saveLayerAlpha(AndroidUtilities.rectTmp, (int) (255 * alpha), Canvas.ALL_SAVE_FLAG);
+
+                    contentView.draw(canvas);
+
+                    if (actionBar.getOccupyStatusBar() && !SharedConfig.noStatusBar) {
+                        if (statusBarPaint == null) {
+                            statusBarPaint = new Paint();
+                            statusBarPaint.setColor(ColorUtils.setAlphaComponent(Color.BLACK, (int) (255 * 0.2f)));
+                        }
+                        canvas.drawRect(actionBar.getX(), actionBar.getY(), actionBar.getX() + actionBar.getMeasuredWidth(), actionBar.getY() + AndroidUtilities.statusBarHeight, statusBarPaint);
+                    }
+                    canvas.save();
+                    canvas.translate(actionBar.getX(), actionBar.getY());
+                    actionBar.draw(canvas);
+                    canvas.restore();
+
+                    canvas.restore();
+                }
+            }
+
+            @Override
+            protected boolean zoomEnabled(View child, ImageReceiver receiver) {
+                if (!super.zoomEnabled(child, receiver)) {
+                    return false;
+                }
+                return listView.getScrollState() != RecyclerView.SCROLL_STATE_DRAGGING;
+            }
+        };
+        pinchToZoomHelper.setCallback(new PinchToZoomHelper.Callback() {
+            @Override
+            public void onZoomStarted(MessageObject messageObject) {
+                listView.cancelClickRunnables(true);
+                if (sharedMediaLayout != null && sharedMediaLayout.getCurrentListView() != null) {
+                    sharedMediaLayout.getCurrentListView().cancelClickRunnables(true);
+                }
+                topView.setBackgroundColor(ColorUtils.blendARGB(getAverageColor(pinchToZoomHelper.getPhotoImage()), getThemedColor(Theme.key_windowBackgroundWhite), 0.1f));
+            }
+        });
+        avatarsViewPager.setPinchToZoomHelper(pinchToZoomHelper);
+        scrimPaint.setAlpha(0);
+        actionBarBackgroundPaint.setColor(getThemedColor(Theme.key_listSelector));
+        contentView.blurBehindViews.add(sharedMediaLayout);
+        updateTtlIcon();
+
+        blurredView = new View(context) {
+            @Override
+            public void setAlpha(float alpha) {
+                super.setAlpha(alpha);
+                if (fragmentView != null) {
+                    fragmentView.invalidate();
+                }
+            }
+        };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            blurredView.setForeground(new ColorDrawable(ColorUtils.setAlphaComponent(getThemedColor(Theme.key_windowBackgroundWhite), 100)));
+        }
+        blurredView.setFocusable(false);
+        blurredView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        blurredView.setOnClickListener(e -> {
+            finishPreviewFragment();
+        });
+        blurredView.setVisibility(View.GONE);
+        blurredView.setFitsSystemWindows(true);
+        contentView.addView(blurredView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
         checkLayout();
         showAvatarProgress(false, false);
         updateProfileData(true);
@@ -3463,6 +3752,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
 
         return contentView;
+    }
+
+    private int getAverageColor(ImageReceiver imageReceiver) {
+        if (imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable) {
+            return ((VectorAvatarThumbDrawable)imageReceiver.getDrawable()).gradientTools.getAverageColor();
+        }
+        return AndroidUtilities.calcBitmapColor(avatarImage.getImageReceiver().getBitmap());
     }
 
     private void initText(Context context) {
@@ -9880,7 +10176,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (target == listView && sharedMediaLayoutAttached) {
                     RecyclerListView innerListView = sharedMediaLayout.getCurrentListView();
                     int top = sharedMediaLayout.getTop();
-                    if (top == 0) {
+                    if (top == topBarsHeight) {
                         consumed[1] = dyUnconsumed;
                         innerListView.scrollBy(0, dyUnconsumed);
                     }
@@ -9917,7 +10213,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         public void onNestedPreScroll(View target, int dx, int dy, int[] consumed, int type) {
             if (target == listView && sharedMediaRow != -1 && sharedMediaLayoutAttached) {
                 boolean searchVisible = actionBar.isSearchFieldVisible();
-                int t = sharedMediaLayout.getTop();
+                int t = sharedMediaLayout.getTop() - topBarsHeight;
                 if (dy < 0) {
                     boolean scrolledInner = false;
                     if (t <= 0) {
