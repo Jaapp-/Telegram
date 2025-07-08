@@ -3492,12 +3492,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     if (wasRightDrawableX != getRightDrawableX()) {
                         updateCollectibleHint();
                     }
-                    Paint debugPaint = new Paint();
-                    debugPaint.setColor(Color.RED);
-                    debugPaint.setStyle(Paint.Style.STROKE);
-                    debugPaint.setStrokeWidth(4); // adjust thickness if needed
-
-                    canvas.drawRect(0, 0, getWidth(), getHeight(), debugPaint);
                 }
             };
             if (a == 1) {
@@ -3525,9 +3519,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         for (int a = 0; a < onlineTextView.length; a++) {
             if (a == 1) {
                 onlineTextView[a] = new LinkSpanDrawable.ClickableSmallTextView(context) {
-
-                    private Paint debugPaint;
-
                     @Override
                     public void setAlpha(float alpha) {
                         super.setAlpha(alpha);
@@ -3558,17 +3549,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         if (showStatusButton != null) {
                             showStatusButton.setTextColor(Theme.multAlpha(Theme.adaptHSV(color, -.02f, +.15f), 1.4f));
                         }
-                    }
-
-                    @Override
-                    protected void onDraw(Canvas canvas) {
-                        super.onDraw(canvas);
-                        debugPaint = new Paint();
-                        debugPaint.setColor(Color.RED);
-                        debugPaint.setStyle(Paint.Style.STROKE);
-                        debugPaint.setStrokeWidth(4); // adjust thickness if needed
-
-                        canvas.drawRect(0, 0, getWidth(), getHeight(), debugPaint);
                     }
                 };
             } else {
