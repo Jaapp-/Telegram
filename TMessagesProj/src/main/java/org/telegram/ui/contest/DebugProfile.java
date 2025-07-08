@@ -34,6 +34,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -48,6 +49,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -676,7 +678,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //            videoCallItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
             editItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
 
-            // TODO
             if (verifiedDrawable[0] != null) {
                 color1 = getThemedColor(Theme.key_profile_verifiedBackground);
                 color2 = getThemedColor(Theme.key_player_actionBarTitle);
@@ -2221,7 +2222,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
 
             if (currentChat.megagroup) {
-//                getChannelParticipants(true); // TODO
+                getChannelParticipants(true);
             } else {
                 participantsMap = null;
             }
@@ -3151,6 +3152,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
         };
         fragmentView = contentView;
+        fragmentView.setWillNotDraw(false);
+        contentView.needBlur = true;
 
         layoutManager = new LinearLayoutManager(context);
         listView = new RecyclerListView(context);
@@ -7949,7 +7952,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     public void prepareBlurBitmap() {
-        // TODO
+        if (blurredView == null) {
+            return;
+        }
+        int w = (int) (fragmentView.getMeasuredWidth() / 6.0f);
+        int h = (int) (fragmentView.getMeasuredHeight() / 6.0f);
+        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.scale(1.0f / 6.0f, 1.0f / 6.0f);
+        fragmentView.draw(canvas);
+        Utilities.stackBlurBitmap(bitmap, Math.max(7, Math.max(w, h) / 180));
+        blurredView.setBackground(new BitmapDrawable(bitmap));
+        blurredView.setAlpha(0.0f);
+        blurredView.setVisibility(View.VISIBLE);
     }
 
     static class HeaderButtonView extends FrameLayout {
