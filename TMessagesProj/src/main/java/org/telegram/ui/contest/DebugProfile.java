@@ -4808,6 +4808,18 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             overlaysLp.width = listView.getMeasuredWidth();
             overlaysLp.height = topScroll;
             overlaysView.requestLayout();
+
+            if (!avatarMaximizeAnimator.isRunning()) {
+                ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
+                params.width = listView.getMeasuredWidth();
+                params.height = topScroll;
+                avatarsViewPager.requestLayout();
+
+                final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+                avatarParams.width = listView.getMeasuredWidth();
+                avatarParams.height = (int) (topScroll / 1.1f);
+                avatarContainer.requestLayout();
+            }
             return;
         }
         avatarContainer.setTranslationX(offsetX);
@@ -4836,14 +4848,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
         avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x / 1.1f, progress);
-        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) maximizedOffset / 1.1f, progress);
+        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) topScroll / 1.1f, progress);
         avatarContainer.requestLayout();
 
 
         if (isPulledDown) {
             ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
             params.width = listView.getMeasuredWidth();
-            params.height = (int) (progress * maximizedOffset);
+            params.height = (int) (progress * topScroll);
             avatarsViewPager.requestLayout();
         }
     }
