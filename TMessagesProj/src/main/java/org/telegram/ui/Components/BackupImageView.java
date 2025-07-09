@@ -247,7 +247,6 @@ public class BackupImageView extends View {
     }
 
     public void setBlurRoundRadiusEnabled(boolean value) {
-        Log.i("Contest", "setBlurRoundRadiusEnabled: " + value);
         enableBlurRoundRadius = value;
         if (enableBlurRoundRadius) {
             blurImageReceiver.setRoundRadius(imageReceiver.getRoundRadius());

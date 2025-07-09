@@ -3261,6 +3261,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 customAvatarProgress = progress;
                 checkPhotoDescriptionAlpha();
             }
+
+            @Override
+            public void setVisibility(int visibility) {
+                super.setVisibility(visibility);
+            }
         };
 
 
@@ -3316,8 +3321,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (!isPulledDown) {
                     avatarImage.setBlurRoundRadiusEnabled(true);
                 }
-//                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
-//                doNotSetForeground = false;
+                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
+                doNotSetForeground = false;
 //                updateStoriesViewBounds(false);
             }
         });
@@ -4797,7 +4802,12 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             avatarScale = 1.1f;
             avatarContainer.setScaleX(avatarScale);
             avatarContainer.setScaleY(avatarScale);
-            // Handle by maximize animation
+
+
+            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
+            overlaysLp.width = listView.getMeasuredWidth();
+            overlaysLp.height = topScroll;
+            overlaysView.requestLayout();
             return;
         }
         avatarContainer.setTranslationX(offsetX);
@@ -4840,9 +4850,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     void startMaximizeAnimator() {
         listView.smoothScrollBy(0, 0);
-        if (avatarMaximizeAnimator.isRunning()) {
-            avatarMaximizeAnimator.cancel();
-        }
+//        if (avatarMaximizeAnimator.isRunning()) {
+//            avatarMaximizeAnimator.cancel();
+//        }
         avatarMaximizeAnimator.start();
     }
 
@@ -4886,6 +4896,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
             if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
                 if (!isPulledDown) {
+                    if (avatarMaximizeAnimator.isRunning()) {
+                        avatarMaximizeAnimator.cancel();
+                    }
                     isPulledDown = true;
                     startMaximizeAnimator();
                     // TODO duration
@@ -4894,6 +4907,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             } else {
                 if (isPulledDown) {
+                    if (avatarMaximizeAnimator.isRunning()) {
+                        avatarMaximizeAnimator.cancel();
+                    }
                     isPulledDown = false;
                     startMaximizeAnimator();
                     avatarsViewPagerIndicatorView.refreshVisibility(300);
