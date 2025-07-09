@@ -3296,20 +3296,27 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarMaximizeAnimator.addUpdateListener(anim -> {
             setAvatarMaximizeAnimationProgress(anim.getAnimatedFraction());
         });
+        avatarMaximizeAnimator.setDuration(500);
         avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
         avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
+                avatarImage.setBlurRoundRadiusEnabled(false);
                 if (!isPulledDown) {
                     avatarsViewPager.setVisibility(View.GONE);
+                    updateAvatar();
                 }
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                setAvatarMaximizeAnimationProgress(1.0f);
                 actionBar.setItemsBackgroundColor(isPulledDown ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
                 avatarImage.clearForeground();
-                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
+                if (!isPulledDown) {
+                    avatarImage.setBlurRoundRadiusEnabled(true);
+                }
+//                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
 //                doNotSetForeground = false;
 //                updateStoriesViewBounds(false);
             }
@@ -4787,6 +4794,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
         }
         if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
+            avatarScale = 1.1f;
+            avatarContainer.setScaleX(avatarScale);
+            avatarContainer.setScaleY(avatarScale);
             // Handle by maximize animation
             return;
         }
@@ -4811,9 +4821,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
-        avatarContainer.setScaleX(scaleX);
-        avatarContainer.setScaleY(scaleY);
-        avatarImage.setRoundRadius(roundRadius, roundRadius, roundRadius, roundRadius);
+        avatarImage.setRoundRadius(roundRadius);
+
+
+        final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+        avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x / 1.1f, progress);
+        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) maximizedOffset / 1.1f, progress);
+        avatarContainer.requestLayout();
 
 
         if (isPulledDown) {

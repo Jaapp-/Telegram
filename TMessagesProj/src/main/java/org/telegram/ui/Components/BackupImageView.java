@@ -23,6 +23,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -48,6 +49,7 @@ public class BackupImageView extends View {
     protected boolean hasBlur;
     protected boolean blurAllowed;
     public boolean drawFromStart;
+    private boolean enableBlurRoundRadius = true;
 
     public BackupImageView(Context context) {
         super(context);
@@ -244,9 +246,20 @@ public class BackupImageView extends View {
         imageReceiver.setLayerNum(value);
     }
 
+    public void setBlurRoundRadiusEnabled(boolean value) {
+        Log.i("Contest", "setBlurRoundRadiusEnabled: " + value);
+        enableBlurRoundRadius = value;
+        if (enableBlurRoundRadius) {
+            blurImageReceiver.setRoundRadius(imageReceiver.getRoundRadius());
+        } else {
+            blurImageReceiver.setRoundRadius(0);
+        }
+        invalidate();
+    }
+
     public void setRoundRadius(int value) {
         imageReceiver.setRoundRadius(value);
-        if (blurAllowed) {
+        if (blurAllowed && enableBlurRoundRadius) {
             blurImageReceiver.setRoundRadius(value);
         }
         invalidate();
@@ -254,7 +267,7 @@ public class BackupImageView extends View {
 
     public void setRoundRadius(int tl, int tr, int bl, int br) {
         imageReceiver.setRoundRadius(tl, tr, bl ,br);
-        if (blurAllowed) {
+        if (blurAllowed && enableBlurRoundRadius) {
             blurImageReceiver.setRoundRadius(tl, tr, bl, br);
         }
         invalidate();

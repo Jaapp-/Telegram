@@ -49,6 +49,8 @@ public class AvatarImageView extends BackupImageView {
     private boolean hasStories;
     private float progressToInsets = 1f;
     private float blurAlpha;
+    private Rect srcTmp = new Rect();
+    private Rect dstTmp = new Rect();
 
     public AvatarImageView(Context context) {
         super(context);
@@ -145,7 +147,8 @@ public class AvatarImageView extends BackupImageView {
         float x = inset;
         float y = inset;
         float width = getMeasuredWidth() - inset * 2f;
-        float height = getMeasuredHeight() - inset * 2f;
+        float height = width;
+        int bottomBlurHeight = getMeasuredHeight() - getMeasuredWidth();
 
         if (animateFromImageReceiver != null) {
             alpha *= 1.0f - crossfadeProgress;
@@ -190,30 +193,27 @@ public class AvatarImageView extends BackupImageView {
             blurImageReceiver.setAlpha(blurAlpha);
             blurImageReceiver.draw(canvas);
         }
-        if (BOTTOM_BLUR_PADDING > 0f) {
-            rect.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
-            float radius = getRoundRadius()[0];
+        if (bottomBlurHeight > 0f) {
+//            float radius = getRoundRadius()[0];
 
-            // TODO performance
-            // Create a bitmap to render blur into
-            Bitmap blurBitmap = Bitmap.createBitmap(getMeasuredWidth(), (int) BOTTOM_BLUR_PADDING, Bitmap.Config.ARGB_8888);
-            Canvas tempCanvas = new Canvas(blurBitmap);
-
-            tempCanvas.translate(0, BOTTOM_BLUR_PADDING - height);
-            blurImageReceiver.setImageCoords(0, 0, getMeasuredWidth(), getMeasuredHeight());
-            blurImageReceiver.setAlpha(1f);
-            blurImageReceiver.draw(tempCanvas);
+//            bottomBlurCanvas.translate(0, bottomBlurHeight - height);
+//            blurImageReceiver.setImageCoords(0, 0, getMeasuredWidth(), getMeasuredHeight());
+//            blurImageReceiver.setAlpha(1f);
+//            blurImageReceiver.draw(bottomBlurCanvas);
 
             canvas.save();
 
+            rect.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             bottomBlurClipPath.reset();
+            final int radius = foregroundImageReceiver.getRoundRadius()[0];
             bottomBlurClipPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
             canvas.clipPath(bottomBlurClipPath);
 
             // Draw scaled bitmap (image gets stretched, clip remains stable)
-            Rect src = new Rect(0, 0, getMeasuredWidth(), (int) BOTTOM_BLUR_PADDING);
-            RectF dst = new RectF(0, getMeasuredHeight() - BOTTOM_BLUR_PADDING / 2f, getMeasuredWidth(), getMeasuredHeight() + BOTTOM_BLUR_PADDING / 2f);
-            canvas.drawBitmap(blurBitmap, src, dst, null);
+            Bitmap bm = blurImageReceiver.getBitmap();
+            srcTmp.set(0, (int) (0.8f * bm.getHeight()), bm.getWidth(), bm.getHeight());
+            dstTmp.set(0, getMeasuredHeight() - bottomBlurHeight, getMeasuredWidth(), getMeasuredHeight());
+            canvas.drawBitmap(blurImageReceiver.getBitmap(), srcTmp, dstTmp, null);
 
             canvas.restore();
         }
