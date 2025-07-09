@@ -2933,6 +2933,21 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         contentView = new NestedFrameLayout(context) {
 
+            private final ArrayList<View> sortedChildren = new ArrayList<>();
+            private final Comparator<View> viewComparator = (view, view2) -> (int) (view.getY() - view2.getY());
+            private boolean ignoreLayout;
+            private Paint grayPaint = new Paint();
+            private boolean wasPortrait;
+
+//            @Override
+//            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+//                super.onLayout(changed, left, top, right, bottom);
+//                savedScrollPosition = -1;
+//                firstLayout = false;
+//                invalidateScroll = false;
+//                checkListViewScroll();
+//            }
+
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
                 if (pinchToZoomHelper.isInOverlayMode()) {
@@ -2947,24 +2962,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 return super.dispatchTouchEvent(ev);
             }
 
-            private boolean ignoreLayout;
-            private Paint grayPaint = new Paint();
-
             @Override
             public boolean hasOverlappingRendering() {
                 return false;
             }
-
-            private boolean wasPortrait;
-
-//            @Override
-//            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-//                super.onLayout(changed, left, top, right, bottom);
-//                savedScrollPosition = -1;
-//                firstLayout = false;
-//                invalidateScroll = false;
-//                checkListViewScroll();
-//            }
 
             @Override
             public void requestLayout() {
@@ -2973,10 +2974,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
                 super.requestLayout();
             }
-
-            private final ArrayList<View> sortedChildren = new ArrayList<>();
-            private final Comparator<View> viewComparator = (view, view2) -> (int) (view.getY() - view2.getY());
-
 
             @Override
             protected void dispatchDraw(Canvas canvas) {
@@ -3170,7 +3167,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //                if (view != null && !openingAvatar) {
                 if (view != null) {
                     final int canScroll = view.getTop() - expandedOffset;
-                    Log.i(TAG, "scrollVerticallyBy: " + view.getTop() +  " " + canScroll);
                     if (!allowPullingDown && canScroll > dy) {
                         dy = canScroll;
                         if (avatarsViewPager.hasImages() && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled() && !isInLandscapeMode && !AndroidUtilities.isTablet()) {
@@ -3230,6 +3226,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         contentView.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
 
         avatarImage = new AvatarImageView(context);
+        avatarImage.setBlurAllowed(true);
+        avatarImage.setHasBlur(true);
         avatarImage.setRoundRadius(dp(AVATAR_SIZE_DP / 2));
         avatarImage.getImageReceiver().setAllowDecodeSingleFrame(true);
         avatarContainer.addView(avatarImage, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -3793,7 +3791,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     private int getAverageColor(ImageReceiver imageReceiver) {
         if (imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable) {
-            return ((VectorAvatarThumbDrawable)imageReceiver.getDrawable()).gradientTools.getAverageColor();
+            return ((VectorAvatarThumbDrawable) imageReceiver.getDrawable()).gradientTools.getAverageColor();
         }
         return AndroidUtilities.calcBitmapColor(avatarImage.getImageReceiver().getBitmap());
     }
@@ -4797,6 +4795,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarContainer.setScaleX(avatarScale);
         avatarContainer.setScaleY(avatarScale);
         avatarContainer.setAlpha(alpha);
+        avatarImage.setBlurAlpha(clamp01((1f - alpha) * 2));
+        avatarImage.invalidate();
     }
 
     private void setAvatarMaximizeAnimationProgress(float animatedFraction) {
