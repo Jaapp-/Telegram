@@ -3223,19 +3223,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarDrawable = new AvatarDrawable();
         avatarDrawable.setProfile(true);
 
-        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
-        contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
         avatarContainer = new FrameLayout(context);
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
-        contentView.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
 
         avatarImage = new AvatarImageView(context);
         avatarImage.setBlurAllowed(true);
         avatarImage.setHasBlur(true);
         avatarImage.setRoundRadius(dp(AVATAR_SIZE_DP / 2));
         avatarImage.getImageReceiver().setAllowDecodeSingleFrame(true);
+
+        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
+        contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        contentView.addView(avatarContainer, LayoutHelper.createFrame(AVATAR_SIZE_DP, AVATAR_SIZE_DP, Gravity.TOP | Gravity.LEFT));
         avatarContainer.addView(avatarImage, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         avatarProgressView = new RadialProgressView(context) {
