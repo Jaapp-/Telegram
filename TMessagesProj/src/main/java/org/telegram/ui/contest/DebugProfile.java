@@ -87,9 +87,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.collection.LongSparseArray;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -2625,39 +2627,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     });
                     presentFragment(fragment);
                 } else if (id == share) {
-                    try {
-                        String text = null;
-                        if (userId != 0) {
-                            TLRPC.User user = getMessagesController().getUser(userId);
-                            if (user == null) {
-                                return;
-                            }
-                            if (botInfo != null && userInfo != null && !TextUtils.isEmpty(userInfo.about)) {
-                                text = String.format("%s https://" + getMessagesController().linkPrefix + "/%s", userInfo.about, UserObject.getPublicUsername(user));
-                            } else {
-                                text = String.format("https://" + getMessagesController().linkPrefix + "/%s", UserObject.getPublicUsername(user));
-                            }
-                        } else if (chatId != 0) {
-                            TLRPC.Chat chat = getMessagesController().getChat(chatId);
-                            if (chat == null) {
-                                return;
-                            }
-                            if (chatInfo != null && !TextUtils.isEmpty(chatInfo.about)) {
-                                text = String.format("%s\nhttps://" + getMessagesController().linkPrefix + "/%s", chatInfo.about, ChatObject.getPublicUsername(chat));
-                            } else {
-                                text = String.format("https://" + getMessagesController().linkPrefix + "/%s", ChatObject.getPublicUsername(chat));
-                            }
-                        }
-                        if (TextUtils.isEmpty(text)) {
-                            return;
-                        }
-                        Intent intent = new Intent(Intent.ACTION_SEND);
-                        intent.setType("text/plain");
-                        intent.putExtra(Intent.EXTRA_TEXT, text);
-                        startActivityForResult(Intent.createChooser(intent, LocaleController.getString(R.string.BotShare)), 500);
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
+                    doShare();
                 } else if (id == add_shortcut) {
                     try {
                         long did;
@@ -3808,6 +3778,42 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         return contentView;
     }
 
+    private void doShare() {
+        try {
+            String text = null;
+            if (userId != 0) {
+                TLRPC.User user = getMessagesController().getUser(userId);
+                if (user == null) {
+                    return;
+                }
+                if (botInfo != null && userInfo != null && !TextUtils.isEmpty(userInfo.about)) {
+                    text = String.format("%s https://" + getMessagesController().linkPrefix + "/%s", userInfo.about, UserObject.getPublicUsername(user));
+                } else {
+                    text = String.format("https://" + getMessagesController().linkPrefix + "/%s", UserObject.getPublicUsername(user));
+                }
+            } else if (chatId != 0) {
+                TLRPC.Chat chat = getMessagesController().getChat(chatId);
+                if (chat == null) {
+                    return;
+                }
+                if (chatInfo != null && !TextUtils.isEmpty(chatInfo.about)) {
+                    text = String.format("%s\nhttps://" + getMessagesController().linkPrefix + "/%s", chatInfo.about, ChatObject.getPublicUsername(chat));
+                } else {
+                    text = String.format("https://" + getMessagesController().linkPrefix + "/%s", ChatObject.getPublicUsername(chat));
+                }
+            }
+            if (TextUtils.isEmpty(text)) {
+                return;
+            }
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, text);
+            startActivityForResult(Intent.createChooser(intent, LocaleController.getString(R.string.BotShare)), 500);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
     private int getAverageColor(ImageReceiver imageReceiver) {
         if (imageReceiver.getDrawable() instanceof VectorAvatarThumbDrawable) {
             return ((VectorAvatarThumbDrawable) imageReceiver.getDrawable()).gradientTools.getAverageColor();
@@ -4047,41 +4053,90 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private void initHeaderButtons(Context context, FrameLayout frameLayout) {
-        HeaderButtonView messageButton = new HeaderButtonView(context);
-        messageButton.setTextAndIcon(LocaleController.getString(R.string.Message), R.drawable.message);
-        messageButton.setOnClickListener(v -> {
-            onWriteButtonClick();
-        });
+        ArrayList<HeaderButtonView> buttons = new ArrayList<HeaderButtonView>(4);
 
-        HeaderButtonView muteButton = new HeaderButtonView(context);
-        muteButton.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.mute);
-        muteButton.setOnClickListener(v -> {
-            Log.i(TAG, "initHeaderButtons: MUTE");
-        });
+//        boolean isPersonalChannel = false;
+//        if (userInfo != null && (userInfo.flags2 & 64) != 0 && (profileChannelMessageFetcher == null || !profileChannelMessageFetcher.loaded || profileChannelMessageFetcher.messageObject != null)) {
+//            final TLRPC.Chat channel = getMessagesController().getChat(userInfo.personal_channel_id);
+//            if (channel != null && (ChatObject.isPublic(channel) || !ChatObject.isNotInChat(channel))) {
+//                isPersonalChannel = true;
+//            }
+//        }
+//        TLRPC.Chat personalChat = getMessagesController().getChat(userInfo.personal_channel_id);
 
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user.bot) {
+                buttons.add(initMessageButton(context));
+                buttons.add(initMuteButton(context));
+                buttons.add(initShareButton(context));
+                buttons.add(initStopButton(context));
+            } else {
+                buttons.add(initMessageButton(context));
+                buttons.add(initMuteButton(context));
+                buttons.add(initVoiceCallButton(context));
+                buttons.add(initVideoCallButton(context));
+            }
+        } else if (chatId != 0) {
 
-        HeaderButtonView button3 = new HeaderButtonView(context);
-        button3.setTextAndIcon(LocaleController.getString(R.string.Call), R.drawable.call);
-        button3.setOnClickListener(v -> {
-            startCall(false);
-        });
-
-        HeaderButtonView button4 = new HeaderButtonView(context);
-        button4.setTextAndIcon(LocaleController.getString(R.string.Video), R.drawable.video);
-        button4.setOnClickListener(v -> {
-            startCall(true);
-        });
+            if (ChatObject.isForum(currentChat)) {
+                if (isTopic) {
+                    // It's a profile group topic
+                } else {
+                    // It's a group forum
+                }
+            } else if (currentChat.megagroup) {
+                // It's a regular group
+            } else {
+                // It's a channel (non-megagroup, non-forum)
+            }
+        }
 
         headerButtonLayout = new LinearLayout(getContext());
         headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
         params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
-        headerButtonLayout.addView(messageButton, params);
-        headerButtonLayout.addView(muteButton, params);
-        headerButtonLayout.addView(button3, params);
-        headerButtonLayout.addView(button4, params);
+        for (HeaderButtonView button : buttons) {
+            headerButtonLayout.addView(button, params);
+        }
         frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
     }
+
+    private HeaderButtonView initButton(Context context, @StringRes int textRes, @DrawableRes int icon, View.OnClickListener listener) {
+        HeaderButtonView button = new HeaderButtonView(context);
+        button.setTextAndIcon(LocaleController.getString(textRes), icon);
+        button.setOnClickListener(listener);
+        return button;
+    }
+
+    private HeaderButtonView initVoiceCallButton(Context context) {
+        return initButton(context, R.string.Call, R.drawable.call, v -> startCall(false));
+    }
+
+    private HeaderButtonView initVideoCallButton(Context context) {
+        return initButton(context, R.string.Video, R.drawable.video, v -> startCall(true));
+    }
+
+    private HeaderButtonView initMuteButton(Context context) {
+        return initButton(context, R.string.Mute, R.drawable.mute, v -> {
+            Log.i(TAG, "initHeaderButtons: MUTE");
+        });
+    }
+
+    private HeaderButtonView initMessageButton(Context context) {
+        return initButton(context, R.string.Message, R.drawable.message, v -> onWriteButtonClick());
+    }
+
+    private HeaderButtonView initShareButton(Context context) {
+        return initButton(context, R.string.BotShare, R.drawable.share, v -> doShare());
+    }
+
+    private HeaderButtonView initStopButton(Context context) {
+        return initButton(context, R.string.Stop, R.drawable.block, v -> {
+            Log.i(TAG, "initStopButton: STOP BOT");
+        });
+    }
+
 
     private void startCall(boolean isVideo) {
         if (userId != 0) {
