@@ -4894,6 +4894,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         nameTextView[1].setTextColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), Color.WHITE, progress));
         actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), Color.WHITE, progress), false);
 
+        if (storyView != null) {
+            storyView.setExpandProgress(progress);
+        }
+        if (giftsView != null) {
+            giftsView.setExpandProgress(progress);
+        }
+
 //        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
 //        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
 //        float offsetY = lerp(avatarOffsetY, 0, progress);
@@ -4990,6 +4997,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateHeaderButtons();
         updateMediaHeaderVisible();
         updateText();
+
+        if (storyView != null) {
+            storyView.setExpandCoords(contentView.getMeasuredWidth() - AndroidUtilities.dp(40), false, topScroll);
+        }
+        if (giftsView != null) {
+            giftsView.setExpandCoords(contentView.getMeasuredWidth() - AndroidUtilities.dp(40), false, topScroll);
+        }
     }
 
     private void updateText() {
