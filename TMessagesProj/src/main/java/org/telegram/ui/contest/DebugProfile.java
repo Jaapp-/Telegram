@@ -650,9 +650,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (storyView != null) {
                 storyView.setActionBarActionMode(value);
             }
-            if (giftsView != null) {
-                giftsView.setActionBarActionMode(value);
-            }
             topView.invalidate();
 
             int color1 = getThemedColor(Theme.key_profile_title);
@@ -3226,6 +3223,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarDrawable = new AvatarDrawable();
         avatarDrawable.setProfile(true);
 
+        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
+        contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
         avatarContainer = new FrameLayout(context);
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
@@ -3710,8 +3710,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             avatarImage.setHasStories(needInsetForStories());
         }
         contentView.addView(storyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
-        contentView.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
         ViewGroup decorView;
@@ -4999,10 +4997,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateText();
 
         if (storyView != null) {
-            storyView.setExpandCoords(contentView.getMeasuredWidth() - AndroidUtilities.dp(40), false, topScroll);
+            storyView.setExpandCoords(contentView.getMeasuredWidth(), false, topScroll);
         }
         if (giftsView != null) {
-            giftsView.setExpandCoords(contentView.getMeasuredWidth() - AndroidUtilities.dp(40), false, topScroll);
+            giftsView.setExpandCoords(contentView.getMeasuredWidth(), false, topScroll);
+            giftsView.setMinimizeProgress(1f - expandProgress);
         }
     }
 

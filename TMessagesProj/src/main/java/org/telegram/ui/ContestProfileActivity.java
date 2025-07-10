@@ -764,7 +764,7 @@ public class ContestProfileActivity extends BaseFragment implements Notification
                 storyView.setActionBarActionMode(value);
             }
             if (giftsView != null) {
-                giftsView.setActionBarActionMode(value);
+                giftsView.setMinimizeProgress(value);
             }
             topView.invalidate();
 

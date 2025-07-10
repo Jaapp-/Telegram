@@ -6630,7 +6630,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 storyView.setActionBarActionMode(value);
             }
             if (giftsView != null) {
-                giftsView.setActionBarActionMode(value);
+                giftsView.setMinimizeProgress(value);
             }
             topView.invalidate();
 
