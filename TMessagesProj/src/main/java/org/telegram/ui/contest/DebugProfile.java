@@ -198,6 +198,7 @@ import org.telegram.ui.Components.AnimationProperties;
 import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
 import org.telegram.ui.Components.AvatarDrawable;
+import org.telegram.ui.Components.BackButtonMenu;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.BulletinFactory;
@@ -741,6 +742,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private Paint whitePaint = new Paint();
     private boolean allowPullingDown;
     private float avatarOffsetX;
+    private Rect rect = new Rect();
+    private AnimatorSet scrimAnimatorSet;
 
 
     public DebugProfile(Bundle args) {
@@ -3610,7 +3613,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
         };
         sharedMediaLayout.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.MATCH_PARENT));
-
         ActionBarMenu menu = actionBar.createMenu();
 
         if (userId == getUserConfig().clientUserId && !myProfile) {
@@ -3671,6 +3673,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         ttlIconView.setImageResource(R.drawable.msg_mini_autodelete_timer);
         otherItem.addView(ttlIconView, LayoutHelper.createFrame(12, 12, Gravity.CENTER_VERTICAL | Gravity.LEFT, 8, 2, 0, 0));
         otherItem.setContentDescription(LocaleController.getString(R.string.AccDescrMoreOptions));
+
+        createActionBarMenu(false);
 
 
         storyView = new ProfileStoriesView(context, currentAccount, getDialogId(), isTopic, avatarContainer, avatarImage, resourcesProvider) {
@@ -4887,6 +4891,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarExpandProgress = progress;
         updateAvatar();
 
+        nameTextView[1].setTextColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), Color.WHITE, progress));
+        actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), Color.WHITE, progress), false);
+
 //        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
 //        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
 //        float offsetY = lerp(avatarOffsetY, 0, progress);
@@ -5050,23 +5057,99 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     @Override
     public ActionBar createActionBar(Context context) {
-        ActionBar ab = new ActionBar(context, resourcesProvider);
-        ab.setBackgroundColor(Color.TRANSPARENT);
-        ab.setBackButtonDrawable(new BackDrawable(false));
-        ab.setOccupyStatusBar(true);
-        ab.setClipContent(true);
-        ab.setAddToContainer(false);
-        ab.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), false);
-        ab.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+        BaseFragment lastFragment = parentLayout.getLastFragment();
+        if (lastFragment instanceof ChatActivity && ((ChatActivity) lastFragment).themeDelegate != null && ((ChatActivity) lastFragment).themeDelegate.getCurrentTheme() != null) {
+            resourcesProvider = lastFragment.getResourceProvider();
+        }
+        ActionBar actionBar = new ActionBar(context, resourcesProvider) {
             @Override
-            public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
+            public boolean onTouchEvent(MotionEvent event) {
+                avatarContainer.getHitRect(rect);
+                if (rect.contains((int) event.getX(), (int) event.getY())) {
+                    return false;
+                }
+                return super.onTouchEvent(event);
+            }
+
+            @Override
+            public void setItemsColor(int color, boolean isActionMode) {
+                super.setItemsColor(color, isActionMode);
+                if (!isActionMode && ttlIconView != null) {
+                    ttlIconView.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
                 }
             }
-        });
 
-        return ab;
+            @Override
+            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                updateStoriesViewBounds(false);
+            }
+        };
+        actionBar.setForceSkipTouches(true);
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setItemsBackgroundColor(peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
+        actionBar.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), false);
+        actionBar.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), true);
+        actionBar.setBackButtonDrawable(new BackDrawable(false));
+        actionBar.setCastShadows(false);
+        actionBar.setAddToContainer(false);
+        actionBar.setClipContent(true);
+        actionBar.setOccupyStatusBar(Build.VERSION.SDK_INT >= 21 && !AndroidUtilities.isTablet() && !inBubbleMode);
+        ImageView backButton = actionBar.getBackButton();
+        backButton.setOnLongClickListener(e -> {
+            ActionBarPopupWindow menu = BackButtonMenu.show(this, backButton, getDialogId(), getTopicId(), resourcesProvider);
+            if (menu != null) {
+                menu.setOnDismissListener(() -> dimBehindView(false));
+                dimBehindView(backButton, 0.3f);
+                if (undoView != null) {
+                    undoView.hide(true, 1);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        });
+        return actionBar;
+    }
+
+    private void dimBehindView(View view, float value) {
+        scrimView = view;
+        dimBehindView(value);
+    }
+
+    private void dimBehindView(boolean enable) {
+        dimBehindView(enable ? 0.2f : 0);
+    }
+
+    private void dimBehindView(float value) {
+        boolean enable = value > 0;
+        fragmentView.invalidate();
+        if (scrimAnimatorSet != null) {
+            scrimAnimatorSet.cancel();
+        }
+        scrimAnimatorSet = new AnimatorSet();
+        ArrayList<Animator> animators = new ArrayList<>();
+        ValueAnimator scrimPaintAlphaAnimator;
+        if (enable) {
+            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(0, value));
+        } else {
+            animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(scrimPaint.getAlpha() / 255f, 0));
+        }
+        scrimPaintAlphaAnimator.addUpdateListener(a -> {
+            scrimPaint.setAlpha((int) (255 * (float) a.getAnimatedValue()));
+        });
+        scrimAnimatorSet.playTogether(animators);
+        scrimAnimatorSet.setDuration(enable ? 150 : 220);
+        if (!enable) {
+            scrimAnimatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    scrimView = null;
+                    fragmentView.invalidate();
+                }
+            });
+        }
+        scrimAnimatorSet.start();
     }
 
     public void setUserInfo(TLRPC.UserFull value, ProfileChannelCell.ChannelMessageFetcher channelMessageFetcher, ProfileBirthdayEffect.BirthdayEffectFetcher birthdayAssetsFetcher) {
@@ -6580,57 +6663,55 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (topView != null) {
             topView.setBackgroundColorId(peerColor, true);
         }
-        // TODO
-//        if (onlineTextView[1] != null) {
-//            int statusColor;
-//            if (onlineTextView[1].getTag() instanceof Integer) {
-//                statusColor = getThemedColor((Integer) onlineTextView[1].getTag());
-//            } else {
-//                statusColor = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
-//            }
-//            onlineTextView[1].setTextColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, isOnline[0]), 0xB3FFFFFF, currentExpandAnimatorValue));
-//        }
-//        if (showStatusButton != null) {
-//            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
-//        }
-        if (actionBar != null) {
-            // TODO progress 1f
-            actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), getThemedColor(Theme.key_actionBarActionModeDefaultIcon), 1f), false);
-            actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(peerColor != null ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), getThemedColor(Theme.key_actionBarActionModeDefaultSelector), 1f), false);
+        if (onlineTextView[1] != null) {
+            int statusColor;
+            if (onlineTextView[1].getTag() instanceof Integer) {
+                statusColor = getThemedColor((Integer) onlineTextView[1].getTag());
+            } else {
+                statusColor = getThemedColor(Theme.key_avatar_subtitleInProfileBlue);
+            }
+            onlineTextView[1].setTextColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, isOnline[0]), 0xB3FFFFFF, avatarExpandProgress));
         }
-//        if (verifiedDrawable[1] != null) {
-//            final int color1 = peerColor != null ? Theme.adaptHSV(ColorUtils.blendARGB(peerColor.getColor2(), peerColor.hasColor6(Theme.isCurrentThemeDark()) ? peerColor.getColor5() : peerColor.getColor3(), .4f), +.1f, Theme.isCurrentThemeDark() ? -.1f : -.08f) : getThemedColor(Theme.key_profile_verifiedBackground);
-//            final int color2 = getThemedColor(Theme.key_player_actionBarTitle);
-//            verifiedDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, mediaHeaderAnimationProgress, 1.0f), PorterDuff.Mode.MULTIPLY);
-//        }
-//        if (verifiedCheckDrawable[1] != null) {
-//            final int color1 = peerColor != null ? Color.WHITE : dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedCheck));
-//            final int color2 = getThemedColor(Theme.key_windowBackgroundWhite);
-//            verifiedCheckDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, mediaHeaderAnimationProgress, 1.0f), PorterDuff.Mode.MULTIPLY);
-//        }
-//        if (nameTextView[1] != null) {
-//            nameTextView[1].setTextColor(ColorUtils.blendARGB(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), getThemedColor(Theme.key_player_actionBarTitle), mediaHeaderAnimationProgress), Color.WHITE, currentExpandAnimatorValue));
-//        }
-//        if (autoDeletePopupWrapper != null && autoDeletePopupWrapper.textView != null) {
-//            autoDeletePopupWrapper.textView.invalidate();
-//        }
-//        AndroidUtilities.forEachViews(listView, view -> {
-//            if (view instanceof HeaderCell) {
-//                ((HeaderCell) view).setTextColor(dontApplyPeerColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader), false));
-//            } else if (view instanceof TextDetailCell) {
-//                ((TextDetailCell) view).updateColors();
-//            } else if (view instanceof TextCell) {
-//                ((TextCell) view).updateColors();
-//            } else if (view instanceof AboutLinkCell) {
-//                ((AboutLinkCell) view).updateColors();
-//            } else if (view instanceof NotificationsCheckCell) {
-//                ((NotificationsCheckCell) view).getCheckBox().invalidate();
-//            } else if (view instanceof ProfileHoursCell) {
-//                ((ProfileHoursCell) view).updateColors();
-//            } else if (view instanceof ProfileChannelCell) {
-//                ((ProfileChannelCell) view).updateColors();
-//            }
-//        });
+        if (showStatusButton != null) {
+            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, avatarExpandProgress));
+        }
+        if (actionBar != null) {
+            actionBar.setItemsColor(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon), getThemedColor(Theme.key_actionBarActionModeDefaultIcon), mediaHeaderAnimationProgress), false);
+            actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(peerColor != null ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), getThemedColor(Theme.key_actionBarActionModeDefaultSelector), mediaHeaderAnimationProgress), false);
+        }
+        if (verifiedDrawable[1] != null) {
+            final int color1 = peerColor != null ? Theme.adaptHSV(ColorUtils.blendARGB(peerColor.getColor2(), peerColor.hasColor6(Theme.isCurrentThemeDark()) ? peerColor.getColor5() : peerColor.getColor3(), .4f), +.1f, Theme.isCurrentThemeDark() ? -.1f : -.08f) : getThemedColor(Theme.key_profile_verifiedBackground);
+            final int color2 = getThemedColor(Theme.key_player_actionBarTitle);
+            verifiedDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, mediaHeaderAnimationProgress, 1.0f), PorterDuff.Mode.MULTIPLY);
+        }
+        if (verifiedCheckDrawable[1] != null) {
+            final int color1 = peerColor != null ? Color.WHITE : dontApplyPeerColor(getThemedColor(Theme.key_profile_verifiedCheck));
+            final int color2 = getThemedColor(Theme.key_windowBackgroundWhite);
+            verifiedCheckDrawable[1].setColorFilter(AndroidUtilities.getOffsetColor(color1, color2, mediaHeaderAnimationProgress, 1.0f), PorterDuff.Mode.MULTIPLY);
+        }
+        if (nameTextView[1] != null) {
+            nameTextView[1].setTextColor(ColorUtils.blendARGB(ColorUtils.blendARGB(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_profile_title), getThemedColor(Theme.key_player_actionBarTitle), mediaHeaderAnimationProgress), Color.WHITE, avatarExpandProgress));
+        }
+        if (autoDeletePopupWrapper != null && autoDeletePopupWrapper.textView != null) {
+            autoDeletePopupWrapper.textView.invalidate();
+        }
+        AndroidUtilities.forEachViews(listView, view -> {
+            if (view instanceof HeaderCell) {
+                ((HeaderCell) view).setTextColor(dontApplyPeerColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader), false));
+            } else if (view instanceof TextDetailCell) {
+                ((TextDetailCell) view).updateColors();
+            } else if (view instanceof TextCell) {
+                ((TextCell) view).updateColors();
+            } else if (view instanceof AboutLinkCell) {
+                ((AboutLinkCell) view).updateColors();
+            } else if (view instanceof NotificationsCheckCell) {
+                ((NotificationsCheckCell) view).getCheckBox().invalidate();
+            } else if (view instanceof ProfileHoursCell) {
+                ((ProfileHoursCell) view).updateColors();
+            } else if (view instanceof ProfileChannelCell) {
+                ((ProfileChannelCell) view).updateColors();
+            }
+        });
         if (sharedMediaLayout != null && sharedMediaLayout.scrollSlidingTextTabStrip != null) {
             sharedMediaLayout.scrollSlidingTextTabStrip.updateColors();
         }
@@ -6638,13 +6719,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             sharedMediaLayout.giftsContainer.updateColors();
         }
 //        writeButtonSetBackground();
-//        updateEmojiStatusDrawableColor();
-//        if (storyView != null) {
-//            storyView.update();
-//        }
-//        if (giftsView != null) {
-//            giftsView.update();
-//        }
+        updateEmojiStatusDrawableColor();
+        if (storyView != null) {
+            storyView.update();
+        }
+        if (giftsView != null) {
+            giftsView.update();
+        }
     }
 
     private void showAvatarProgress(boolean show, boolean animated) {
