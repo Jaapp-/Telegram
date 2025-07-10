@@ -10,7 +10,6 @@ package org.telegram.ui.Components;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 
-import android.graphics.Rect;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,10 +17,14 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -38,23 +41,28 @@ import org.telegram.tgnet.TLObject;
 
 public class BackupImageView extends View {
 
+    public AnimatedEmojiDrawable animatedEmojiDrawable;
+    public ColorFilter animatedEmojiDrawableColorFilter;
+    public boolean drawFromStart;
+    public int bottomBlurPadding;
+    public int blurFadeHeight = 50;
+    public boolean applyAttach = true;
+    public Text blurText;
     protected ImageReceiver imageReceiver;
     protected ImageReceiver blurImageReceiver;
     protected int width = -1;
     protected int height = -1;
-    public AnimatedEmojiDrawable animatedEmojiDrawable;
-    public ColorFilter animatedEmojiDrawableColorFilter;
-    private AvatarDrawable avatarDrawable;
-    boolean attached;
-
     protected boolean hasBlur;
     protected boolean blurAllowed;
-    public boolean drawFromStart;
+    boolean attached;
+    ValueAnimator roundRadiusAnimator;
+    private AvatarDrawable avatarDrawable;
     private boolean enableBlurRoundRadius = true;
-    public int bottomBlurPadding;
     private Rect srcRect = new Rect();
     private Rect dstRect = new Rect();
     private Paint bottomBlurPaint = new Paint();
+    private Path blurTextClipPath;
+    private ColorFilter blurTextBgColorFilter;
 
     public BackupImageView(Context context) {
         super(context);
@@ -263,16 +271,8 @@ public class BackupImageView extends View {
         invalidate();
     }
 
-    public void setRoundRadius(int value) {
-        imageReceiver.setRoundRadius(value);
-        if (blurAllowed && enableBlurRoundRadius) {
-            blurImageReceiver.setRoundRadius(value);
-        }
-        invalidate();
-    }
-
     public void setRoundRadius(int tl, int tr, int bl, int br) {
-        imageReceiver.setRoundRadius(tl, tr, bl ,br);
+        imageReceiver.setRoundRadius(tl, tr, bl, br);
         if (blurAllowed && enableBlurRoundRadius) {
             blurImageReceiver.setRoundRadius(tl, tr, bl, br);
         }
@@ -281,6 +281,14 @@ public class BackupImageView extends View {
 
     public int[] getRoundRadius() {
         return imageReceiver.getRoundRadius();
+    }
+
+    public void setRoundRadius(int value) {
+        imageReceiver.setRoundRadius(value);
+        if (blurAllowed && enableBlurRoundRadius) {
+            blurImageReceiver.setRoundRadius(value);
+        }
+        invalidate();
     }
 
     public void setAspectFit(boolean value) {
@@ -316,8 +324,6 @@ public class BackupImageView extends View {
             animatedEmojiDrawable.removeView(this);
         }
     }
-
-    public boolean applyAttach = true;
 
     @Override
     protected void onAttachedToWindow() {
@@ -370,18 +376,52 @@ public class BackupImageView extends View {
     }
 
     public void drawBottomBlur(Canvas canvas) {
-        if (blurAllowed && bottomBlurPadding > 0) {
-            Bitmap bm = blurImageReceiver.getBitmap();
-            if (bm != null) {
-                srcRect.set(0, (int) (0.8f * bm.getHeight()), bm.getWidth(), bm.getHeight());
-                dstRect.set(0, getMeasuredHeight() - bottomBlurPadding, getMeasuredWidth(), getMeasuredHeight());
-                canvas.drawBitmap(blurImageReceiver.getBitmap(), srcRect, dstRect, bottomBlurPaint);
-            }
+        int bottomEffectHeight = bottomBlurPadding + blurFadeHeight;
+        if (!blurAllowed || bottomEffectHeight <= 0) return;
+
+        Bitmap bm = blurImageReceiver.getBitmap();
+        if (bm == null) return;
+
+        int bmHeight = bm.getHeight();
+        int srcTop = bmHeight - (int)((float) bottomEffectHeight / getMeasuredHeight() * bmHeight);
+
+        srcRect.set(0, srcTop, bm.getWidth(), bmHeight);
+        dstRect.set(0, getMeasuredHeight() - bottomEffectHeight, getMeasuredWidth(), getMeasuredHeight());
+
+        int saveCount = canvas.saveLayer(
+                dstRect.left, dstRect.top, dstRect.right, dstRect.bottom, null, Canvas.ALL_SAVE_FLAG
+        );
+
+        canvas.drawBitmap(bm, srcRect, dstRect, bottomBlurPaint);
+
+        if (blurFadeHeight > 0) {
+            Paint maskPaint = new Paint();
+            Shader alphaGradient = new LinearGradient(
+                    dstRect.left, dstRect.top, dstRect.left, dstRect.top + blurFadeHeight, // fade from transparent to opaque
+                    0x00FFFFFF, 0xFFFFFFFF,
+                    Shader.TileMode.CLAMP
+            );
+            maskPaint.setShader(alphaGradient);
+            maskPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+            canvas.drawRect(dstRect, maskPaint);
         }
+
+        canvas.restoreToCount(saveCount);
     }
+
+
 
     public void setColorFilter(ColorFilter colorFilter) {
         imageReceiver.setColorFilter(colorFilter);
+    }
+
+    public void setEmojiColorFilter(ColorFilter colorFilter) {
+        animatedEmojiDrawableColorFilter = colorFilter;
+        invalidate();
+    }
+
+    public AnimatedEmojiDrawable getAnimatedEmojiDrawable() {
+        return animatedEmojiDrawable;
     }
 
     public void setAnimatedEmojiDrawable(AnimatedEmojiDrawable animatedEmojiDrawable) {
@@ -398,17 +438,6 @@ public class BackupImageView extends View {
         invalidate();
     }
 
-    public void setEmojiColorFilter(ColorFilter colorFilter) {
-        animatedEmojiDrawableColorFilter = colorFilter;
-        invalidate();
-    }
-
-    public AnimatedEmojiDrawable getAnimatedEmojiDrawable() {
-        return animatedEmojiDrawable;
-    }
-
-    ValueAnimator roundRadiusAnimator;
-    
     public void animateToRoundRadius(int animateToRad) {
         if (getRoundRadius()[0] != animateToRad) {
             if (roundRadiusAnimator != null) {
@@ -425,10 +454,6 @@ public class BackupImageView extends View {
             roundRadiusAnimator.start();
         }
     }
-
-    public Text blurText;
-    private Path blurTextClipPath;
-    private ColorFilter blurTextBgColorFilter;
 
     public void setBlurredText(CharSequence str) {
         if (TextUtils.isEmpty(str)) {
@@ -494,5 +519,9 @@ public class BackupImageView extends View {
 
     public void setBottomBlurPadding(int bottomBlurPadding) {
         this.bottomBlurPadding = bottomBlurPadding;
+    }
+
+    public void setBlurFadeHeight(int blurFadeHeight) {
+        this.blurFadeHeight = blurFadeHeight;
     }
 }
