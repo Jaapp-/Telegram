@@ -3311,11 +3311,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarExpandAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                avatarImage.setBlurRoundRadiusEnabled(false);
-                if (!isPulledDown) {
-                    avatarContainer.setVisibility(VISIBLE);
-                    avatarsViewPager.setVisibility(GONE);
-                    updateAvatar();
+                if (isPulledDown) {
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
+                    avatarImage.setBlurRoundRadiusEnabled(false);
+                    setForegroundImage(false);
+
+                    avatarsViewPager.setAnimatedFileMaybe(avatarImage.getImageReceiver().getAnimation());
+                    avatarsViewPager.resetCurrentItem();
                 }
             }
 
@@ -3323,13 +3325,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             public void onAnimationEnd(Animator animation) {
                 actionBar.setItemsBackgroundColor(isPulledDown ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
                 avatarImage.clearForeground();
-                if (isPulledDown) {
-                    avatarContainer.setVisibility(GONE);
-                    avatarsViewPager.setVisibility(VISIBLE);
-                } else {
+                if (!isPulledDown) {
                     avatarImage.setBlurRoundRadiusEnabled(true);
                 }
-//                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
                 doNotSetForeground = false;
 //                updateStoriesViewBounds(false);
             }
@@ -4772,7 +4770,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     void updateAvatar() {
         if (topScroll < minimizedOffset) {
             avatarContainer.setVisibility(GONE);
-            return;
+            if (!avatarExpandAnimator.isRunning()) {
+                return;
+            }
         }
 
         float alpha = 1;
@@ -4784,7 +4784,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         float scale1 = 0.3f;
         float scale2 = 0.8f;
 
-        if (topScroll < expandedOffset) {
+        if (topScroll < minimizedOffset) {
+            avatarScale = scale1;
+            avatarOffsetY = -scale1 * dp(AVATAR_SIZE_DP);
+            avatarOffsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
+        } else if (topScroll < expandedOffset) {
             if (expandProgress < breakpoint1) {
                 avatarScale = scale1;
             } else if (expandProgress < breakpoint2) {
@@ -4882,7 +4886,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         float progress = isPulledDown ? animatedFraction : 1f - animatedFraction;
         avatarExpandProgress = progress;
         updateAvatar();
-        Log.i(TAG, "setAvatarExpandProgress: " + animatedFraction);
 
 //        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
 //        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
@@ -4913,11 +4916,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (avatarExpandAnimator.isRunning()) {
             avatarExpandAnimator.cancel();
         }
+
         isPulledDown = expand;
 
         listView.smoothScrollBy(0, 0);
-        avatarsViewPagerIndicatorView.refreshVisibility(300);
-        overlaysView.setOverlaysVisible(isPulledDown, 300);
+        avatarsViewPagerIndicatorView.refreshVisibility(1f);
+        overlaysView.setOverlaysVisible(isPulledDown, 1f);
+        avatarExpandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+        avatarExpandAnimator.setDuration(250L);
         avatarExpandAnimator.start();
     }
 
