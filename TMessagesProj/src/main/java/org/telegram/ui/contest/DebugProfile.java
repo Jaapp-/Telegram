@@ -1,5 +1,7 @@
 package org.telegram.ui.contest;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static androidx.core.view.ViewCompat.TYPE_TOUCH;
 import static org.telegram.messenger.AndroidUtilities.displaySize;
 import static org.telegram.messenger.AndroidUtilities.dp;
@@ -423,7 +425,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private LinearLayout headerButtonLayout;
     private float buttonHideProgress;
     private boolean isPulledDown;
-    private ValueAnimator avatarMaximizeAnimator;
+    private ValueAnimator avatarExpandAnimator;
     private float avatarOffsetY;
     private float avatarScale;
     private boolean openSimilar;
@@ -630,7 +632,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private SizeNotifierFrameLayout contentView;
     private boolean openAnimationInProgress;
     private float customAvatarProgress;
-    private float currentExpandAnimatorValue;
+    private float avatarExpandProgress;
     private ShowDrawable showStatusButton;
     private float customPhotoOffset;
     private float onlineX;
@@ -738,6 +740,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private View blurredView;
     private Paint whitePaint = new Paint();
     private boolean allowPullingDown;
+    private float avatarOffsetX;
 
 
     public DebugProfile(Bundle args) {
@@ -2899,9 +2902,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                             getMessagesStorage().clearUserPhoto(userId, photo.id);
                         }
                         if (avatarsViewPager.removePhotoAtIndex(position) || avatarsViewPager.getRealCount() <= 0) {
-                            avatarsViewPager.setVisibility(View.GONE);
+                            avatarsViewPager.setVisibility(GONE);
                             avatarImage.setForegroundAlpha(1f);
-                            avatarContainer.setVisibility(View.VISIBLE);
+                            avatarContainer.setVisibility(VISIBLE);
                             doNotSetForeground = true;
                             final View view = layoutManager.findViewByPosition(0);
                             if (view != null) {
@@ -3092,7 +3095,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     scrimView.draw(canvas);
                     canvas.restoreToCount(c);
                 }
-                if (blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
+                if (blurredView != null && blurredView.getVisibility() == VISIBLE) {
                     if (blurredView.getAlpha() != 1f) {
                         if (blurredView.getAlpha() != 0) {
                             canvas.saveLayerAlpha(blurredView.getLeft(), blurredView.getTop(), blurredView.getRight(), blurredView.getBottom(), (int) (255 * blurredView.getAlpha()), Canvas.ALL_SAVE_FLAG);
@@ -3299,31 +3302,34 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         contentView.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
 
 
-        avatarMaximizeAnimator = ValueAnimator.ofFloat(0f, 1f);
-        avatarMaximizeAnimator.addUpdateListener(anim -> {
-            setAvatarMaximizeAnimationProgress(anim.getAnimatedFraction());
+        avatarExpandAnimator = ValueAnimator.ofFloat(0f, 1f);
+        avatarExpandAnimator.addUpdateListener(anim -> {
+            setAvatarExpandProgress(anim.getAnimatedFraction());
         });
-        avatarMaximizeAnimator.setDuration(500);
-        avatarMaximizeAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-        avatarMaximizeAnimator.addListener(new AnimatorListenerAdapter() {
+        avatarExpandAnimator.setDuration(500);
+        avatarExpandAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+        avatarExpandAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
                 avatarImage.setBlurRoundRadiusEnabled(false);
                 if (!isPulledDown) {
-                    avatarsViewPager.setVisibility(View.GONE);
+                    avatarContainer.setVisibility(VISIBLE);
+                    avatarsViewPager.setVisibility(GONE);
                     updateAvatar();
                 }
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                setAvatarMaximizeAnimationProgress(1.0f);
                 actionBar.setItemsBackgroundColor(isPulledDown ? Theme.ACTION_BAR_WHITE_SELECTOR_COLOR : peerColor != null ? 0x20ffffff : getThemedColor(Theme.key_avatar_actionBarSelectorBlue), false);
                 avatarImage.clearForeground();
-                if (!isPulledDown) {
+                if (isPulledDown) {
+                    avatarContainer.setVisibility(GONE);
+                    avatarsViewPager.setVisibility(VISIBLE);
+                } else {
                     avatarImage.setBlurRoundRadiusEnabled(true);
                 }
-                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
+//                avatarsViewPager.setVisibility(isPulledDown ? View.VISIBLE : View.GONE);
                 doNotSetForeground = false;
 //                updateStoriesViewBounds(false);
             }
@@ -3790,7 +3796,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         blurredView.setOnClickListener(e -> {
             finishPreviewFragment();
         });
-        blurredView.setVisibility(View.GONE);
+        blurredView.setVisibility(GONE);
         blurredView.setFitsSystemWindows(true);
         contentView.addView(blurredView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -3944,22 +3950,22 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             photoDescriptionProgress = onlineTextView[1] == null ? 0 : onlineTextView[1].getAlpha();
         } else {
             if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
-                photoDescriptionProgress = currentExpandAnimatorValue * (1f - customAvatarProgress);
+                photoDescriptionProgress = avatarExpandProgress * (1f - customAvatarProgress);
             } else {
-                photoDescriptionProgress = currentExpandAnimatorValue * customAvatarProgress;
+                photoDescriptionProgress = avatarExpandProgress * customAvatarProgress;
             }
         }
         if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
             if (hasFallbackPhoto) {
                 customPhotoOffset = AndroidUtilities.dp(28) * photoDescriptionProgress;
                 if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(currentExpandAnimatorValue);
-                    onlineTextView[3].setAlpha(1f - currentExpandAnimatorValue);
+                    onlineTextView[2].setAlpha(avatarExpandProgress);
+                    onlineTextView[3].setAlpha(1f - avatarExpandProgress);
                     //  onlineTextView[1].setAlpha(1f - expandProgress);
                     onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
                     contentView.invalidate();
                     if (showStatusButton != null) {
-                        showStatusButton.setAlpha2(1f - currentExpandAnimatorValue);
+                        showStatusButton.setAlpha2(1f - avatarExpandProgress);
                     }
                 }
             } else {
@@ -3993,7 +3999,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     public void updateCollectibleHint() {
         if (collectibleHint == null) return;
-        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + (nameTextView[1].getRightDrawableX() - nameTextView[1].getRightDrawableWidth() * lerp(0.45f, 0.25f, currentExpandAnimatorValue)) * nameTextView[1].getScaleX());
+        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + (nameTextView[1].getRightDrawableX() - nameTextView[1].getRightDrawableWidth() * lerp(0.45f, 0.25f, avatarExpandProgress)) * nameTextView[1].getScaleX());
         final float expanded = expandProgress;
         collectibleHint.setTranslationY(-collectibleHint.getPaddingBottom() + nameTextView[1].getY() - dp(24) + lerp(dp(6), -dp(12), expanded));
         collectibleHint.setBgColor(ColorUtils.blendARGB(collectibleHintBackgroundColor, 0x50000000, expanded));
@@ -4107,7 +4113,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (actionBar.menu != null) {
             for (int i = 0; i < actionBar.menu.getChildCount(); ++i) {
                 View child = actionBar.menu.getChildAt(i);
-                if (child.getAlpha() <= 0 || child.getVisibility() != View.VISIBLE) {
+                if (child.getAlpha() <= 0 || child.getVisibility() != VISIBLE) {
                     continue;
                 }
                 int left = actionBar.menu.getLeft() + (int) child.getX();
@@ -4765,12 +4771,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     void updateAvatar() {
         if (topScroll < minimizedOffset) {
-            avatarContainer.setVisibility(View.GONE);
+            avatarContainer.setVisibility(GONE);
             return;
         }
-        avatarContainer.setVisibility(View.VISIBLE);
 
-        float offsetX;
         float alpha = 1;
 
         float breakpoint1 = 0.2f;
@@ -4791,83 +4795,130 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 avatarScale = lerp(scale2, 1f, (expandProgress - breakpoint3) / (1f - breakpoint3));
             }
             avatarOffsetY = lerp(-scale1 * dp(AVATAR_SIZE_DP), dp(38), expandProgress);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
+            avatarOffsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
             alpha = clamp01((expandProgress - 0.3f) / (0.5f - 0.3f));
         } else {
             float pulldownProgress = clamp01(maximizeProgress / AVATAR_EXPAND_THRESHOLD);
             avatarScale = lerp(1f, 1.1f, pulldownProgress);
             avatarOffsetY = lerp(dp(38), dp(74), pulldownProgress);
-            offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
+            avatarOffsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * avatarScale) / 2f;
         }
-        if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
-            avatarScale = 1.1f;
+
+        if (avatarExpandAnimator.isRunning()) {
+            float scaleX = lerp(avatarScale, 1f, avatarExpandProgress);
+            float scaleY = lerp(avatarScale, 1f, avatarExpandProgress);
+            float offsetY = lerp(avatarOffsetY, 0, avatarExpandProgress);
+            float offsetX = lerp(avatarOffsetX, 0, avatarExpandProgress);
+            int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, avatarExpandProgress);
+            avatarContainer.setTranslationX(offsetX);
+            avatarContainer.setTranslationY(offsetY);
+            avatarContainer.setScaleX(scaleX);
+            avatarContainer.setScaleY(scaleY);
+
+            avatarImage.setOnDrawRoundRadius(roundRadius);
+            avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), avatarExpandProgress));
+            avatarImage.setBlurFadeHeight(lerp(0, dp(30), avatarExpandProgress));
+
+            final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+            avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x, avatarExpandProgress);
+            avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) topScroll, avatarExpandProgress);
+            avatarContainer.requestLayout();
+        } else {
+            avatarContainer.setTranslationX(avatarOffsetX);
+            avatarContainer.setTranslationY(avatarOffsetY);
             avatarContainer.setScaleX(avatarScale);
             avatarContainer.setScaleY(avatarScale);
-
-
-            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
-            overlaysLp.width = listView.getMeasuredWidth();
-            overlaysLp.height = topScroll;
-            overlaysView.requestLayout();
-
-            if (!avatarMaximizeAnimator.isRunning()) {
-                ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
-                params.width = listView.getMeasuredWidth();
-                params.height = topScroll;
-                avatarsViewPager.requestLayout();
-
-                final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
-                avatarParams.width = listView.getMeasuredWidth();
-                avatarParams.height = (int) (topScroll / 1.1f);
-                avatarContainer.requestLayout();
-            }
-            return;
+            avatarContainer.setAlpha(alpha);
+            avatarImage.setBlurAlpha(clamp01((1f - alpha) * 2));
+            avatarImage.invalidate();
         }
-        avatarContainer.setTranslationX(offsetX);
-        avatarContainer.setTranslationY(avatarOffsetY);
-        avatarContainer.setScaleX(avatarScale);
-        avatarContainer.setScaleY(avatarScale);
-        avatarContainer.setAlpha(alpha);
-        avatarImage.setBlurAlpha(clamp01((1f - alpha) * 2));
-        avatarImage.invalidate();
-    }
 
-    private void setAvatarMaximizeAnimationProgress(float animatedFraction) {
-        float progress = isPulledDown ? animatedFraction : 1f - animatedFraction;
-        currentExpandAnimatorValue = progress;
-        updateAvatar();
-
-        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
-        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
-        float offsetY = lerp(avatarOffsetY, 0, progress);
-        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scaleX) / 2f;
-        int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
-        avatarContainer.setTranslationX(offsetX);
-        avatarContainer.setTranslationY(offsetY);
-        avatarImage.setOnDrawRoundRadius(roundRadius);
-        avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), progress));
-
-
-        final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
-        avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x / 1.1f, progress);
-        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) topScroll / 1.1f, progress);
-        avatarContainer.requestLayout();
-
+        boolean viewPagerVisible = isPulledDown && avatarExpandProgress == 1f;
+        avatarsViewPager.setVisibility(viewPagerVisible ? VISIBLE : GONE);
+        avatarContainer.setVisibility(viewPagerVisible ? GONE : VISIBLE);
 
         if (isPulledDown) {
+            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
+            if (overlaysLp.height != topScroll) {
+                overlaysLp.height = topScroll;
+                overlaysView.requestLayout();
+            }
+
             ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
-            params.width = listView.getMeasuredWidth();
-            params.height = (int) (progress * topScroll);
-            avatarsViewPager.requestLayout();
+            if (params.height != topScroll) {
+                params.height = topScroll;
+                avatarsViewPager.requestLayout();
+            }
         }
+
+
+//        if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
+//            avatarScale = 1.1f;
+//            avatarContainer.setScaleX(avatarScale);
+//            avatarContainer.setScaleY(avatarScale);
+//
+//
+//            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
+//            overlaysLp.width = listView.getMeasuredWidth();
+//            overlaysLp.height = topScroll;
+//            overlaysView.requestLayout();
+//
+//            if (!avatarExpandAnimator.isRunning()) {
+//                ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
+//                params.width = listView.getMeasuredWidth();
+//                params.height = topScroll;
+//                avatarsViewPager.requestLayout();
+//
+//                final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+//                avatarParams.width = listView.getMeasuredWidth();
+//                avatarParams.height = (int) (topScroll / 1.1f);
+//                avatarContainer.requestLayout();
+//            }
+//            return;
+//        }
     }
 
-    void startMaximizeAnimator() {
-        listView.smoothScrollBy(0, 0);
-//        if (avatarMaximizeAnimator.isRunning()) {
-//            avatarMaximizeAnimator.cancel();
+    private void setAvatarExpandProgress(float animatedFraction) {
+        float progress = isPulledDown ? animatedFraction : 1f - animatedFraction;
+        avatarExpandProgress = progress;
+        updateAvatar();
+        Log.i(TAG, "setAvatarExpandProgress: " + animatedFraction);
+
+//        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
+//        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
+//        float offsetY = lerp(avatarOffsetY, 0, progress);
+//        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scaleX) / 2f;
+//        int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
+//        avatarContainer.setTranslationX(offsetX);
+//        avatarContainer.setTranslationY(offsetY);
+//        avatarImage.setOnDrawRoundRadius(roundRadius);
+//        avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), progress));
+//
+//
+//        final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
+//        avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x / 1.1f, progress);
+//        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) topScroll / 1.1f, progress);
+//        avatarContainer.requestLayout();
+//
+//
+//        if (isPulledDown) {
+//            ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
+//            params.width = listView.getMeasuredWidth();
+//            params.height = (int) (progress * topScroll);
+//            avatarsViewPager.requestLayout();
 //        }
-        avatarMaximizeAnimator.start();
+    }
+
+    void startMaximizeAnimator(boolean expand) {
+        if (avatarExpandAnimator.isRunning()) {
+            avatarExpandAnimator.cancel();
+        }
+        isPulledDown = expand;
+
+        listView.smoothScrollBy(0, 0);
+        avatarsViewPagerIndicatorView.refreshVisibility(300);
+        overlaysView.setOverlaysVisible(isPulledDown, 300);
+        avatarExpandAnimator.start();
     }
 
     @SuppressLint("SetTextI18n")
@@ -4910,24 +4961,11 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
             if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
                 if (!isPulledDown) {
-                    if (avatarMaximizeAnimator.isRunning()) {
-                        avatarMaximizeAnimator.cancel();
-                    }
-                    isPulledDown = true;
-                    startMaximizeAnimator();
-                    // TODO duration
-                    avatarsViewPagerIndicatorView.refreshVisibility(300);
-                    overlaysView.setOverlaysVisible(true, 300);
+                    startMaximizeAnimator(true);
                 }
             } else {
                 if (isPulledDown) {
-                    if (avatarMaximizeAnimator.isRunning()) {
-                        avatarMaximizeAnimator.cancel();
-                    }
-                    isPulledDown = false;
-                    startMaximizeAnimator();
-                    avatarsViewPagerIndicatorView.refreshVisibility(300);
-                    overlaysView.setOverlaysVisible(false, 300);
+                    startMaximizeAnimator(false);
                 }
             }
         } else {
@@ -5875,9 +5913,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
 
-            onlineTextView[2].setVisibility(View.VISIBLE);
+            onlineTextView[2].setVisibility(VISIBLE);
             if (!searchMode) {
-                onlineTextView[3].setVisibility(View.VISIBLE);
+                onlineTextView[3].setVisibility(VISIBLE);
             }
 
             // TODO
@@ -6518,7 +6556,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (showStatusButton == null) {
             showStatusButton = new ShowDrawable(LocaleController.getString(R.string.StatusHiddenShow));
             showStatusButton.setAlpha((int) (0xFF * Math.min(1f, (float) topScroll / minimizedOffset)));
-            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
+            showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, avatarExpandProgress));
         }
         return showStatusButton;
     }
@@ -6641,7 +6679,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //        } else {
         if (show) {
             avatarProgressView.setAlpha(1.0f);
-            avatarProgressView.setVisibility(View.VISIBLE);
+            avatarProgressView.setVisibility(VISIBLE);
         } else {
             avatarProgressView.setAlpha(0.0f);
             avatarProgressView.setVisibility(View.INVISIBLE);
@@ -7229,7 +7267,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         final boolean hasUsername = UserObject.getPublicUsername(user) != null;
         setUsernameItem.setIcon(hasUsername ? R.drawable.menu_username_change : R.drawable.menu_username_set);
         setUsernameItem.setText(hasUsername ? getString(R.string.ProfileUsernameEdit) : getString(R.string.ProfileUsernameSet));
-        linkItem.setVisibility(UserObject.getPublicUsername(user) != null ? View.VISIBLE : View.GONE);
+        linkItem.setVisibility(UserObject.getPublicUsername(user) != null ? VISIBLE : GONE);
     }
 
     private void invalidateIsInLandscapeMode() {
@@ -7474,23 +7512,23 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 //                }
 //            }
             if (editItemVisible) {
-                if (editItem.getVisibility() != View.VISIBLE) {
-                    editItem.setVisibility(View.VISIBLE);
+                if (editItem.getVisibility() != VISIBLE) {
+                    editItem.setVisibility(VISIBLE);
                     if (animated) {
                         editItem.setAlpha(0);
                         editItem.animate().alpha(1f).setDuration(150).start();
                     }
                 }
             } else {
-                if (editItem.getVisibility() != View.GONE) {
-                    editItem.setVisibility(View.GONE);
+                if (editItem.getVisibility() != GONE) {
+                    editItem.setVisibility(GONE);
                 }
             }
         }
         if (avatarsViewPagerIndicatorView != null) {
             if (avatarsViewPagerIndicatorView.isIndicatorFullyVisible()) {
                 if (editItemVisible) {
-                    editItem.setVisibility(View.GONE);
+                    editItem.setVisibility(GONE);
                     editItem.animate().cancel();
                     editItem.setAlpha(1f);
                 }
@@ -7529,24 +7567,24 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         TextView saveItem = sharedMediaLayout.getSaveItem();
         if (!mediaHeaderVisible) {
             if (editItemVisible) {
-                editItem.setVisibility(View.VISIBLE);
+                editItem.setVisibility(VISIBLE);
             }
-            otherItem.setVisibility(View.VISIBLE);
+            otherItem.setVisibility(VISIBLE);
             if (mediaOptionsItem != null) {
-                mediaOptionsItem.setVisibility(View.GONE);
+                mediaOptionsItem.setVisibility(GONE);
             }
             if (saveItem != null) {
-                saveItem.setVisibility(View.GONE);
+                saveItem.setVisibility(GONE);
             }
         } else {
             if (sharedMediaLayout.isSearchItemVisible()) {
-                mediaSearchItem.setVisibility(View.VISIBLE);
+                mediaSearchItem.setVisibility(VISIBLE);
             }
             if (mediaOptionsItem != null) {
-                mediaOptionsItem.setVisibility(View.VISIBLE);
+                mediaOptionsItem.setVisibility(VISIBLE);
             }
             if (sharedMediaLayout.isOptionsItemVisible()) {
-                sharedMediaLayout.photoVideoOptionsItem.setVisibility(View.VISIBLE);
+                sharedMediaLayout.photoVideoOptionsItem.setVisibility(VISIBLE);
                 sharedMediaLayout.animateSearchToOptions(true, false);
             } else {
                 sharedMediaLayout.photoVideoOptionsItem.setVisibility(View.INVISIBLE);
@@ -7596,12 +7634,12 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (headerAnimatorSet != null) {
                     if (mediaHeaderVisible) {
                         if (editItemVisible) {
-                            editItem.setVisibility(View.GONE);
+                            editItem.setVisibility(GONE);
                         }
-                        otherItem.setVisibility(View.GONE);
+                        otherItem.setVisibility(GONE);
                     } else {
                         if (sharedMediaLayout.isSearchItemVisible()) {
-                            mediaSearchItem.setVisibility(View.VISIBLE);
+                            mediaSearchItem.setVisibility(VISIBLE);
                         }
 
                         sharedMediaLayout.photoVideoOptionsItem.setVisibility(View.INVISIBLE);
@@ -8042,7 +8080,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         Utilities.stackBlurBitmap(bitmap, Math.max(7, Math.max(w, h) / 180));
         blurredView.setBackground(new BitmapDrawable(bitmap));
         blurredView.setAlpha(0.0f);
-        blurredView.setVisibility(View.VISIBLE);
+        blurredView.setVisibility(VISIBLE);
     }
 
     static class HeaderButtonView extends FrameLayout {
@@ -9418,7 +9456,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
 
-            if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarMaximizeAnimator.isRunning()) {
+            if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarExpandAnimator.isRunning()) {
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
                 canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
                 drawDroplet(canvas);
