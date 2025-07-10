@@ -95,6 +95,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
     private TLRPC.GroupCallParticipant participant;
 
     private int imagesLayerNum;
+    private int bottomBlurPadding;
 
     public void setHasActiveVideo(boolean hasActiveVideo) {
         this.hasActiveVideo = hasActiveVideo;
@@ -115,6 +116,14 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
 
     public void clearPrevImages() {
         prevImageLocation = null;
+    }
+
+    public int getBottomBlurPadding() {
+        return bottomBlurPadding;
+    }
+
+    public void setBottomBlurPadding(int bottomBlurPadding) {
+        this.bottomBlurPadding = bottomBlurPadding;
     }
 
     private static class Item {
@@ -1140,6 +1149,9 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             }
             if (item.imageView == null) {
                 item.imageView = new AvatarImageView(context, position, placeholderPaint);
+                item.imageView.setBlurAllowed(true);
+                item.imageView.setHasBlur(true);
+                item.imageView.setBottomBlurPadding(bottomBlurPadding);
                 imageViews.set(position, item.imageView);
             }
 

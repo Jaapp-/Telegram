@@ -1,12 +1,10 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.Property;
@@ -21,7 +19,6 @@ import org.telegram.ui.Components.ChatActivityInterface;
 import org.telegram.ui.Components.ProfileGalleryView;
 
 public class AvatarImageView extends BackupImageView {
-    public static float BOTTOM_BLUR_PADDING = 100f;
     public static Property<AvatarImageView, Float> CROSSFADE_PROGRESS = new AnimationProperties.FloatProperty<AvatarImageView>("crossfadeProgress") {
         @Override
         public void setValue(AvatarImageView object, float value) {
@@ -35,7 +32,6 @@ public class AvatarImageView extends BackupImageView {
     };
     private final RectF rect = new RectF();
     private final Paint placeholderPaint;
-    private final Path bottomBlurClipPath = new Path();
     public boolean drawAvatar = true;
     public float bounceScale = 1f;
     boolean drawForeground = true;
@@ -49,8 +45,7 @@ public class AvatarImageView extends BackupImageView {
     private boolean hasStories;
     private float progressToInsets = 1f;
     private float blurAlpha;
-    private Rect srcTmp = new Rect();
-    private Rect dstTmp = new Rect();
+    private final Path bottomBlurClipPath = new Path();
 
     public AvatarImageView(Context context) {
         super(context);
@@ -147,8 +142,7 @@ public class AvatarImageView extends BackupImageView {
         float x = inset;
         float y = inset;
         float width = getMeasuredWidth() - inset * 2f;
-        float height = width;
-        int bottomBlurHeight = getMeasuredHeight() - getMeasuredWidth();
+        float height = getMeasuredHeight() - bottomBlurPadding;
 
         if (animateFromImageReceiver != null) {
             alpha *= 1.0f - crossfadeProgress;
@@ -193,28 +187,15 @@ public class AvatarImageView extends BackupImageView {
             blurImageReceiver.setAlpha(blurAlpha);
             blurImageReceiver.draw(canvas);
         }
-        if (bottomBlurHeight > 0f) {
-//            float radius = getRoundRadius()[0];
 
-//            bottomBlurCanvas.translate(0, bottomBlurHeight - height);
-//            blurImageReceiver.setImageCoords(0, 0, getMeasuredWidth(), getMeasuredHeight());
-//            blurImageReceiver.setAlpha(1f);
-//            blurImageReceiver.draw(bottomBlurCanvas);
-
+        if (blurAllowed && bottomBlurPadding > 0) {
             canvas.save();
-
-            rect.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             bottomBlurClipPath.reset();
             final int radius = foregroundImageReceiver.getRoundRadius()[0];
+            rect.set(0f, 0f, getMeasuredWidth(), getMeasuredHeight());
             bottomBlurClipPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
             canvas.clipPath(bottomBlurClipPath);
-
-            // Draw scaled bitmap (image gets stretched, clip remains stable)
-            Bitmap bm = blurImageReceiver.getBitmap();
-            srcTmp.set(0, (int) (0.8f * bm.getHeight()), bm.getWidth(), bm.getHeight());
-            dstTmp.set(0, getMeasuredHeight() - bottomBlurHeight, getMeasuredWidth(), getMeasuredHeight());
-            canvas.drawBitmap(blurImageReceiver.getBitmap(), srcTmp, dstTmp, null);
-
+            this.drawBottomBlur(canvas);
             canvas.restore();
         }
         canvas.restore();

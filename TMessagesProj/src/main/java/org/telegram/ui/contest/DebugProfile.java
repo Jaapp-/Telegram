@@ -3267,6 +3267,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 super.setVisibility(visibility);
             }
         };
+        checkLayout();
+        avatarsViewPager.setBottomBlurPadding(maximizedOffset - displaySize.x);
 
 
         contentView.addView(avatarsViewPager);
@@ -3792,7 +3794,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         blurredView.setFitsSystemWindows(true);
         contentView.addView(blurredView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        checkLayout();
         showAvatarProgress(false, false);
         updateProfileData(true);
 
@@ -4844,6 +4845,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
         avatarImage.setRoundRadius(roundRadius);
+        avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), progress));
 
 
         final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();

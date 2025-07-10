@@ -10,6 +10,7 @@ package org.telegram.ui.Components;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 
+import android.graphics.Rect;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -17,13 +18,13 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -50,6 +51,10 @@ public class BackupImageView extends View {
     protected boolean blurAllowed;
     public boolean drawFromStart;
     private boolean enableBlurRoundRadius = true;
+    public int bottomBlurPadding;
+    private Rect srcRect = new Rect();
+    private Rect dstRect = new Rect();
+    private Paint bottomBlurPaint = new Paint();
 
     public BackupImageView(Context context) {
         super(context);
@@ -61,6 +66,8 @@ public class BackupImageView extends View {
                 checkCreateBlurredImage();
             }
         });
+        bottomBlurPaint.setFilterBitmap(true);
+        bottomBlurPaint.setAntiAlias(true);
     }
 
     protected ImageReceiver createImageReciever() {
@@ -347,14 +354,29 @@ public class BackupImageView extends View {
                 }
             }
         } else {
-            imageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
+            imageReceiver.setImageCoords(0, 0, getWidth(), getHeight() - bottomBlurPadding);
             if (blurAllowed) {
-                blurImageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
+                blurImageReceiver.setImageCoords(0, 0, getWidth(), getHeight() - bottomBlurPadding);
             }
         }
         imageReceiver.draw(canvas);
         if (blurAllowed) {
-            blurImageReceiver.draw(canvas);
+            if (bottomBlurPadding > 0) {
+                drawBottomBlur(canvas);
+            } else {
+                blurImageReceiver.draw(canvas);
+            }
+        }
+    }
+
+    public void drawBottomBlur(Canvas canvas) {
+        if (blurAllowed && bottomBlurPadding > 0) {
+            Bitmap bm = blurImageReceiver.getBitmap();
+            if (bm != null) {
+                srcRect.set(0, (int) (0.8f * bm.getHeight()), bm.getWidth(), bm.getHeight());
+                dstRect.set(0, getMeasuredHeight() - bottomBlurPadding, getMeasuredWidth(), getMeasuredHeight());
+                canvas.drawBitmap(blurImageReceiver.getBitmap(), srcRect, dstRect, null);
+            }
         }
     }
 
@@ -464,5 +486,13 @@ public class BackupImageView extends View {
     @Override
     protected boolean verifyDrawable(@NonNull Drawable who) {
         return who == imageReceiver.getDrawable() || who == imageReceiver.getImageDrawable() || super.verifyDrawable(who);
+    }
+
+    public int getBottomBlurPadding() {
+        return bottomBlurPadding;
+    }
+
+    public void setBottomBlurPadding(int bottomBlurPadding) {
+        this.bottomBlurPadding = bottomBlurPadding;
     }
 }
