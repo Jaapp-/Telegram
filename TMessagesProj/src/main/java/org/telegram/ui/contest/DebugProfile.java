@@ -4843,7 +4843,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         avatarsViewPager.setVisibility(viewPagerVisible ? VISIBLE : GONE);
         avatarContainer.setVisibility(viewPagerVisible ? GONE : VISIBLE);
 
-        if (isPulledDown) {
+        if (isPulledDown || avatarExpandAnimator.isRunning()) {
             final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
             if (overlaysLp.height != topScroll) {
                 overlaysLp.height = topScroll;
