@@ -46,6 +46,7 @@ public class AvatarImageView extends BackupImageView {
     private float progressToInsets = 1f;
     private float blurAlpha;
     private final Path bottomBlurClipPath = new Path();
+    private int onDrawRoundRadius;
 
     public AvatarImageView(Context context) {
         super(context);
@@ -144,6 +145,13 @@ public class AvatarImageView extends BackupImageView {
         float width = getMeasuredWidth() - inset * 2f;
         float height = getMeasuredHeight() - bottomBlurPadding;
 
+        if (onDrawRoundRadius > 0) {
+            bottomBlurClipPath.reset();
+            rect.set(0f, 0f, getMeasuredWidth(), getMeasuredHeight());
+            bottomBlurClipPath.addRoundRect(rect, onDrawRoundRadius, onDrawRoundRadius, Path.Direction.CW);
+            canvas.clipPath(bottomBlurClipPath);
+        }
+
         if (animateFromImageReceiver != null) {
             alpha *= 1.0f - crossfadeProgress;
             if (crossfadeProgress > 0.0f) {
@@ -189,14 +197,9 @@ public class AvatarImageView extends BackupImageView {
         }
 
         if (blurAllowed && bottomBlurPadding > 0) {
-            canvas.save();
-            bottomBlurClipPath.reset();
-            final int radius = foregroundImageReceiver.getRoundRadius()[0];
-            rect.set(0f, 0f, getMeasuredWidth(), getMeasuredHeight());
-            bottomBlurClipPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
-            canvas.clipPath(bottomBlurClipPath);
+//            canvas.save();
             this.drawBottomBlur(canvas);
-            canvas.restore();
+//            canvas.restore();
         }
         canvas.restore();
     }
@@ -245,5 +248,16 @@ public class AvatarImageView extends BackupImageView {
         }
         progressToExpand = animatedFracture;
         invalidate();
+    }
+
+    public int getOnDrawRoundRadius() {
+        return onDrawRoundRadius;
+    }
+
+    public void setOnDrawRoundRadius(int onDrawRoundRadius) {
+        this.onDrawRoundRadius = onDrawRoundRadius;
+        if (foregroundImageReceiver.getRoundRadius()[0] != 0) {
+            this.setRoundRadius(0);
+        }
     }
 }

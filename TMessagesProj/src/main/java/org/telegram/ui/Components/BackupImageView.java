@@ -375,7 +375,7 @@ public class BackupImageView extends View {
             if (bm != null) {
                 srcRect.set(0, (int) (0.8f * bm.getHeight()), bm.getWidth(), bm.getHeight());
                 dstRect.set(0, getMeasuredHeight() - bottomBlurPadding, getMeasuredWidth(), getMeasuredHeight());
-                canvas.drawBitmap(blurImageReceiver.getBitmap(), srcRect, dstRect, null);
+                canvas.drawBitmap(blurImageReceiver.getBitmap(), srcRect, dstRect, bottomBlurPaint);
             }
         }
     }

@@ -4844,7 +4844,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
         avatarContainer.setTranslationX(offsetX);
         avatarContainer.setTranslationY(offsetY);
-        avatarImage.setRoundRadius(roundRadius);
+        avatarImage.setOnDrawRoundRadius(roundRadius);
         avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), progress));
 
 
