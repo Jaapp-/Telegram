@@ -190,16 +190,14 @@ public class AvatarImageView extends BackupImageView {
             }
         }
 
-        if (blurAllowed && blurAlpha > 0f) {
+        if (hasBlur && blurAlpha > 0f) {
             blurImageReceiver.setImageCoords(x, y, width, height);
             blurImageReceiver.setAlpha(blurAlpha);
             blurImageReceiver.draw(canvas);
         }
 
-        if (blurAllowed && bottomBlurPadding > 0) {
-//            canvas.save();
+        if (hasBlur && bottomBlurPadding > 0) {
             this.drawBottomBlur(canvas);
-//            canvas.restore();
         }
         canvas.restore();
     }

@@ -1221,7 +1221,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             item.imageView.getImageReceiver().setDelegate(new ImageReceiver.ImageReceiverDelegate() {
                 @Override
                 public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-
+                    item.imageView.setHasBlur(true);
                 }
 
                 @Override
