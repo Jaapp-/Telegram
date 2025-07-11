@@ -12,7 +12,6 @@ import static org.telegram.messenger.ContactsController.PRIVACY_RULES_TYPE_ADDED
 import static org.telegram.messenger.LocaleController.formatPluralString;
 import static org.telegram.messenger.LocaleController.formatString;
 import static org.telegram.messenger.LocaleController.getString;
-import static org.telegram.messenger.Utilities.clamp;
 import static org.telegram.messenger.Utilities.clamp01;
 import static org.telegram.ui.Stars.StarsIntroActivity.formatStarsAmountShort;
 import static org.telegram.ui.bots.AffiliateProgramFragment.percents;
@@ -501,14 +500,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private int versionRow;
     private int emptyRow;
     private int bottomPaddingRow;
-    private int infoHeaderRow;
     private int phoneRow;
     private int locationRow;
     private int userInfoRow;
     private int channelInfoRow;
     private int usernameRow;
     private int notificationsDividerRow;
-//    private int notificationsRow;
+    //    private int notificationsRow;
     private int bizHoursRow;
     private int bizLocationRow;
     private int notificationsSimpleRow;
@@ -972,7 +970,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             presentFragment(new IdenticonActivity(args));
         } else if (position == settingsTimerRow) {
             showDialog(AlertsCreator.createTTLAlert(getParentActivity(), currentEncryptedChat, resourcesProvider).create());
-        }  else if (position == unblockRow) {
+        } else if (position == unblockRow) {
             getMessagesController().unblockPeer(userId);
             if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
                 BulletinFactory.createBanBulletin(DebugProfile.this, false).show();
@@ -5266,7 +5264,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         reportReactionRow = -1;
         addToContactsRow = -1;
         emptyRow = -1;
-        infoHeaderRow = -1;
         phoneRow = -1;
         userInfoRow = -1;
         locationRow = -1;
@@ -5436,7 +5433,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     }
                 }
                 infoStartRow = rowCount;
-                infoHeaderRow = rowCount++;
                 if (!isBot && (hasPhone || !hasInfo)) {
                     phoneRow = rowCount++;
                 }
@@ -5544,7 +5540,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
         } else if (isTopic) {
-            infoHeaderRow = rowCount++;
             usernameRow = rowCount++;
             notificationsSimpleRow = rowCount++;
             infoSectionRow = rowCount++;
@@ -5556,7 +5551,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (LocaleController.isRTL && ChatObject.isChannel(currentChat) && chatInfo != null && !currentChat.megagroup && chatInfo.linked_chat_id != 0) {
                     emptyRow = rowCount++;
                 }
-                infoHeaderRow = rowCount++;
                 if (chatInfo != null) {
                     if (!TextUtils.isEmpty(chatInfo.about)) {
                         channelInfoRow = rowCount++;
@@ -8668,13 +8662,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             switch (holder.getItemViewType()) {
                 case VIEW_TYPE_HEADER:
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
-                    if (position == infoHeaderRow) {
-                        if (ChatObject.isChannel(currentChat) && !currentChat.megagroup && channelInfoRow != -1) {
-                            headerCell.setText(LocaleController.getString(R.string.ReportChatDescription));
-                        } else {
-                            headerCell.setText(LocaleController.getString(R.string.Info));
-                        }
-                    } else if (position == membersHeaderRow) {
+                    if (position == membersHeaderRow) {
                         headerCell.setText(LocaleController.getString(R.string.ChannelMembers));
                     } else if (position == settingsSectionRow2) {
                         headerCell.setText(LocaleController.getString(R.string.SETTINGS));
@@ -9390,7 +9378,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         @Override
         public int getItemViewType(int position) {
-            if (position == infoHeaderRow || position == membersHeaderRow || position == settingsSectionRow2 || position == numberSectionRow || position == helpHeaderRow || position == debugHeaderRow || position == botPermissionsHeader) {
+            if (position == membersHeaderRow || position == settingsSectionRow2 || position == numberSectionRow || position == helpHeaderRow || position == debugHeaderRow || position == botPermissionsHeader) {
                 return VIEW_TYPE_HEADER;
             } else if (position == phoneRow || position == locationRow || position == numberRow || position == birthdayRow) {
                 return VIEW_TYPE_TEXT_DETAIL;
@@ -10288,7 +10276,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             put(++pointer, versionRow, sparseIntArray);
             put(++pointer, emptyRow, sparseIntArray);
             put(++pointer, bottomPaddingRow, sparseIntArray);
-            put(++pointer, infoHeaderRow, sparseIntArray);
             put(++pointer, phoneRow, sparseIntArray);
             put(++pointer, locationRow, sparseIntArray);
             put(++pointer, userInfoRow, sparseIntArray);
