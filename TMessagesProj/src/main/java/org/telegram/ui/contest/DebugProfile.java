@@ -4950,32 +4950,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 avatarsViewPager.requestLayout();
             }
         }
-
-
-//        if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
-//            avatarScale = 1.1f;
-//            avatarContainer.setScaleX(avatarScale);
-//            avatarContainer.setScaleY(avatarScale);
-//
-//
-//            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
-//            overlaysLp.width = listView.getMeasuredWidth();
-//            overlaysLp.height = topScroll;
-//            overlaysView.requestLayout();
-//
-//            if (!avatarExpandAnimator.isRunning()) {
-//                ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
-//                params.width = listView.getMeasuredWidth();
-//                params.height = topScroll;
-//                avatarsViewPager.requestLayout();
-//
-//                final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
-//                avatarParams.width = listView.getMeasuredWidth();
-//                avatarParams.height = (int) (topScroll / 1.1f);
-//                avatarContainer.requestLayout();
-//            }
-//            return;
-//        }
     }
 
     private void setAvatarExpandProgress(float animatedFraction) {
@@ -4992,30 +4966,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (giftsView != null) {
             giftsView.setExpandProgress(progress);
         }
-
-//        float scaleX = lerp(avatarScale, (float) displaySize.x / dp(AVATAR_SIZE_DP), progress);
-//        float scaleY = lerp(avatarScale, (float) maximizedOffset / dp(AVATAR_SIZE_DP), progress);
-//        float offsetY = lerp(avatarOffsetY, 0, progress);
-//        float offsetX = (displaySize.x - dp(AVATAR_SIZE_DP) * scaleX) / 2f;
-//        int roundRadius = lerp(dp(AVATAR_SIZE_DP / 2), 0, progress);
-//        avatarContainer.setTranslationX(offsetX);
-//        avatarContainer.setTranslationY(offsetY);
-//        avatarImage.setOnDrawRoundRadius(roundRadius);
-//        avatarImage.setBottomBlurPadding(lerp(0, maximizedOffset - listView.getMeasuredWidth(), progress));
-//
-//
-//        final FrameLayout.LayoutParams avatarParams = (FrameLayout.LayoutParams) avatarContainer.getLayoutParams();
-//        avatarParams.width = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) displaySize.x / 1.1f, progress);
-//        avatarParams.height = (int) lerp(dpf2(AVATAR_SIZE_DP), (float) topScroll / 1.1f, progress);
-//        avatarContainer.requestLayout();
-//
-//
-//        if (isPulledDown) {
-//            ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
-//            params.width = listView.getMeasuredWidth();
-//            params.height = (int) (progress * topScroll);
-//            avatarsViewPager.requestLayout();
-//        }
     }
 
     void startMaximizeAnimator(boolean expand) {
