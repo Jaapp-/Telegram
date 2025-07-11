@@ -3933,6 +3933,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             onlineTextView[a].setTextSize(14);
             onlineTextView[a].setGravity(Gravity.LEFT);
             onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
+            onlineTextView[a].setPivotX(0);
+            onlineTextView[a].setPivotY(0);
             if (a > 0) {
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
@@ -5060,24 +5062,44 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         final float titleY = 32;
         final float subtitleY = 55;
 
+        float nameX, nameY, onlineX, onlineY, mediaX, mediaY;
+        float nameScale = 1f;
+
         if (topScroll <= minimizedOffset) {
-            nameTextView[1].setTranslationX(dp(titleX));
-            nameTextView[1].setTranslationY(dp(titleY));
-            onlineTextView[1].setTranslationX(dp(titleX));
-            onlineTextView[1].setTranslationY(dp(subtitleY));
-            mediaCounterTextView.setTranslationX(dp(titleX));
-            mediaCounterTextView.setTranslationY(dp(subtitleY));
+            nameX = dp(titleX);
+            nameY = dp(titleY);
+            onlineX = dp(titleX);
+            onlineY = dp(subtitleY);
+            mediaX = dp(titleX);
+            mediaY = dp(subtitleY);
         } else if (topScroll <= expandedOffset) {
-            nameTextView[1].setTranslationX(lerp(dp(titleX), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, expandProgress));
-            nameTextView[1].setTranslationY(lerp(dp(titleY), dp(140), expandProgress));
-            onlineTextView[1].setTranslationX(lerp(dp(titleX), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, expandProgress));
-            onlineTextView[1].setTranslationY(lerp(dp(subtitleY), dp(158), expandProgress));
+            nameX = lerp(dp(titleX), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, expandProgress);
+            nameY = lerp(dp(titleY), dp(140), expandProgress);
+            onlineX = lerp(dp(titleX), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, expandProgress);
+            onlineY = lerp(dp(subtitleY), dp(169), expandProgress);
+            mediaX = lerp(dp(titleX), displaySize.x / 2f - mediaCounterTextView.getWidth() / 2f, expandProgress);
+            mediaY = lerp(dp(subtitleY), dp(158), expandProgress);
+            nameScale = lerp(1f, 1.23f, expandProgress);
         } else {
-            nameTextView[1].setTranslationX(lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(titleX), maximizeProgress));
-            nameTextView[1].setTranslationY(lerp(dp(140), dp(300), maximizeProgress));
-            onlineTextView[1].setTranslationX(lerp(displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, dp(titleX), maximizeProgress));
-            onlineTextView[1].setTranslationY(lerp(dp(158), dp(318), maximizeProgress));
+            nameX = lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(20), maximizeProgress);
+            nameY = lerp(dp(140), dp(300), maximizeProgress);
+            onlineX = lerp(displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, dp(20), maximizeProgress);
+            onlineY = lerp(dp(169), dp(331), maximizeProgress);
+            mediaX = lerp(displaySize.x / 2f - mediaCounterTextView.getWidth() / 2f, dp(20), maximizeProgress);
+            mediaY = lerp(dp(158), dp(328), maximizeProgress);
+            nameScale = lerp(1.23f, 1.4f, maximizeProgress);
         }
+
+        nameTextView[1].setTranslationX(nameX);
+        nameTextView[1].setTranslationY(nameY);
+        nameTextView[1].setScaleX(nameScale);
+        nameTextView[1].setScaleY(nameScale);
+
+        onlineTextView[1].setTranslationX(onlineX);
+        onlineTextView[1].setTranslationY(onlineY);
+
+        mediaCounterTextView.setTranslationX(mediaX);
+        mediaCounterTextView.setTranslationY(mediaY);
     }
 
     void updateMediaHeaderVisible() {
