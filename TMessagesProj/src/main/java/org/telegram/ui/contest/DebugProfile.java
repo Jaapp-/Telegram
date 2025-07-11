@@ -742,6 +742,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private float avatarOffsetX;
     private Rect rect = new Rect();
     private AnimatorSet scrimAnimatorSet;
+    private HeaderButtonView muteButton;
 
 
     public DebugProfile(Bundle args) {
@@ -1174,6 +1175,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
                     BulletinFactory.createSoundEnabledBulletin(DebugProfile.this, enabled ? NotificationsController.SETTING_SOUND_ON : NotificationsController.SETTING_SOUND_OFF, getResourceProvider()).show();
                 }
+                updateMuteButton();
             }
 
             @Override
@@ -1191,7 +1193,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         BulletinFactory.createMuteBulletin(DebugProfile.this, NotificationsController.SETTING_MUTE_CUSTOM, timeInSeconds, getResourceProvider()).show();
                     }
                     updateExceptions();
-                    // TODO update mute button
+                    updateMuteButton();
                 }
             }
 
@@ -1213,7 +1215,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     BulletinFactory.createMuteBulletin(DebugProfile.this, !muted, null).show();
                 }
                 updateExceptions();
-                // TODO update mute button
+                updateMuteButton();
             }
 
             @Override
@@ -2289,9 +2291,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
                 notificationsExceptionTopics.clear();
                 notificationsExceptionTopics.addAll(arrayList);
-
-                // TODO update mute button
             });
+            updateMuteButton();
         }
     }
 
@@ -4068,9 +4069,47 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private HeaderButtonView initMuteButton(Context context) {
-        return initButton(context, R.string.Mute, R.drawable.mute, v -> {
+        boolean isMuted = isMuted();
+        muteButton = initButton(context, isMuted ? R.string.Unmute : R.string.Mute, isMuted ? R.drawable.hbtn_unmute : R.drawable.mute, v -> {
             showMuteDialog(v, 0, 0, context, dialogId);
         });
+        return muteButton;
+    }
+
+    private void updateMuteButton() {
+        if (muteButton == null) return;
+        boolean isMuted = isMuted();
+        muteButton.setTextAndIcon(LocaleController.getString(isMuted ? R.string.Unmute : R.string.Mute), isMuted ? R.drawable.hbtn_unmute : R.drawable.mute);
+        muteButton.invalidate();
+    }
+
+    private boolean isMuted() {
+        SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
+
+        String key = NotificationsController.getSharedPrefKey(dialogId, topicId);
+        boolean soundEnabled = preferences.getBoolean("sound_enabled_" + key, true);
+        if (!soundEnabled) return true;
+        boolean enabled = false;
+        boolean hasOverride = preferences.contains("notify2_" + key);
+        int value = preferences.getInt("notify2_" + key, 0);
+        int delta = preferences.getInt("notifyuntil_" + key, 0);
+        if (value == 3 && delta != Integer.MAX_VALUE) {
+            delta -= getConnectionsManager().getCurrentTime();
+            if (delta <= 0) {
+                enabled = true;
+            }
+        } else {
+            if (value == 0) {
+                if (hasOverride) {
+                    enabled = true;
+                } else {
+                    enabled = getNotificationsController().isGlobalNotificationsEnabled(dialogId, false, false);
+                }
+            } else if (value == 1) {
+                enabled = true;
+            }
+        }
+        return !enabled;
     }
 
     private HeaderButtonView initMessageButton(Context context) {
