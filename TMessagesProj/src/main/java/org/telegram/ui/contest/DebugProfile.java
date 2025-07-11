@@ -509,7 +509,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     //    private int notificationsRow;
     private int bizHoursRow;
     private int bizLocationRow;
-    private int notificationsSimpleRow;
     private int infoStartRow, infoEndRow;
     private int infoSectionRow;
     private int affiliateRow;
@@ -899,14 +898,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 });
             } else if (user != null && user.bot_can_edit) {
                 presentFragment(new AffiliateProgramFragment(userId));
-            }
-        } else if (position == notificationsSimpleRow) {
-            boolean muted = getMessagesController().isDialogMuted(did, topicId);
-            getNotificationsController().muteDialog(did, topicId, !muted);
-            BulletinFactory.createMuteBulletin(DebugProfile.this, !muted, null).show();
-            updateExceptions();
-            if (notificationsSimpleRow >= 0 && listAdapter != null) {
-                listAdapter.notifyItemChanged(notificationsSimpleRow);
             }
         } else if (position == addToContactsRow) {
             TLRPC.User user = getMessagesController().getUser(userId);
@@ -5296,7 +5287,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         membersSectionRow = -1;
         channelBalanceSectionRow = -1;
         sharedMediaRow = -1;
-        notificationsSimpleRow = -1;
         settingsRow = -1;
         botStarsBalanceRow = -1;
         botTonBalanceRow = -1;
@@ -5541,7 +5531,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
         } else if (isTopic) {
             usernameRow = rowCount++;
-            notificationsSimpleRow = rowCount++;
             infoSectionRow = rowCount++;
             if (hasMedia) {
                 sharedMediaRow = rowCount++;
@@ -8379,7 +8368,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
-        private final static int VIEW_TYPE_HEADER = 1, VIEW_TYPE_TEXT_DETAIL = 2, VIEW_TYPE_ABOUT_LINK = 3, VIEW_TYPE_TEXT = 4, VIEW_TYPE_DIVIDER = 5, VIEW_TYPE_SHADOW = 7, VIEW_TYPE_USER = 8, VIEW_TYPE_EMPTY = 11, VIEW_TYPE_BOTTOM_PADDING = 12, VIEW_TYPE_SHARED_MEDIA = 13, VIEW_TYPE_VERSION = 14, VIEW_TYPE_SUGGESTION = 15, VIEW_TYPE_ADDTOGROUP_INFO = 17, VIEW_TYPE_PREMIUM_TEXT_CELL = 18, VIEW_TYPE_TEXT_DETAIL_MULTILINE = 19, VIEW_TYPE_NOTIFICATIONS_CHECK_SIMPLE = 20, VIEW_TYPE_LOCATION = 21, VIEW_TYPE_HOURS = 22, VIEW_TYPE_CHANNEL = 23, VIEW_TYPE_STARS_TEXT_CELL = 24, VIEW_TYPE_BOT_APP = 25, VIEW_TYPE_SHADOW_TEXT = 26, VIEW_TYPE_COLORFUL_TEXT = 27;
+        private final static int VIEW_TYPE_HEADER = 1, VIEW_TYPE_TEXT_DETAIL = 2, VIEW_TYPE_ABOUT_LINK = 3, VIEW_TYPE_TEXT = 4, VIEW_TYPE_DIVIDER = 5, VIEW_TYPE_SHADOW = 7, VIEW_TYPE_USER = 8, VIEW_TYPE_EMPTY = 11, VIEW_TYPE_BOTTOM_PADDING = 12, VIEW_TYPE_SHARED_MEDIA = 13, VIEW_TYPE_VERSION = 14, VIEW_TYPE_SUGGESTION = 15, VIEW_TYPE_ADDTOGROUP_INFO = 17, VIEW_TYPE_PREMIUM_TEXT_CELL = 18, VIEW_TYPE_TEXT_DETAIL_MULTILINE = 19, VIEW_TYPE_LOCATION = 21, VIEW_TYPE_HOURS = 22, VIEW_TYPE_CHANNEL = 23, VIEW_TYPE_STARS_TEXT_CELL = 24, VIEW_TYPE_BOT_APP = 25, VIEW_TYPE_SHADOW_TEXT = 26, VIEW_TYPE_COLORFUL_TEXT = 27;
         private final HashMap<TLRPC.TL_username, ClickableSpan> usernameSpans = new HashMap<TLRPC.TL_username, ClickableSpan>();
         private final Context mContext;
 
@@ -8448,11 +8437,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     view = new DividerCell(mContext, resourcesProvider);
                     view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     view.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(4), 0, 0);
-                    break;
-                }
-                case VIEW_TYPE_NOTIFICATIONS_CHECK_SIMPLE: {
-                    view = new TextCheckCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 }
                 case VIEW_TYPE_SHADOW: {
@@ -9223,10 +9207,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     addToGroupInfo.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, getThemedColor(Theme.key_windowBackgroundGrayShadow)));
                     addToGroupInfo.setText(LocaleController.getString(R.string.BotAddToGroupOrChannelInfo));
                     break;
-                case VIEW_TYPE_NOTIFICATIONS_CHECK_SIMPLE:
-                    TextCheckCell textCheckCell = (TextCheckCell) holder.itemView;
-                    textCheckCell.setTextAndCheck(LocaleController.getString(R.string.Notifications), !getMessagesController().isDialogMuted(getDialogId(), topicId), false);
-                    break;
                 case VIEW_TYPE_LOCATION:
                     ((ProfileLocationCell) holder.itemView).set(userInfo != null ? userInfo.business_location : null, notificationsDividerRow < 0 && !myProfile);
                     break;
@@ -9390,8 +9370,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 return VIEW_TYPE_TEXT;
             } else if (position == notificationsDividerRow) {
                 return VIEW_TYPE_DIVIDER;
-            } else if (position == notificationsSimpleRow) {
-                return VIEW_TYPE_NOTIFICATIONS_CHECK_SIMPLE;
             } else if (position == lastSectionRow || position == membersSectionRow || position == secretSettingsSectionRow || position == settingsSectionRow || position == devicesSectionRow || position == helpSectionCell || position == setAvatarSectionRow || position == passwordSuggestionSectionRow || position == phoneSuggestionSectionRow || position == premiumSectionsRow || position == reportDividerRow || position == channelDividerRow || position == graceSuggestionSectionRow || position == balanceDividerRow || position == botPermissionsDivider || position == channelBalanceSectionRow) {
                 return VIEW_TYPE_SHADOW;
             } else if (position >= membersStartRow && position < membersEndRow) {
@@ -10308,7 +10286,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             put(++pointer, addToGroupInfoRow, sparseIntArray);
             put(++pointer, joinRow, sparseIntArray);
             put(++pointer, lastSectionRow, sparseIntArray);
-            put(++pointer, notificationsSimpleRow, sparseIntArray);
             put(++pointer, bizHoursRow, sparseIntArray);
             put(++pointer, bizLocationRow, sparseIntArray);
             put(++pointer, birthdayRow, sparseIntArray);
