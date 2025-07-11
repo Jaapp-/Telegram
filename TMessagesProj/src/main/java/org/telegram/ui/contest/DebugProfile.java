@@ -12,6 +12,7 @@ import static org.telegram.messenger.ContactsController.PRIVACY_RULES_TYPE_ADDED
 import static org.telegram.messenger.LocaleController.formatPluralString;
 import static org.telegram.messenger.LocaleController.formatString;
 import static org.telegram.messenger.LocaleController.getString;
+import static org.telegram.messenger.Utilities.clamp;
 import static org.telegram.messenger.Utilities.clamp01;
 import static org.telegram.ui.Stars.StarsIntroActivity.formatStarsAmountShort;
 import static org.telegram.ui.bots.AffiliateProgramFragment.percents;
@@ -5032,13 +5033,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             mediaX = dp(titleX);
             mediaY = dp(subtitleY);
         } else if (topScroll <= expandedOffset) {
-            nameX = lerp(dp(titleX), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, expandProgress);
-            nameY = lerp(dp(titleY), dp(140), expandProgress);
-            onlineX = lerp(dp(titleX), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, expandProgress);
-            onlineY = lerp(dp(subtitleY), dp(169), expandProgress);
-            mediaX = lerp(dp(titleX), displaySize.x / 2f - mediaCounterTextView.getWidth() / 2f, expandProgress);
-            mediaY = lerp(dp(subtitleY), dp(158), expandProgress);
-            nameScale = lerp(1f, 1.23f, expandProgress);
+            float textProgress = clamp01((expandProgress - 0.2f) / (1f - 0.2f));
+            nameX = lerp(dp(titleX), displaySize.x / 2f - nameTextView[1].getWidth() / 2f, textProgress);
+            nameY = lerp(dp(titleY), dp(140), textProgress);
+            onlineX = lerp(dp(titleX), displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, textProgress);
+            onlineY = lerp(dp(subtitleY), dp(169), textProgress);
+            mediaX = lerp(dp(titleX), displaySize.x / 2f - mediaCounterTextView.getWidth() / 2f, textProgress);
+            mediaY = lerp(dp(subtitleY), dp(158), textProgress);
+            nameScale = lerp(1f, 1.23f, textProgress);
         } else {
             nameX = lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(20), maximizeProgress);
             nameY = lerp(dp(140), dp(300), maximizeProgress);
@@ -5074,7 +5076,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private void updateHeaderButtons() {
-        buttonHideProgress = 1f - clamp01((float) (topScroll - topBarsHeight) / dp(HEADER_BUTTON_HEIGHT_DP));
+        buttonHideProgress = 1f - clamp01((float) (topScroll - topBarsHeight - dp(10)) / dp(HEADER_BUTTON_HEIGHT_DP * 1.8f));
 
         if (headerButtonLayout != null) {
             for (int i = 0; i < headerButtonLayout.getChildCount(); i++) {
