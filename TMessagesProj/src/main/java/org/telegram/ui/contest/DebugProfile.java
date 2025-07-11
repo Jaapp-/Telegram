@@ -1114,7 +1114,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         } else if (position == sendMessageRow) {
             onWriteButtonClick();
         } else if (position == reportRow) {
-            ReportBottomSheet.openChat(DebugProfile.this, getDialogId());
+            reportChat();
         } else if (position >= membersStartRow && position < membersEndRow) {
             TLRPC.ChatParticipant participant;
             if (!sortedUsers.isEmpty()) {
@@ -1134,28 +1134,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 presentFragment(fragment);
             }
         } else if (position == joinRow) {
-            getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, DebugProfile.this, true, () -> {
-                updateRowsIds();
-                if (listAdapter != null) {
-                    listAdapter.notifyDataSetChanged();
-                }
-            }, err -> {
-                if (err != null && "INVITE_REQUEST_SENT".equals(err.text)) {
-                    SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
-                    preferences.edit().putLong("dialog_join_requested_time_" + dialogId, System.currentTimeMillis()).commit();
-                    JoinGroupAlert.showBulletin(context, DebugProfile.this, ChatObject.isChannel(currentChat) && !currentChat.megagroup);
-                    updateRowsIds();
-                    if (listAdapter != null) {
-                        listAdapter.notifyDataSetChanged();
-                    }
-                    if (lastFragment instanceof ChatActivity) {
-                        ((ChatActivity) lastFragment).showBottomOverlayProgress(false, true);
-                    }
-                    return false;
-                }
-                return true;
-            });
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.closeSearchByActiveAction);
+            joinChat(context, lastFragment);
         } else if (position == subscribersRow) {
             Bundle args = new Bundle();
             args.putLong("chat_id", chatId);
@@ -1313,6 +1292,35 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         } else {
             processOnClickOrPress(position, view, x, y);
         }
+    }
+
+    private void reportChat() {
+        ReportBottomSheet.openChat(DebugProfile.this, getDialogId());
+    }
+
+    private void joinChat(Context context, BaseFragment lastFragment) {
+        getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, DebugProfile.this, true, () -> {
+            updateRowsIds();
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+        }, err -> {
+            if (err != null && "INVITE_REQUEST_SENT".equals(err.text)) {
+                SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
+                preferences.edit().putLong("dialog_join_requested_time_" + dialogId, System.currentTimeMillis()).commit();
+                JoinGroupAlert.showBulletin(context, DebugProfile.this, ChatObject.isChannel(currentChat) && !currentChat.megagroup);
+                updateRowsIds();
+                if (listAdapter != null) {
+                    listAdapter.notifyDataSetChanged();
+                }
+                if (lastFragment instanceof ChatActivity) {
+                    ((ChatActivity) lastFragment).showBottomOverlayProgress(false, true);
+                }
+                return false;
+            }
+            return true;
+        });
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.closeSearchByActiveAction);
     }
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
@@ -2543,7 +2551,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         button.setTextColor(Theme.getColor(Theme.key_text_RedBold));
                     }
                 } else if (id == report) {
-                    ReportBottomSheet.openChat(DebugProfile.this, getDialogId());
+                    reportChat();
                 } else if (id == edit_channel) {
                     if (isTopic) {
                         Bundle args = new Bundle();
@@ -4053,16 +4061,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private void initHeaderButtons(Context context, FrameLayout frameLayout) {
-        ArrayList<HeaderButtonView> buttons = new ArrayList<HeaderButtonView>(4);
-
-//        boolean isPersonalChannel = false;
-//        if (userInfo != null && (userInfo.flags2 & 64) != 0 && (profileChannelMessageFetcher == null || !profileChannelMessageFetcher.loaded || profileChannelMessageFetcher.messageObject != null)) {
-//            final TLRPC.Chat channel = getMessagesController().getChat(userInfo.personal_channel_id);
-//            if (channel != null && (ChatObject.isPublic(channel) || !ChatObject.isNotInChat(channel))) {
-//                isPersonalChannel = true;
-//            }
-//        }
-//        TLRPC.Chat personalChat = getMessagesController().getChat(userInfo.personal_channel_id);
+        ArrayList<HeaderButtonView> buttons = new ArrayList<>(4);
 
         if (userId != 0) {
             TLRPC.User user = getMessagesController().getUser(userId);
@@ -4075,20 +4074,31 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 buttons.add(initMessageButton(context));
                 buttons.add(initMuteButton(context));
                 buttons.add(initVoiceCallButton(context));
-                buttons.add(initVideoCallButton(context));
+                if (user.restricted) {
+                    buttons.add(initGiftButton(context));
+                } else {
+                    buttons.add(initVideoCallButton(context));
+                }
             }
         } else if (chatId != 0) {
-
-            if (ChatObject.isForum(currentChat)) {
-                if (isTopic) {
-                    // It's a profile group topic
+            if (ChatObject.isChannel(currentChat)) {
+                if (ChatObject.isInChat(currentChat)) {
+                    buttons.add(initMuteButton(context));
+                    buttons.add(initShareButton(context));
+                    // TODO: discuss / gift
+                    buttons.add(initLeaveButton(context));
                 } else {
-                    // It's a group forum
+                    buttons.add(initJoinButton(context));
+                    buttons.add(initShareButton(context));
+                    buttons.add(initShareButton(context));
+                    buttons.add(initReportButton(context));
                 }
-            } else if (currentChat.megagroup) {
-                // It's a regular group
             } else {
-                // It's a channel (non-megagroup, non-forum)
+                // TODO forum megagroup
+                buttons.add(initMessageButton(context));
+                buttons.add(initMuteButton(context));
+                buttons.add(initGroupCallButton(context));
+                buttons.add(initLeaveButton(context));
             }
         }
 
@@ -4113,6 +4123,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         return initButton(context, R.string.Call, R.drawable.call, v -> startCall(false));
     }
 
+    private HeaderButtonView initGroupCallButton(Context context) {
+        return initButton(context, R.string.StartVoipChatTitle, R.drawable.hbtn_live_stream, v -> startCall(false));
+    }
+
     private HeaderButtonView initVideoCallButton(Context context) {
         return initButton(context, R.string.Video, R.drawable.video, v -> startCall(true));
     }
@@ -4134,6 +4148,31 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private HeaderButtonView initStopButton(Context context) {
         return initButton(context, R.string.Stop, R.drawable.block, v -> {
             Log.i(TAG, "initStopButton: STOP BOT");
+        });
+    }
+
+    private HeaderButtonView initLeaveButton(Context context) {
+        // TODO separate string
+        return initButton(context, R.string.VoipGroupLeave, R.drawable.msg_leave, v -> {
+            leaveChatPressed();
+        });
+    }
+
+    private HeaderButtonView initGiftButton(Context context) {
+        return initButton(context, R.string.Gift2Gift, R.drawable.hbtn_gift, v -> {
+            UserSelectorBottomSheet.open(0, BirthdayController.getInstance(currentAccount).getState());
+        });
+    }
+
+    private HeaderButtonView initJoinButton(Context context) {
+        return initButton(context, R.string.VoipChatJoin, R.drawable.hbtn_join, v -> {
+            joinChat(context, parentLayout.getLastFragment());
+        });
+    }
+
+    private HeaderButtonView initReportButton(Context context) {
+        return initButton(context, R.string.Report2, R.drawable.hbtn_report, v -> {
+            reportChat();
         });
     }
 
