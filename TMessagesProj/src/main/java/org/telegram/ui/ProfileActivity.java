@@ -3844,7 +3844,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     x += v.getX() + v.getPaddingLeft();
                     y += v.getY() + v.getPaddingTop();
                 }
-                chatNotificationsPopupWrapper.showAsOptions(ProfileActivity.this, view, x, y);
+                chatNotificationsPopupWrapper.showAsOptions(ProfileActivity.this, view, x, y, false);
             } else if (position == unblockRow) {
                 getMessagesController().unblockPeer(userId);
                 if (BulletinFactory.canShowBulletin(ProfileActivity.this)) {

@@ -1029,77 +1029,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
                 return;
             }
-            ChatNotificationsPopupWrapper chatNotificationsPopupWrapper = new ChatNotificationsPopupWrapper(context, currentAccount, null, true, true, new ChatNotificationsPopupWrapper.Callback() {
-                @Override
-                public void toggleSound() {
-                    SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
-                    boolean enabled = !preferences.getBoolean("sound_enabled_" + NotificationsController.getSharedPrefKey(did, topicId), true);
-                    preferences.edit().putBoolean("sound_enabled_" + NotificationsController.getSharedPrefKey(did, topicId), enabled).apply();
-                    if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
-                        BulletinFactory.createSoundEnabledBulletin(DebugProfile.this, enabled ? NotificationsController.SETTING_SOUND_ON : NotificationsController.SETTING_SOUND_OFF, getResourceProvider()).show();
-                    }
-                }
-
-                @Override
-                public void muteFor(int timeInSeconds) {
-                    if (timeInSeconds == 0) {
-                        if (getMessagesController().isDialogMuted(did, topicId)) {
-                            toggleMute();
-                        }
-                        if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
-                            BulletinFactory.createMuteBulletin(DebugProfile.this, NotificationsController.SETTING_MUTE_UNMUTE, timeInSeconds, getResourceProvider()).show();
-                        }
-                    } else {
-                        getNotificationsController().muteUntil(did, topicId, timeInSeconds);
-                        if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
-                            BulletinFactory.createMuteBulletin(DebugProfile.this, NotificationsController.SETTING_MUTE_CUSTOM, timeInSeconds, getResourceProvider()).show();
-                        }
-                        updateExceptions();
-                        if (notificationsRow >= 0 && listAdapter != null) {
-                            listAdapter.notifyItemChanged(notificationsRow);
-                        }
-                    }
-                }
-
-                @Override
-                public void showCustomize() {
-                    if (did != 0) {
-                        Bundle args = new Bundle();
-                        args.putLong("dialog_id", did);
-                        args.putLong("topic_id", topicId);
-                        presentFragment(new ProfileNotificationsActivity(args, resourcesProvider));
-                    }
-                }
-
-                @Override
-                public void toggleMute() {
-                    boolean muted = getMessagesController().isDialogMuted(did, topicId);
-                    getNotificationsController().muteDialog(did, topicId, !muted);
-                    if (DebugProfile.this.fragmentView != null) {
-                        BulletinFactory.createMuteBulletin(DebugProfile.this, !muted, null).show();
-                    }
-                    updateExceptions();
-                    if (notificationsRow >= 0 && listAdapter != null) {
-                        listAdapter.notifyItemChanged(notificationsRow);
-                    }
-                }
-
-                @Override
-                public void openExceptions() {
-                    Bundle bundle = new Bundle();
-                    bundle.putLong("dialog_id", did);
-                    TopicsNotifySettingsFragments notifySettings = new TopicsNotifySettingsFragments(bundle);
-                    notifySettings.setExceptions(notificationsExceptionTopics);
-                    presentFragment(notifySettings);
-                }
-            }, getResourceProvider());
-            chatNotificationsPopupWrapper.update(did, topicId, notificationsExceptionTopics);
-            if (AndroidUtilities.isTablet()) {
-                View v = parentLayout.getView();
-                x += v.getX() + v.getPaddingLeft();
-                y += v.getY() + v.getPaddingTop();
-            }
-            chatNotificationsPopupWrapper.showAsOptions(DebugProfile.this, view, x, y);
+            showMuteDialog(view, x, y, context, did);
         } else if (position == unblockRow) {
             getMessagesController().unblockPeer(userId);
             if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
@@ -1292,6 +1222,82 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         } else {
             processOnClickOrPress(position, view, x, y);
         }
+    }
+
+    private void showMuteDialog(View view, float x, float y, Context context, long did) {
+        ChatNotificationsPopupWrapper chatNotificationsPopupWrapper = new ChatNotificationsPopupWrapper(context, currentAccount, null, true, true, new ChatNotificationsPopupWrapper.Callback() {
+            @Override
+            public void toggleSound() {
+                SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
+                boolean enabled = !preferences.getBoolean("sound_enabled_" + NotificationsController.getSharedPrefKey(did, topicId), true);
+                preferences.edit().putBoolean("sound_enabled_" + NotificationsController.getSharedPrefKey(did, topicId), enabled).apply();
+                if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
+                    BulletinFactory.createSoundEnabledBulletin(DebugProfile.this, enabled ? NotificationsController.SETTING_SOUND_ON : NotificationsController.SETTING_SOUND_OFF, getResourceProvider()).show();
+                }
+            }
+
+            @Override
+            public void muteFor(int timeInSeconds) {
+                if (timeInSeconds == 0) {
+                    if (getMessagesController().isDialogMuted(did, topicId)) {
+                        toggleMute();
+                    }
+                    if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
+                        BulletinFactory.createMuteBulletin(DebugProfile.this, NotificationsController.SETTING_MUTE_UNMUTE, timeInSeconds, getResourceProvider()).show();
+                    }
+                } else {
+                    getNotificationsController().muteUntil(did, topicId, timeInSeconds);
+                    if (BulletinFactory.canShowBulletin(DebugProfile.this)) {
+                        BulletinFactory.createMuteBulletin(DebugProfile.this, NotificationsController.SETTING_MUTE_CUSTOM, timeInSeconds, getResourceProvider()).show();
+                    }
+                    updateExceptions();
+                    if (notificationsRow >= 0 && listAdapter != null) {
+                        listAdapter.notifyItemChanged(notificationsRow);
+                    }
+                }
+            }
+
+            @Override
+            public void showCustomize() {
+                if (did != 0) {
+                    Bundle args = new Bundle();
+                    args.putLong("dialog_id", did);
+                    args.putLong("topic_id", topicId);
+                    presentFragment(new ProfileNotificationsActivity(args, resourcesProvider));
+                }
+            }
+
+            @Override
+            public void toggleMute() {
+                boolean muted = getMessagesController().isDialogMuted(did, topicId);
+                getNotificationsController().muteDialog(did, topicId, !muted);
+                if (DebugProfile.this.fragmentView != null) {
+                    BulletinFactory.createMuteBulletin(DebugProfile.this, !muted, null).show();
+                }
+                updateExceptions();
+                if (notificationsRow >= 0 && listAdapter != null) {
+                    listAdapter.notifyItemChanged(notificationsRow);
+                }
+            }
+
+            @Override
+            public void openExceptions() {
+                Bundle bundle = new Bundle();
+                bundle.putLong("dialog_id", did);
+                TopicsNotifySettingsFragments notifySettings = new TopicsNotifySettingsFragments(bundle);
+                notifySettings.setExceptions(notificationsExceptionTopics);
+                presentFragment(notifySettings);
+            }
+        }, getResourceProvider());
+        chatNotificationsPopupWrapper.update(did, topicId, notificationsExceptionTopics);
+        if (AndroidUtilities.isTablet()) {
+            View v = parentLayout.getView();
+            x += v.getX() + v.getPaddingLeft();
+            y += v.getY() + v.getPaddingTop();
+        }
+        x -= dp(8);
+        y -= dp(8);
+        chatNotificationsPopupWrapper.showAsOptions(DebugProfile.this, view, x, y, true);
     }
 
     private void reportChat() {
@@ -4133,7 +4139,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     private HeaderButtonView initMuteButton(Context context) {
         return initButton(context, R.string.Mute, R.drawable.mute, v -> {
-            Log.i(TAG, "initHeaderButtons: MUTE");
+            showMuteDialog(v, 0, 0, context, dialogId);
         });
     }
 
