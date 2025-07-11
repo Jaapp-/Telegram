@@ -81,6 +81,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -264,6 +265,7 @@ import org.telegram.ui.PinchToZoomHelper;
 import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.PrivacyControlActivity;
 import org.telegram.ui.PrivacySettingsActivity;
+import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.ProfileBirthdayEffect;
 import org.telegram.ui.ProfileNotificationsActivity;
 import org.telegram.ui.QrActivity;
@@ -3184,6 +3186,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         };
         checkLayout();
         avatarsViewPager.setBottomBlurPadding(maximizedOffset - displaySize.x);
+        listView.setPadding(0, maximizedOffset, 0, 0);
 
 
         contentView.addView(avatarsViewPager);
@@ -3707,6 +3710,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateProfileData(true);
 
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
+
+        Button debug = new Button(context);
+        debug.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putLong("user_id", userId);
+            presentFragment(new ProfileActivity(args));
+        });
+        contentView.addView(debug, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         return contentView;
     }
@@ -5091,8 +5102,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         minimizedOffset = topBarsHeight;
         expandedOffset = dp(270);
         maximizedOffset = displaySize.x + dp(62);
-
-        listView.setPadding(0, maximizedOffset, 0, 0);
     }
 
     @Override
@@ -5678,8 +5687,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         if (sharedMediaRow == -1) {
             bottomPaddingRow = rowCount++;
         }
-        final int actionBarHeight = actionBar != null ? ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) : 0;
         // TODO
+//        final int actionBarHeight = actionBar != null ? ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) : 0;
 //        if (listView == null || prevRowsCount > rowCount || listContentHeight != 0 && listContentHeight + actionBarHeight + AndroidUtilities.dp(88) < listView.getMeasuredHeight()) {
 //            lastMeasuredContentWidth = 0;
 //        }
@@ -8474,6 +8483,10 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
                         @Override
                         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//                            if (sharedMediaLayoutAttached) {
+//                                setMeasuredDimension(listView.getMeasuredWidth(), 0);
+//                                return;
+//                            }
                             if (lastListViewHeight != listView.getMeasuredHeight()) {
                                 lastPaddingHeight = 0;
                             }
@@ -8488,20 +8501,15 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                                         totalHeight += listView.getChildAt(i).getMeasuredHeight();
                                     }
                                 }
-                                int paddingHeight = (fragmentView == null ? 0 : fragmentView.getMeasuredHeight()) - ActionBar.getCurrentActionBarHeight() - AndroidUtilities.statusBarHeight - totalHeight;
-                                if (paddingHeight > AndroidUtilities.dp(88)) {
-                                    paddingHeight = 0;
-                                }
-                                if (paddingHeight <= 0) {
-                                    paddingHeight = 0;
-                                }
+                                int paddingHeight = contentView.getMeasuredHeight() - totalHeight - minimizedOffset;
                                 setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight = paddingHeight);
+                                Log.i(TAG, "bottom padding: " + contentView.getMeasuredHeight() + " " + totalHeight + " " + paddingHeight + " " + sharedMediaLayoutAttached);
                             } else {
                                 setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight);
                             }
                         }
                     };
-                    view.setBackground(new ColorDrawable(Color.TRANSPARENT));
+                    view.setBackground(new ColorDrawable(Color.RED));
                     break;
                 }
                 case VIEW_TYPE_SHARED_MEDIA: {
@@ -8509,6 +8517,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         ((ViewGroup) sharedMediaLayout.getParent()).removeView(sharedMediaLayout);
                     }
                     view = sharedMediaLayout;
+//                    ViewGroup.LayoutParams params = sharedMediaLayout.getLayoutParams();
+//                    params.height = contentView.getMeasuredHeight() - topBarsHeight;
                     break;
                 }
                 case VIEW_TYPE_ADDTOGROUP_INFO: {
@@ -8627,6 +8637,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
             if (holder.itemView == sharedMediaLayout) {
                 sharedMediaLayoutAttached = true;
+//                sharedMediaLayout.setVisibleHeight(listView.getMeasuredHeight() - sharedMediaLayout.getTop());
+//                ViewGroup.LayoutParams params
+//                        = sharedMediaLayout.getLayoutParams();
+//                params.height = listView.getMeasuredHeight() - topBarsHeight;
+//                if (listView.getPaddingTop() != maximizedOffset) {
+//                    listView.setPadding(0, maximizedOffset, 0, 0);
+//                }
             }
             if (holder.itemView instanceof TextDetailCell) {
                 ((TextDetailCell) holder.itemView).textView.setLoading(loadingSpan);

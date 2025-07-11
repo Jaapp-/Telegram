@@ -75,6 +75,7 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -3619,6 +3620,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 return super.scrollVerticallyBy(dy, recycler, state);
+            }
+
+
+            @Override
+            public void onMeasure(@NonNull RecyclerView.Recycler recycler, @NonNull RecyclerView.State state, int widthSpec, int heightSpec) {
+                super.onMeasure(recycler, state, widthSpec, heightSpec);
+                int totalHeight = 0;
+                for (int i = 0; i < getChildCount(); i++) {
+                    View child = getChildAt(i);
+                    totalHeight += child.getHeight();
+                }
+                Log.i("Contest", "manager onMeasure: " + getWidth() + " " + getHeight() + " children " + totalHeight + " padding " + listView.getPaddingTop() + " " + listView.getPaddingBottom());
             }
         };
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -11268,34 +11281,45 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                         @Override
                         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                            if (lastListViewHeight != listView.getMeasuredHeight()) {
-                                lastPaddingHeight = 0;
-                            }
-                            lastListViewHeight = listView.getMeasuredHeight();
+//                            if (lastListViewHeight != listView.getMeasuredHeight()) {
+//                                lastPaddingHeight = 0;
+//                            }
+//                            lastListViewHeight = listView.getMeasuredHeight();
+//                            int n = listView.getChildCount();
+//                            if (n == listAdapter.getItemCount()) {
+//                                int totalHeight = 0;
+//                                for (int i = 0; i < n; i++) {
+//                                    View view = listView.getChildAt(i);
+//                                    int p = listView.getChildAdapterPosition(view);
+//                                    if (p >= 0 && p != bottomPaddingRow) {
+//                                        totalHeight += listView.getChildAt(i).getMeasuredHeight();
+//                                    }
+//                                }
+//                                int paddingHeight = (fragmentView == null ? 0 : fragmentView.getMeasuredHeight())  - totalHeight;
+//                                if (paddingHeight > AndroidUtilities.dp(88)) {
+//                                    paddingHeight = 0;
+//                                }
+//                                if (paddingHeight <= 0) {
+//                                    paddingHeight = 0;
+//                                }
+//                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight = paddingHeight);
+//                            } else {
+//                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight);
+//                            }
+
+                            int totalHeight = 0;
                             int n = listView.getChildCount();
-                            if (n == listAdapter.getItemCount()) {
-                                int totalHeight = 0;
-                                for (int i = 0; i < n; i++) {
-                                    View view = listView.getChildAt(i);
-                                    int p = listView.getChildAdapterPosition(view);
-                                    if (p >= 0 && p != bottomPaddingRow) {
-                                        totalHeight += listView.getChildAt(i).getMeasuredHeight();
-                                    }
+                            for (int i = 0; i < n; i++) {
+                                View view = listView.getChildAt(i);
+                                int p = listView.getChildAdapterPosition(view);
+                                if (p >= 0 && p != bottomPaddingRow) {
+                                    totalHeight += listView.getChildAt(i).getMeasuredHeight();
                                 }
-                                int paddingHeight = (fragmentView == null ? 0 : fragmentView.getMeasuredHeight()) - ActionBar.getCurrentActionBarHeight() - AndroidUtilities.statusBarHeight - totalHeight;
-                                if (paddingHeight > AndroidUtilities.dp(88)) {
-                                    paddingHeight = 0;
-                                }
-                                if (paddingHeight <= 0) {
-                                    paddingHeight = 0;
-                                }
-                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight = paddingHeight);
-                            } else {
-                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight);
                             }
+                            setMeasuredDimension(listView.getMeasuredWidth(), listView.getMeasuredHeight() - totalHeight);
                         }
                     };
-                    view.setBackground(new ColorDrawable(Color.TRANSPARENT));
+                    view.setBackground(new ColorDrawable(Color.RED));
                     break;
                 }
                 case VIEW_TYPE_SHARED_MEDIA: {
