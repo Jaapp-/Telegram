@@ -3709,13 +3709,13 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
 
-        Button debug = new Button(context);
-        debug.setOnClickListener(v -> {
-            Bundle args = new Bundle();
-            args.putLong("user_id", userId);
-            presentFragment(new ProfileActivity(args));
-        });
-        contentView.addView(debug, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+//        Button debug = new Button(context);
+//        debug.setOnClickListener(v -> {
+//            Bundle args = new Bundle();
+//            args.putLong("user_id", userId);
+//            presentFragment(new ProfileActivity(args));
+//        });
+//        contentView.addView(debug, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         return contentView;
     }
@@ -4126,6 +4126,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
     private HeaderButtonView initStopButton(Context context) {
         return initButton(context, R.string.Stop, R.drawable.block, v -> {
+            // TODO
             Log.i(TAG, "initStopButton: STOP BOT");
         });
     }
@@ -8514,7 +8515,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                             setMeasuredDimension(listView.getMeasuredWidth(), paddingHeight);
                         }
                     };
-                    view.setBackground(new ColorDrawable(Color.RED));
+                    view.setBackground(new ColorDrawable(Color.TRANSPARENT));
                     break;
                 }
                 case VIEW_TYPE_SHARED_MEDIA: {
