@@ -9499,7 +9499,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
 
-            if (topScroll >= minimizedOffset && topScroll <= expandedOffset && !avatarExpandAnimator.isRunning()) {
+            if (topScroll >= minimizedOffset && topScroll < expandedOffset && !avatarExpandAnimator.isRunning()) {
                 float avatarSize = avatarContainer.getScaleY() * dp(AVATAR_SIZE_DP) / 2f;
                 canvas.drawCircle((float) getWidth() / 2, avatarContainer.getTranslationY() + avatarSize, avatarSize, black);
                 drawDroplet(canvas);
