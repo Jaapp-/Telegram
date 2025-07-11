@@ -407,7 +407,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
     };
     private int actionBarHeight;
-    private TextView debugText;
     private int topBarsHeight;
     private int minimizedOffset;
     private int expandedOffset;
@@ -3283,12 +3282,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
 
 //        createFloatingActionButton(getContext());
 
-        debugText = new TextView(context);
-        debugText.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
-        debugText.setTextSize(10);
-        contentView.addView(debugText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 24, 4, 0));
-
-
         avatarExpandAnimator = ValueAnimator.ofFloat(0f, 1f);
         avatarExpandAnimator.addUpdateListener(anim -> {
             setAvatarExpandProgress(anim.getAnimatedFraction());
@@ -5016,18 +5009,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         topScroll = newOffset;
         topView.invalidate();
 
-        String debug = "scroll: " + topScroll + "\n";
         if (topScroll < minimizedOffset) {
-            debug += "minimized";
             expandProgress = 0;
         } else if (topScroll <= expandedOffset) {
             expandProgress = clamp01((topScroll - minimizedOffset) / (float) (expandedOffset - minimizedOffset));
             maximizeProgress = 0;
-            debug += "expanding " + expandProgress;
         } else if (topScroll <= maximizedOffset) {
             maximizeProgress = clamp01((topScroll - expandedOffset) / (float) (maximizedOffset - expandedOffset));
             expandProgress = 1f;
-            debug += "maximizing " + maximizeProgress;
 
             if (maximizeProgress > AVATAR_EXPAND_THRESHOLD) {
                 if (!isPulledDown) {
@@ -5038,11 +5027,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     startMaximizeAnimator(false);
                 }
             }
-        } else {
-            debugText.setText("maximized");
-            debug += "maximized";
         }
-        debugText.setText(debug);
         updateAvatar();
         updateHeaderButtons();
         updateMediaHeaderVisible();
