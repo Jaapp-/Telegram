@@ -1249,6 +1249,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             if (listAdapter != null) {
                 listAdapter.notifyDataSetChanged();
             }
+            initHeaderButtons(context);
         }, err -> {
             if (err != null && "INVITE_REQUEST_SENT".equals(err.text)) {
                 SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
@@ -3205,7 +3206,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         contentView.addView(avatarsViewPagerIndicatorView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 
-        initHeaderButtons(context, contentView);
+        initHeaderButtons(context);
 
         contentView.addView(actionBar);
 
@@ -3998,7 +3999,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         }
     }
 
-    private void initHeaderButtons(Context context, FrameLayout frameLayout) {
+    private void initHeaderButtons(Context context) {
         ArrayList<HeaderButtonView> buttons = new ArrayList<>(4);
 
         if (userId != 0) {
@@ -4027,7 +4028,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     buttons.add(initLeaveButton(context));
                 } else {
                     buttons.add(initJoinButton(context));
-                    buttons.add(initShareButton(context));
+                    buttons.add(initMuteButton(context));
                     buttons.add(initShareButton(context));
                     buttons.add(initReportButton(context));
                 }
@@ -4040,14 +4041,19 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             }
         }
 
-        headerButtonLayout = new LinearLayout(getContext());
-        headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        if (headerButtonLayout == null) {
+            headerButtonLayout = new LinearLayout(getContext());
+            headerButtonLayout.setOrientation(LinearLayout.HORIZONTAL);
+            contentView.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+        } else {
+            headerButtonLayout.removeAllViews();
+        }
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LayoutHelper.WRAP_CONTENT, 1f);
         params.setMargins(AndroidUtilities.dp(10f / 3), 0, AndroidUtilities.dp(10f / 3), 0);
         for (HeaderButtonView button : buttons) {
             headerButtonLayout.addView(button, params);
         }
-        frameLayout.addView(headerButtonLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 26 / 3f, 0f, 26 / 3f, 0f));
+        headerButtonLayout.invalidate();
     }
 
     private HeaderButtonView initButton(Context context, @StringRes int textRes, @DrawableRes int icon, View.OnClickListener listener) {
