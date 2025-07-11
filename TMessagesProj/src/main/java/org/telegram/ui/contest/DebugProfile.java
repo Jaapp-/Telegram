@@ -5037,9 +5037,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             nameScale = lerp(1f, 1.23f, textProgress);
         } else {
             nameX = lerp(displaySize.x / 2f - nameTextView[1].getWidth() / 2f, dp(20), maximizeProgress);
-            nameY = lerp(dp(140), dp(300), maximizeProgress);
+            nameY = lerp(dp(140), maximizedOffset - dp(123), maximizeProgress);
             onlineX = lerp(displaySize.x / 2f - onlineTextView[1].getWidth() / 2f, dp(20), maximizeProgress);
-            onlineY = lerp(dp(169), dp(331), maximizeProgress);
+            onlineY = lerp(dp(169), maximizedOffset - dp(91), maximizeProgress);
             mediaX = lerp(displaySize.x / 2f - mediaCounterTextView.getWidth() / 2f, dp(20), maximizeProgress);
             mediaY = lerp(dp(158), dp(328), maximizeProgress);
             nameScale = lerp(1.23f, 1.4f, maximizeProgress);
