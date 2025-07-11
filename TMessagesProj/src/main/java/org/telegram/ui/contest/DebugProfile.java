@@ -180,7 +180,6 @@ import org.telegram.ui.Cells.ProfileChannelCell;
 import org.telegram.ui.Cells.SettingsSuggestionCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCell;
-import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextDetailCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.UserCell;
@@ -743,6 +742,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private Rect rect = new Rect();
     private AnimatorSet scrimAnimatorSet;
     private HeaderButtonView muteButton;
+    private int savedScrollPosition;
+    private int savedScrollOffset;
 
 
     public DebugProfile(Bundle args) {
@@ -1130,10 +1131,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             saveScrollPosition();
             view.requestLayout();
             listAdapter.notifyItemChanged(bizHoursRow);
-            // TODO
-//            if (savedScrollPosition >= 0) {
-//                layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
-//            }
+            if (savedScrollPosition >= 0) {
+                layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
+            }
         } else if (position == bizLocationRow) {
             openLocation(false);
         } else if (position == channelRow) {
@@ -2854,14 +2854,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             private Paint grayPaint = new Paint();
             private boolean wasPortrait;
 
-//            @Override
-//            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-//                super.onLayout(changed, left, top, right, bottom);
-//                savedScrollPosition = -1;
+            @Override
+            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                savedScrollPosition = -1;
 //                firstLayout = false;
 //                invalidateScroll = false;
 //                checkListViewScroll();
-//            }
+            }
 
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -3078,8 +3078,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             @Override
             public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
                 final View view = layoutManager.findViewByPosition(0);
-                // TODO
-//                if (view != null && !openingAvatar) {
                 if (view != null) {
                     final int canScroll = view.getTop() - expandedOffset;
                     if (!allowPullingDown && canScroll > dy) {
@@ -7269,7 +7267,29 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private void saveScrollPosition() {
-        // TODO
+        if (listView != null && layoutManager != null && listView.getChildCount() > 0) {
+            View view = null;
+            int position = -1;
+            int top = Integer.MAX_VALUE;
+            for (int i = 0; i < listView.getChildCount(); i++) {
+                int childPosition = listView.getChildAdapterPosition(listView.getChildAt(i));
+                View child = listView.getChildAt(i);
+                if (childPosition != RecyclerListView.NO_POSITION && child.getTop() < top) {
+                    view = child;
+                    position = childPosition;
+                    top = child.getTop();
+                }
+            }
+            if (view != null) {
+                savedScrollPosition = position;
+                savedScrollOffset = view.getTop();
+                if (savedScrollPosition == 0 && !allowPullingDown && savedScrollOffset > expandedOffset) {
+                    savedScrollOffset = expandedOffset;
+                }
+
+                layoutManager.scrollToPositionWithOffset(position, view.getTop() - listView.getPaddingTop());
+            }
+        }
     }
 
     private void fetchUsersFromChannelInfo() {
@@ -7873,9 +7893,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             FileLog.e(e);
             listAdapter.notifyDataSetChanged();
         }
-//        if (savedScrollPosition >= 0) { // TODO
-//            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
-//        }
+        if (savedScrollPosition >= 0) {
+            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
+        }
         AndroidUtilities.updateVisibleRows(listView);
     }
 
@@ -8478,35 +8498,20 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 case VIEW_TYPE_BOTTOM_PADDING: {
                     view = new View(mContext) {
 
-                        private int lastPaddingHeight = 0;
-                        private int lastListViewHeight = 0;
 
                         @Override
                         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//                            if (sharedMediaLayoutAttached) {
-//                                setMeasuredDimension(listView.getMeasuredWidth(), 0);
-//                                return;
-//                            }
-                            if (lastListViewHeight != listView.getMeasuredHeight()) {
-                                lastPaddingHeight = 0;
-                            }
-                            lastListViewHeight = listView.getMeasuredHeight();
                             int n = listView.getChildCount();
-                            if (n == listAdapter.getItemCount()) {
-                                int totalHeight = 0;
-                                for (int i = 0; i < n; i++) {
-                                    View view = listView.getChildAt(i);
-                                    int p = listView.getChildAdapterPosition(view);
-                                    if (p >= 0 && p != bottomPaddingRow) {
-                                        totalHeight += listView.getChildAt(i).getMeasuredHeight();
-                                    }
+                            int totalHeight = 0;
+                            for (int i = 0; i < n; i++) {
+                                View view = listView.getChildAt(i);
+                                int p = listView.getChildAdapterPosition(view);
+                                if (p >= 0 && p != bottomPaddingRow) {
+                                    totalHeight += listView.getChildAt(i).getMeasuredHeight();
                                 }
-                                int paddingHeight = contentView.getMeasuredHeight() - totalHeight - minimizedOffset;
-                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight = paddingHeight);
-                                Log.i(TAG, "bottom padding: " + contentView.getMeasuredHeight() + " " + totalHeight + " " + paddingHeight + " " + sharedMediaLayoutAttached);
-                            } else {
-                                setMeasuredDimension(listView.getMeasuredWidth(), lastPaddingHeight);
                             }
+                            int paddingHeight = contentView.getMeasuredHeight() - totalHeight - minimizedOffset;
+                            setMeasuredDimension(listView.getMeasuredWidth(), paddingHeight);
                         }
                     };
                     view.setBackground(new ColorDrawable(Color.RED));
@@ -8517,8 +8522,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         ((ViewGroup) sharedMediaLayout.getParent()).removeView(sharedMediaLayout);
                     }
                     view = sharedMediaLayout;
-//                    ViewGroup.LayoutParams params = sharedMediaLayout.getLayoutParams();
-//                    params.height = contentView.getMeasuredHeight() - topBarsHeight;
+                    ViewGroup.LayoutParams params = sharedMediaLayout.getLayoutParams();
+                    params.height = contentView.getMeasuredHeight() - minimizedOffset;
                     break;
                 }
                 case VIEW_TYPE_ADDTOGROUP_INFO: {
@@ -9237,10 +9242,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                         saveScrollPosition();
                         view.requestLayout();
                         listAdapter.notifyItemChanged(bizHoursRow);
-                        // TODO
-//                        if (savedScrollPosition >= 0) {
-//                            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
-//                        }
+                        if (savedScrollPosition >= 0) {
+                            layoutManager.scrollToPositionWithOffset(savedScrollPosition, savedScrollOffset - listView.getPaddingTop());
+                        }
                     });
                     hoursCell.set(userInfo != null ? userInfo.business_work_hours : null, hoursExpanded, hoursShownMine, notificationsDividerRow < 0 && !myProfile || bizLocationRow >= 0);
                     break;
