@@ -81,6 +81,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -264,6 +265,7 @@ import org.telegram.ui.PinchToZoomHelper;
 import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.PrivacyControlActivity;
 import org.telegram.ui.PrivacySettingsActivity;
+import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.ProfileBirthdayEffect;
 import org.telegram.ui.ProfileNotificationsActivity;
 import org.telegram.ui.QrActivity;
@@ -505,6 +507,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     private int userInfoRow;
     private int channelInfoRow;
     private int usernameRow;
+    private int infoTopRow;
+    private int infoBottomRow;
     private int notificationsDividerRow;
     //    private int notificationsRow;
     private int bizHoursRow;
@@ -2892,73 +2896,72 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             protected void dispatchDraw(Canvas canvas) {
                 whitePaint.setColor(getThemedColor(Theme.key_windowBackgroundWhite));
                 if (listView.getVisibility() == VISIBLE) {
-                    grayPaint.setColor(getThemedColor(Theme.key_windowBackgroundGray));
-                    // TODO
-//                    if (transitionAnimationInProress) {
-//                        whitePaint.setAlpha((int) (255 * listView.getAlpha()));
+//                    grayPaint.setColor(getThemedColor(Theme.key_windowBackgroundGray));
+////                    if (transitionAnimationInProress) {
+//                    whitePaint.setAlpha((int) (255 * listView.getAlpha()));
+////                    }
+////                    if (transitionAnimationInProress) {
+//                    grayPaint.setAlpha((int) (255 * listView.getAlpha()));
+////                    }
+//
+//                    int count = listView.getChildCount();
+//                    sortedChildren.clear();
+//                    boolean hasRemovingItems = false;
+//                    for (int i = 0; i < count; i++) {
+//                        View child = listView.getChildAt(i);
+//                        if (listView.getChildAdapterPosition(child) != RecyclerView.NO_POSITION) {
+//                            sortedChildren.add(listView.getChildAt(i));
+//                        } else {
+//                            hasRemovingItems = true;
+//                        }
 //                    }
-//                    if (transitionAnimationInProress) {
-//                        grayPaint.setAlpha((int) (255 * listView.getAlpha()));
+//                    Collections.sort(sortedChildren, viewComparator);
+//                    boolean hasBackground = false;
+//                    float lastY = listView.getY();
+//                    count = sortedChildren.size();
+//                    if (!openAnimationInProgress && count > 0 && !hasRemovingItems) {
+//                        lastY += sortedChildren.get(0).getY();
 //                    }
-
-                    int count = listView.getChildCount();
-                    sortedChildren.clear();
-                    boolean hasRemovingItems = false;
-                    for (int i = 0; i < count; i++) {
-                        View child = listView.getChildAt(i);
-                        if (listView.getChildAdapterPosition(child) != RecyclerView.NO_POSITION) {
-                            sortedChildren.add(listView.getChildAt(i));
-                        } else {
-                            hasRemovingItems = true;
-                        }
-                    }
-                    Collections.sort(sortedChildren, viewComparator);
-                    boolean hasBackground = false;
-                    float lastY = listView.getY();
-                    count = sortedChildren.size();
-                    if (!openAnimationInProgress && count > 0 && !hasRemovingItems) {
-                        lastY += sortedChildren.get(0).getY();
-                    }
-                    float alpha = 1f;
-                    for (int i = 0; i < count; i++) {
-                        View child = sortedChildren.get(i);
-                        boolean currentHasBackground = child.getBackground() != null;
-                        int currentY = (int) (listView.getY() + child.getY());
-                        if (hasBackground == currentHasBackground) {
-                            if (child.getAlpha() == 1f) {
-                                alpha = 1f;
-                            }
-                            continue;
-                        }
-                        if (hasBackground) {
-                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
-                        } else {
-                            if (alpha != 1f) {
-                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
-                                whitePaint.setAlpha((int) (255 * alpha));
-                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
-                                whitePaint.setAlpha(255);
-                            } else {
-                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
-                            }
-                        }
-                        hasBackground = currentHasBackground;
-                        lastY = currentY;
-                        alpha = child.getAlpha();
-                    }
-
-                    if (hasBackground) {
-                        canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
-                    } else {
-                        if (alpha != 1f) {
-                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
-                            whitePaint.setAlpha((int) (255 * alpha));
-                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
-                            whitePaint.setAlpha(255);
-                        } else {
-                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
-                        }
-                    }
+//                    float alpha = 1f;
+//                    for (int i = 0; i < count; i++) {
+//                        View child = sortedChildren.get(i);
+//                        boolean currentHasBackground = child.getBackground() != null;
+//                        int currentY = (int) (listView.getY() + child.getY());
+//                        if (hasBackground == currentHasBackground) {
+//                            if (child.getAlpha() == 1f) {
+//                                alpha = 1f;
+//                            }
+//                            continue;
+//                        }
+//                        if (hasBackground) {
+//                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
+//                        } else {
+//                            if (alpha != 1f) {
+//                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, grayPaint);
+//                                whitePaint.setAlpha((int) (255 * alpha));
+//                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
+//                                whitePaint.setAlpha(255);
+//                            } else {
+//                                canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), currentY, whitePaint);
+//                            }
+//                        }
+//                        hasBackground = currentHasBackground;
+//                        lastY = currentY;
+//                        alpha = child.getAlpha();
+//                    }
+//
+//                    if (hasBackground) {
+//                        canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
+//                    } else {
+//                        if (alpha != 1f) {
+//                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), grayPaint);
+//                            whitePaint.setAlpha((int) (255 * alpha));
+//                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
+//                            whitePaint.setAlpha(255);
+//                        } else {
+//                            canvas.drawRect(listView.getX(), lastY, listView.getX() + listView.getMeasuredWidth(), listView.getBottom(), whitePaint);
+//                        }
+//                    }
                 } else {
                     // TODO
 //                    int top = searchListView.getTop();
@@ -3104,6 +3107,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         listAdapter = new ListAdapter(context);
         listView.setAdapter(listAdapter);
         listView.setClipToPadding(false);
+        listView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundGray));
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -3707,6 +3711,14 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         updateProfileData(true);
 
         layoutManager.scrollToPositionWithOffset(0, expandedOffset - maximizedOffset);
+
+        Button debugButton = new Button(context);
+        debugButton.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putLong("user_id", userId);
+            presentFragment(new ProfileActivity(args));
+        });
+        contentView.addView(debugButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         return contentView;
     }
@@ -5260,6 +5272,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         locationRow = -1;
         channelInfoRow = -1;
         usernameRow = -1;
+        infoTopRow = -1;
+        infoBottomRow = -1;
         settingsTimerRow = -1;
         settingsKeyRow = -1;
         notificationsDividerRow = -1;
@@ -5423,6 +5437,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                     }
                 }
                 infoStartRow = rowCount;
+                infoTopRow = rowCount++;
                 if (!isBot && (hasPhone || !hasInfo)) {
                     phoneRow = rowCount++;
                 }
@@ -5446,6 +5461,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (isBot && user != null && user.bot_has_main_app) {
                     botAppRow = rowCount++;
                 }
+                infoBottomRow = rowCount++;
                 infoEndRow = rowCount - 1;
                 infoSectionRow = rowCount++;
 
@@ -5530,7 +5546,9 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
         } else if (isTopic) {
+            infoTopRow = rowCount++;
             usernameRow = rowCount++;
+            infoBottomRow = rowCount++;
             infoSectionRow = rowCount++;
             if (hasMedia) {
                 sharedMediaRow = rowCount++;
@@ -5540,6 +5558,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (LocaleController.isRTL && ChatObject.isChannel(currentChat) && chatInfo != null && !currentChat.megagroup && chatInfo.linked_chat_id != 0) {
                     emptyRow = rowCount++;
                 }
+
+                infoTopRow = rowCount++;
                 if (chatInfo != null) {
                     if (!TextUtils.isEmpty(chatInfo.about)) {
                         channelInfoRow = rowCount++;
@@ -5551,6 +5571,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 if (ChatObject.isPublic(currentChat)) {
                     usernameRow = rowCount++;
                 }
+                infoTopRow = rowCount++;
             }
 //            if (infoHeaderRow != -1) {
 //                notificationsDividerRow = rowCount++;
@@ -8368,7 +8389,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
-        private final static int VIEW_TYPE_HEADER = 1, VIEW_TYPE_TEXT_DETAIL = 2, VIEW_TYPE_ABOUT_LINK = 3, VIEW_TYPE_TEXT = 4, VIEW_TYPE_DIVIDER = 5, VIEW_TYPE_SHADOW = 7, VIEW_TYPE_USER = 8, VIEW_TYPE_EMPTY = 11, VIEW_TYPE_BOTTOM_PADDING = 12, VIEW_TYPE_SHARED_MEDIA = 13, VIEW_TYPE_VERSION = 14, VIEW_TYPE_SUGGESTION = 15, VIEW_TYPE_ADDTOGROUP_INFO = 17, VIEW_TYPE_PREMIUM_TEXT_CELL = 18, VIEW_TYPE_TEXT_DETAIL_MULTILINE = 19, VIEW_TYPE_LOCATION = 21, VIEW_TYPE_HOURS = 22, VIEW_TYPE_CHANNEL = 23, VIEW_TYPE_STARS_TEXT_CELL = 24, VIEW_TYPE_BOT_APP = 25, VIEW_TYPE_SHADOW_TEXT = 26, VIEW_TYPE_COLORFUL_TEXT = 27;
+        private final static int VIEW_TYPE_HEADER = 1, VIEW_TYPE_TEXT_DETAIL = 2, VIEW_TYPE_ABOUT_LINK = 3, VIEW_TYPE_TEXT = 4, VIEW_TYPE_DIVIDER = 5, VIEW_TYPE_SHADOW = 7, VIEW_TYPE_USER = 8, VIEW_TYPE_EMPTY = 11, VIEW_TYPE_BOTTOM_PADDING = 12, VIEW_TYPE_SHARED_MEDIA = 13, VIEW_TYPE_VERSION = 14, VIEW_TYPE_SUGGESTION = 15, VIEW_TYPE_ADDTOGROUP_INFO = 17, VIEW_TYPE_PREMIUM_TEXT_CELL = 18, VIEW_TYPE_TEXT_DETAIL_MULTILINE = 19, VIEW_TYPE_LOCATION = 21, VIEW_TYPE_HOURS = 22, VIEW_TYPE_CHANNEL = 23, VIEW_TYPE_STARS_TEXT_CELL = 24, VIEW_TYPE_BOT_APP = 25, VIEW_TYPE_SHADOW_TEXT = 26, VIEW_TYPE_COLORFUL_TEXT = 27, VIEW_TYPE_INFO_PADDING = 28;
         private final HashMap<TLRPC.TL_username, ClickableSpan> usernameSpans = new HashMap<TLRPC.TL_username, ClickableSpan>();
         private final Context mContext;
 
@@ -8464,6 +8485,16 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                             super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(32), MeasureSpec.EXACTLY));
                         }
                     };
+                    break;
+                }
+                case VIEW_TYPE_INFO_PADDING: {
+                    view = new View(mContext) {
+                        @Override
+                        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(8), MeasureSpec.EXACTLY));
+                        }
+                    };
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 }
                 case VIEW_TYPE_BOTTOM_PADDING: {
@@ -9348,7 +9379,7 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 }
             }
             int type = holder.getItemViewType();
-            return type != VIEW_TYPE_HEADER && type != VIEW_TYPE_DIVIDER && type != VIEW_TYPE_SHADOW && type != VIEW_TYPE_EMPTY && type != VIEW_TYPE_BOTTOM_PADDING && type != VIEW_TYPE_SHARED_MEDIA && type != 9 && type != 10 && type != VIEW_TYPE_BOT_APP; // These are legacy ones, left for compatibility
+            return type != VIEW_TYPE_HEADER && type != VIEW_TYPE_DIVIDER && type != VIEW_TYPE_SHADOW && type != VIEW_TYPE_EMPTY && type != VIEW_TYPE_BOTTOM_PADDING && type != VIEW_TYPE_SHARED_MEDIA && type != 9 && type != 10 && type != VIEW_TYPE_BOT_APP && type != VIEW_TYPE_INFO_PADDING; // These are legacy ones, left for compatibility
         }
 
         @Override
@@ -9402,6 +9433,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
                 return VIEW_TYPE_SHADOW_TEXT;
             } else if (position == affiliateRow) {
                 return VIEW_TYPE_COLORFUL_TEXT;
+            } else if (position == infoTopRow || position == infoBottomRow) {
+                return VIEW_TYPE_INFO_PADDING;
             }
             return 0;
         }
@@ -10259,6 +10292,8 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
             put(++pointer, userInfoRow, sparseIntArray);
             put(++pointer, channelInfoRow, sparseIntArray);
             put(++pointer, usernameRow, sparseIntArray);
+            put(++pointer, infoTopRow, sparseIntArray);
+            put(++pointer, infoBottomRow, sparseIntArray);
             put(++pointer, notificationsDividerRow, sparseIntArray);
             put(++pointer, reportDividerRow, sparseIntArray);
             put(++pointer, infoSectionRow, sparseIntArray);
