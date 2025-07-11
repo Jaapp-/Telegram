@@ -3115,7 +3115,6 @@ public class DebugProfile extends BaseFragment implements NotificationCenter.Not
         listAdapter = new ListAdapter(context);
         listView.setAdapter(listAdapter);
         listView.setClipToPadding(false);
-        listView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundGray));
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
